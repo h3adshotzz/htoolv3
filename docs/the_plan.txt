@@ -1,0 +1,54 @@
+
+ ** The Plan **
+
+
+ 1. HTool commands
+
+    $ htool --help
+    Usage: htool [SUBCOMMAND] [OPTION] PATH
+
+    Commands:
+      file              Identify file type and print header if possible.
+      macho             Mach-O Parser.
+      kernel            XNU Kernel/Kernelcache parser.
+
+    Options:
+      --help            Help menu.
+      --version         HTool version info.
+      --arch            Specify architecture (arm64e, x86_64, ...)
+
+    1.1 `file` options
+
+        $ htool file --help
+        Usage: htool file [OPTION] PATH
+
+        Options:
+          -a, --analyse       Detect file type, print a header if recognised.
+
+
+    1.2 `macho` options
+
+        $ htool macho --help
+        Usage: htool macho [OPTION] PATH
+
+        Options:
+          -a, --arch        Specify architecture if the file is a Universal/FAT file.
+          -h, --header      Print the Mach-O's header.
+          -l, --loadcmds    Print the Mach-O's load commands.
+          -L, --libs        Print the Mach-O's dynamic libraries.
+          -s, --symbols     Print the Mach-O's symbols (if any).
+          -D, --sym-dbg     Include debug symbols (run with -s).
+          -C, --sym-sect    Include section info (run with -s).
+
+    1.3 `kernel` options
+
+        $ htool kernel --help
+        Usage: htool kernel [OPTION] PATH
+
+        Options:
+          -a, --analyse     Print all details of the given Kernel.
+          -k, --kext        Extract a given kext bundle ID to a new file.
+          ...
+          -D, --disassemble   <work this out>
+         
+

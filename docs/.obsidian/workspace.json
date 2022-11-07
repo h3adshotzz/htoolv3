@@ -1,0 +1,180 @@
+{
+  "main": {
+    "id": "172a577d3e116c28",
+    "type": "split",
+    "children": [
+      {
+        "id": "607b598ebb3a7732",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "612d244f5d9844ef",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Project Proposal.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "2dc611d24100d063",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Canvas Quiz.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "2742bcaaa3b72cfc",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Research Notes.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "bd523ea345d68e42",
+    "type": "split",
+    "children": [
+      {
+        "id": "fe98389bbeea5e6c",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "76346cb3fc18951c",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "e924b7c86d3a4a22",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "b88699d115ff1430",
+            "type": "leaf",
+            "state": {
+              "type": "starred",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "9b189933dc389a71",
+    "type": "split",
+    "children": [
+      {
+        "id": "30c6689e2e3f30ef",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "4de278740fdbaeca",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Canvas Quiz.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "6106ab195dc3901a",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Canvas Quiz.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "09500615c929dcb9",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "c8c462ffc428067c",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Canvas Quiz.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "ribbon": {
+    "mostRecentAction": ""
+  },
+  "active": "2dc611d24100d063",
+  "lastOpenFiles": [
+    "HTool Binary Loader.md",
+    "Project Proposal.md",
+    "References.md",
+    "Research Notes.md",
+    "Untitled 3.md",
+    "Canvas Quiz.md",
+    "Untitled 2.md",
+    "Untitled.md",
+    "Untitled 1.md",
+    "2022-10-18.md"
+  ]
+}

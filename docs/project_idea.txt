@@ -1,0 +1,127 @@
+
+** Project Idea: HTool V3.0.0 **
+
+    0. Project Title
+
+        - How can static analysis of the XNU Kernel Cache be improved?
+        - Building a static analysis tool for iOS and macOS Firmware files,
+          focusing on the XNU kernel cache.
+
+
+    1. Introduction
+
+    2. Features and Functionality
+
+        This section covers the indended features for htool, plus any additional
+        features that could be added if time allows.
+
+        The "primary" feature are:
+            - Mach-O/Generic File Format analysis.
+            - HTool Loader
+            - Kernelcache Analysis
+                - KEXT analysis and extraction.
+                - Kernel versiob/build info.
+                - Platform info.
+            - macOS kernel analysis (kernel collections)
+            - Device databse
+            - Basic disassembler, using either capstone or LLVM.
+
+        The "additional" features would be:
+            - iBoot analysis.
+            - SEP/SEPOS analysis.
+            - Device Tree parser.
+
+        The "HTool Loader" that was written for v2.0.0 would be useful, and could
+        be extended.
+
+        2.1 Mach-O / Generic File Analysis
+
+            Mach-O[1] files are used on Apple's "Darwin" based operating systems. Where
+            ELF is the binary format for Linux, macOS, iOS and others use Mach-O files,
+            short for Mach Object Files.
+
+            The XNU kernel is a hybrid of the Mach and BSD kernels, so the Mach-O format
+            is inherited from the Mach/OSFMK kernel.
+
+            Mach-O files have a defined structure, with a header, load commands, segment
+            commands, symbol tables and linking information.
+
+            ** The Aim **
+
+            There are two aims with this feature:
+
+                - Print the Mach-O structure as a neat, human-readable, colour-coded format
+                  to the console.
+                - If the file is not a Mach-O and is, for example, an ELF, then print the
+                  format for that in the same way.
+
+            Essentially, this is a Mach-O and ELF parser.
+
+
+        2.2 HTool Loader
+
+            The "HTool Loader" is a concept for a universal binary loader and parser
+            api. It would be able to parse all the file types and formats that htool
+            will require.
+
+
+        2.3 Kernel Cache Analysis (non-macOS)
+
+            On iOS, watchOS, macOS and other Apple operating systems we have the XNU kernel
+            and then seperate "Kernel Extensions" that extend the functionality of the kernel.
+            Typically kernel extensions, or "KEXTs" might be used for platform-specific features
+            or hardware-support.
+
+            For operating systems based on iOS, so this includes watchOS, tvOS, iPadOS, BridgeOS,
+            these use a "kernelcache". The "Kernel Cache" is a file that contains both the kernel
+            and all the kernel extensions. There have been three different formats for the cache
+            which HTool would need to support.
+
+            2.3.1 Kerenlcache formats
+
+                I have previously completed some research into two of these foramts, and published
+                a blog post on my website. This can be found at [2].
+
+                2.3.1.1 Split Style
+
+                    From the first 64-bit iOS devices until iOS 12, the kernelcache used a format called
+                    "Split Style" where the kernel extensions were split from eachother and sat as
+                    complete Mach-O binaries within the kernelcache file.
+
+                    There was an XML in the __PRELINK_INFO segment that mapped out each KEXT, with its
+                    bundle identifier and file offset within the cache file.
+
+
+                2.3.1.2 Merged Style
+
+                    The "Merged Style" kernelcache was introduced in iOS 12. This format modified the
+                    __PRELINK_INFO segment and removed all information regarding the location of the 
+                    KEXTs.
+
+                    Instead, a new __PRELINK_INFO.__kmod_info section was added that contained a list
+                    of C structures based on the kmod_info structure in the XNU kernel - this defined
+                    all the kernel extensions and where they were located.
+
+                    However, the Merged style went further. All the __TEXT sections from the kexts were
+                    merged together, and all the __DATA sections were also merged together.
+
+                    Essentially, to obtain a full KEXT Mach-O, a tool would need to reconstruct the KEXT
+                    with the __TEXT and __DATA segments.
+
+
+                2.3.1.3 Fileset Style
+
+                    In iOS 16, Apple again changed the format. A new Mach-O type was introduced, called
+                    Fileset. A Mach-O Fileset is essentially a Mach-O file that contains other Mach-O's.
+
+                    The Kernelcache now has a header that identfies it as an MH_FILESET, with hundreds of
+                    LC_FILESET_ENTRY load commands that identify a bundle ID, a virtual address and file
+                    offset. All the KEXTs are listed as these fileset entries, along with the actual kernel
+                    binary - which is identified as "com.apple.kernel".
+
+
+    X. Index
+
+    X. References
+
+        [1]

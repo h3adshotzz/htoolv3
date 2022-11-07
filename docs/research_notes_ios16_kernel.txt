@@ -1,0 +1,101 @@
+** Research notes for iOS kernelcache **
+
+This document outlines all the information I have and can find on the different
+formats of iOS kernelcache, where they appear, and how they are structured.
+
+
+1. Split Style
+
+
+
+2. Merged Style
+
+    ** Supported Devices & Version **
+
+        - iPhone14.5
+            - 15.0
+
+
+3. Fileset Style
+
+    ** Supported Devices & Version **
+
+        - iPhone15,3
+            - 16.0
+        - iPhone14,7
+            - 16.0
+        - iPhone14,5
+            - 16.0
+
+
+    ** Notes **
+
+    The term "Fileset Style" is my own naming, this is not how this format is
+    commonly refered to.
+
+    There is a Mach-O Load Command, called Fileset Entry Command, with the following
+    structure:
+
+        struct fileset_entry_command {
+            uint32_t        cmd;
+            uint32_t        cmdsize;
+            uint64_t        vmaddr;
+            uint64_t        fileoff;
+            union lc_str    entry_id;
+            uint64_t        reserved;
+        };
+
+    Looking at the load commands using otool, there are two things that can be
+    observed:
+
+        1. All the segments are empty. With exception of __PRELINK_TEXT and
+           __PRELINK_INFO.
+
+        2. There are now 200+ LC_FILESET_ENTRY Load Commands in the kernelcache.
+
+    Essentially, what Apple has done is move all the Kernel extensions, and the
+    actual Kernel Mach-O binary itself, out of that Mach-O at the start of the
+    cache file and into seperate regions of the file, with each being pointed to
+    by a fileset entry.
+
+    For example, the first two entries read:
+
+        LC 11:
+            vmaddr:     0x07c5c000
+            fileoff:    0x00c58000
+            reserved:   0x00000000
+            entry_id:   com.apple.kernel
+
+        LC 12:
+            vmaddr:     0x0700c000
+            fileoff:    0x00008000
+            reserved:   0x00000000
+            entry_id:   com.apple.AGXFirmwareKextG15P_A0RTBuddy
+
+        ...
+
+    So, what we have here is the actual kernel, and the first Kernel Extension.
+    We can see that the kernel is at the offset 0x00c58000 in the file. From this
+    information in the Fileset Entry we can locate the actual kernel - i think.
+
+        ** __PRELINK_TEXT and __PRELINK_INFO **
+
+        The file offset properties in the LC_FILESET_ENTRY commands point to areas
+        within the __PRELINK_TEXT segment, meaning all the KEXTs are contained within
+        this __PRELINK_TEXT segment.
+
+        With the __PRELINK_INFO segment, this contains an XML/PLIST that describes
+        each of the KEXTs contained in __PRELINK_TEXT.
+
+
+    ** Testing **
+
+    By taking the fileset entry of com.apple.kernel, we can create a file that starts
+    with the kernels macho-o header like so:
+
+        dd if=kernelcache.release.iphone15 of=com.apple.kernel bs=1 skip=0x07c5c000
+
+    The resulting file will be the actual kernel binary. We can do this with any of
+    the other kernel extensions too and unlike the merged-style kernels, the entire
+    KEXT is present, __TEXT_EXEC and __DATA segments.
+
