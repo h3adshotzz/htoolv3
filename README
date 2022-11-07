@@ -1,0 +1,8 @@
+
+HTool Project
+=============
+
+Repository structure:
+
+    - `main` - stable branch
+    - `working` - unstable branch, commits go here first.
