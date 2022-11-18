@@ -1,0 +1,21 @@
+\subsection{Kernel Cache Format}
+
+The Kernel Cache file format is the second most important aspect of the project, behind Mach-O files. Where the Mach-O format has plenty of public documentation and knowledge, the same cannot be said for the Kernel cache. 
+
+There are two reasons for this. The first being Apple's commitment to secrecy regarding the internals of its operating systems - particular iOS. And the second being that the format is tweaked every few versions of iOS. The topic is also something that has never been the centre of attention, instead usually being something that is a small mention in articles about related topics. 
+
+Brandon Azad, formerly of Google's Project Zero, published in 2018 an article entitled "Analyzing the iOS 12 kernelcaches tagged pointers"[3]. The primary focus of this article was the introduction of a concept known as Pointer Authentication[], or PAC, in the ARMv8.3 architecture on the iPhone. A side note of his research into this was the different variants of the Kernel cache format.
+
+Azad has observed the following; "There appear to be at least 3 distinct kernelcache formats".
+
+\begin{enumerate}
+	\item iOS 11-normal: The format used on iOS 10 and iOS 11. It has split kexts, untagged pointers and around 4000 symbols.
+	\item iOS 12-normal: The format used on iOS 12 beta for iPhone9,1. It is similar to the iOS 11 kernelcache, but with some structural changes that confuse IDA 6.95.
+	\item iOS 12-merged: The format sed on iOS 12 beta for iPhone7,1. It is missing prelink segments, has merged kexts, uses tagged pointers, and, to the dismay of security researchers, is completely stripped.
+\end{enumerate}
+ 
+ This snippet from his article is extremely useful in understanding the different variants of the kernel cache. Once I begin the development of HTool I now already have a basis to work from when further researching the kernel cache format. This means my solution will be able to support as many different versions of iOS firmware files as possible. 
+ 
+ Unfortunately, however, there is zero documentation on the new kernel cache format introduced in iOS 15. The "merged-style" that Azad mentions was used from iOS 12 to iOS 14, when it was replaced with the new "fileset-style". This is something I would have to investigate myself by reverse engineering the files. The initial development of HTool as a Mach-O parser would be the first step here, as it would allow me to visualise the kernel cache mach-o and compare with older versions to see what has changed. 
+ 
+ 

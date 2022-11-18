@@ -1,0 +1,33 @@
+\documentclass{article}
+\usepackage{blindtext}
+\usepackage{multicol}
+\usepackage{babel}
+\usepackage{csquotes}
+\usepackage[style=authoryear-ibid,backend=biber]{biblatex}
+\usepackage[margin=1in]{geometry}
+
+\title{Literature Review}
+\author{Harry Moulton}
+\date{November 2022}
+
+\addbibresource{references.bib}
+
+\begin{document}
+
+\maketitle
+\begin{multicols}{2}
+
+\input{introduction}
+
+\section{Themes}
+\input{themes-macho.tex}
+\input{themes-kernelcache.tex}
+\input{themes-reverse-engineering.tex}
+
+\end{multicols}
+
+\pagebreak
+\section{References}
+\printbibliography
+
+\end{document}
