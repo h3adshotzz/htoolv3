@@ -1,13 +1,30 @@
 \subsection{iBoot}
 
-iBoot is the collective name given to the boot loader components of Apple's iOS and macOS devices. It's made up of the SecureROM, LLB, iBSS, iBEC and iBoot (or iBootStage2). These components serve different purposes, for example iBSS runs when a software updated is being performed and iBEC when the device fails to boot. LLB, short for Low Level Bootloader, used to be a separate component but has since been essentially made redundant. \cite{find-reference}.
+% how the theme is relevant to your problem
+
+iBoot is the collective name given to the boot loader components of Apple's iOS and macOS devices\cite{levin-newosxbook-iboot}. It is made up collectively of the SecureROM, LLB, iBSS, iBEC and iBoot (or iBootStage2). These components serve different purposes; iBSS runs when the device is being updated, iBEC when it fails to boot, and LLB has been made redundant in recent versions. iBootStage2, or as its primarily known "iBoot" is the main boot loader.
 
 The SecureROM is the most secretive component on an iOS/macOS device. It's a piece of software that is burned into the CPU, or Application Processor as Apple refers to it, during manufacturing. It cannot be modified. This means that if a security vulnerability is found it cannot be fixed without a CPU design revision.
 
-This makes bugs in the SecureROM particularly sought after. However, it is not possible to obtain the SecureROM's code without first either having a vulnerability in the SecureROM itself, or one in iBoot that allow for code execution to dump memory. 
+Bugs in the SecureROM and iBoot are particularly sought after due to the significant control they have over the device. Some SecureROM binaries have been posted online, primarily on a website known as securerom.fun, and iBoot binaries are regularly decrypted and posted online too. Therefore, supporting these binaries is required. 
 
-This leads us on to iBoot. The SecureROMs job is to load and decrypt iBoot into memory and jump to it, with iBoot then loading and decompressing the kernel. The iBoot firmware image does not just contain iBoot - it contains firmware for other device components such as the storage controller and power management. \cite{rasegen-github}
 
-As well as this, iBoot is a very complex piece of software. Jonathan Levin mentions in his book "NewOSXBook" how the Relocation Loop works where iBoot "starts with a relocation loop to move the image to a specific virtual address". \cite{levin-newosxbook-iboot}. 
+% a comparison of the findings from the sources relevant to your problem
 
-Providing one has obtained decryption keys for an iBoot binary being able to determine what embedded firmwares are present and being able to split them up into separate files is a necessary feature of any reverse engineering tool. A security researcher who goes by the name "B1n4r1B01" demonstrated this in a Tweet \cite{binaryboy-iboot-tweet} showing how iBoot has a number of embedded firmwares. He also released this tool on Github with some further documentation \cite{rasegen-github}, however it has not been updated in a few years so it is possible newer versions of iBoot are different.
+As documented by a security researcher known as "B1n4r1b01", iBoot has several embedded firmwares as well as the actual iBoot binary. There is not a well-defined structure like there is with the Kernel Cache, instead it appears they're just appended one after the other. B1n4r1b01 demonstrates this in a Tweet where he shows off a tool he developed for detecting these embedded binaries\cite{binaryboy-iboot-tweet}.
+
+He adds some further documentation on the Github page for the tool - Rasegen. He details the different firmwares, such as storage and power management, as well as the devices that they are found on. This tool though has not been updated in a few years and it is possible that either the format has changed, or additional firmwares have been added. 
+
+Jonathan Levin, another security researcher who previously focused on iOS, and then moved onto Android, and happens to be the author of JTool, has written multiple books on the topic of Apple platform security. His book, "*OS Internals: Volume II", covers in detail iBoot \cite{levin-newosxbook-iboot} , it's function and how it works. Importantly, he discusses the first code that iBoot runs and how it essentially relocates itself in memory. 
+
+
+
+% what you learnt collectively from these sources
+
+These two sources have been useful in detailing the inner-workings of iBoot and SecureROM and help form a basis to what will be a feature of HTool that is able to analyse these files, determine the version, device and any other useful information (for iBoot, finding the relocation loop for example).
+
+While B1n4r1b01's research into embedded firmwares in iBoot is useful for understanding the structure of the files, Levin's book's offer a level of detail that isn't matched by anyone else.
+
+% how the findings have influenced your initial solutions
+
+
