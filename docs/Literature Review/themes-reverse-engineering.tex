@@ -1,5 +1,35 @@
 \subsection{Reverse Engineering}
 
-\blindtext
+Reverse Engineering is the primary method of finding software bugs and vulnerabilities on Apple platforms. While other techniques are used, such as code auditing, it would be difficult to discover, document and develop a proof-of-concept for a security bug without any reverse engineering.
 
-this is a test \cite{instruction}
+What does this mean in the context of the HTool project? While this project could never hope to imitate the functionality of applications like IDA64, which are full professional reverse engineering and decompilation tools, HTool needs to be able to match the functionality of both JTool and objdump. What these two applications allow is for the disassembly of provided binaries.
+
+For example, one wants to disassemble the code in an iOS kernel binary between two addresses, a tool named objdump that is shipped with the Xcode Developer Tools can be invoked like so:
+
+\begin{verbatim}
+$ objdump -D kcache-iphone14-5-ios15.arm64 
+  --start-address=0xfffffff008310128 
+  --stop-address=0xfffffff008310158
+	
+Disassembly of section __TEXT_EXEC,__text:
+
+fffffff007ba4000 <__text>:
+fffffff008310128:  	adrp	x0, 0xfffffff009e14000
+fffffff00831012c:  	add	x0, x0, #0
+fffffff008310130:  	add	x0, x0, x22
+fffffff008310134:  	sub	x0, x0, x23
+fffffff008310138:  	bl	0xfffffff00831d67c
+fffffff00831013c:  	mov	sp, x0
+fffffff008310140:  	adrp	x0, 0xfffffff009e0c000
+fffffff008310144:  	add	x0, x0, #0
+fffffff008310148:  	add	x0, x0, x22
+fffffff00831014c:  	sub	x0, x0, x23
+fffffff008310150:  	msr	SPSel, #0
+fffffff008310154:  	mov	sp, x0
+\end{verbatim}
+
+There are two possible options for implementing this kind of functionality. Option 1 would be to develop and implement a completely new and custom disassembly framework, something that is a significant challenge and would require extensive knowledge of the ARM architecture and the ARM reference manual \cite{}.
+
+The second option would be to make use of an existing framework such as Capstone Engine. 
+
+< check and come back to this >

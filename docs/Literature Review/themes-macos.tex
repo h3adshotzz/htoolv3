@@ -1,0 +1,11 @@
+\subsection{macOS Differences}
+
+macOS has typically been very different to that of iOS and other mobile operating systems. It did not have a Kernel Cache, instead it shipped a plain Mach-O Kernel binary, and separate Kernel Extensions split into user and kernel land \cite{apple-system-kernel-macos}.
+
+However since the introduction of the T2 security co-processor, codenamed iBridge, macOS has gradually moved towards the security model of iOS. Pepijn Bruienne undertook a deep-dive into this new chip in his paper from 2018\cite{duo-labs-t2-intro}. iBridge used the same A10 processor as the iPhone 7, and ran a slimmed-down version of watchOS, which Apple named BridgeOS.
+
+Because this new chips primary function was security, and the new Secure Boot architecture on Mac's, this obviously became a target for security researchers. However, because the system is similar to that of watchOS it doesn't require any additional functionality to be analysed - in theory a tool developed for iOS firmware analysis would work just fine for BridgeOS.
+
+Where things begin to change is the introduction of ARM-based "Apple Silicon" machines. These machines had a vastly different security architecture. No more third party kernel extensions, and macOS now used a Kernel Cache too, helpfully with its own strange proprietary format. 
+
+< discuss https://news.ycombinator.com/item?id=26113488, find info on macOS kernel collections >

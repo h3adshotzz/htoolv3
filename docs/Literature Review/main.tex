@@ -3,7 +3,7 @@
 \usepackage{multicol}
 \usepackage{babel}
 \usepackage{csquotes}
-\usepackage[style=authoryear-ibid,backend=biber]{biblatex}
+\usepackage[style=numeric,backend=biber]{biblatex}
 \usepackage[margin=1in]{geometry}
 
 \title{Literature Review}
@@ -22,12 +22,13 @@
 \section{Themes}
 \input{themes-macho.tex}
 \input{themes-kernelcache.tex}
+\input{themes-iboot.tex}
+\input{themes-macos.tex}
+%\input{themes-other-firmware-files.tex}
 \input{themes-reverse-engineering.tex}
 
 \end{multicols}
 
 \pagebreak
-\section{References}
 \printbibliography
-
 \end{document}

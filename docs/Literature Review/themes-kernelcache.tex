@@ -1,12 +1,20 @@
-\subsection{Kernel Cache Format}
+\subsection{Kernel Cache}
 
-The Kernel Cache file format is the second most important aspect of the project, behind Mach-O files. Where the Mach-O format has plenty of public documentation and knowledge, the same cannot be said for the Kernel cache. 
+The "Kernel Cache" is one of the firmware files found on an iOS, and now macOS with the introduction of the T2 security co-processor and ARM-based CPUs. The Kernel Cache is a combination of the XNU kernel binary and the "Kernel Extensions", or KEXTs, required for each device.\cite{kcache-iphonewiki}
 
-There are two reasons for this. The first being Apple's commitment to secrecy regarding the internals of its operating systems - particular iOS. And the second being that the format is tweaked every few versions of iOS. The topic is also something that has never been the centre of attention, instead usually being something that is a small mention in articles about related topics. 
+The XNU kernel and its associated KEXTs are the source of the vast majority of iOS and macOS security vulnerabilities. However the file format is proprietary and often depends on the device or iOS version. Different iOS devices and versions also have different security mitigations/features. 
 
-Brandon Azad, formerly of Google's Project Zero, published in 2018 an article entitled "Analyzing the iOS 12 kernelcaches tagged pointers"[3]. The primary focus of this article was the introduction of a concept known as Pointer Authentication[], or PAC, in the ARMv8.3 architecture on the iPhone. A side note of his research into this was the different variants of the Kernel cache format.
+\subsubsection{File format}
 
-Azad has observed the following; "There appear to be at least 3 distinct kernelcache formats".
+Being able to understand the kernel cache is the second most important feature of the project besides understanding Mach-O files. The KEXTs and the kernel binary itself are all Mach-O files, and the actual kernel cache is also a Mach-O - essentially the kernel cache is a collection of Mach-O's embedded in a Mach-O.\cite{find-reference}.
+
+Where Mach-O's have extensive public documentation, the Kernel Cache does not. There are two possible reasons for this. The first, Apple's commitment to "Security through Obscurity"\cite{security-through-obscurity}, the belief that if they keep much of the platform a secret its less likely that security vulnerabilities will be found. The second being the fact that the format is tweaked every few iOS versions.
+
+The topic of the caches format is not something that has ever been the centre of attention, instead typically being something that is a small mention in related research.
+
+For example, Brandon Azad - formerly of Google's Project Zero security research team - published in 2018 an article entitled "Analyzing the iOS 12 kernel caches tagged pointers"\cite{azad-tagged-pointers}. The primary focus of this article was the introduction of Pointer Authentication\cite{rutland-pac-slides} with the ARMv8.3 architecture into that years iPhones. A side note of this research was Azad noticing a significant difference of the kernel cache format between older devices and the new ARMv8.3 devices. 
+
+Azad observed the following; "There appear to be at least 3 distinct kernelcache formats".
 
 \begin{enumerate}
 	\item iOS 11-normal: The format used on iOS 10 and iOS 11. It has split kexts, untagged pointers and around 4000 symbols.
@@ -14,8 +22,35 @@ Azad has observed the following; "There appear to be at least 3 distinct kernelc
 	\item iOS 12-merged: The format sed on iOS 12 beta for iPhone7,1. It is missing prelink segments, has merged kexts, uses tagged pointers, and, to the dismay of security researchers, is completely stripped.
 \end{enumerate}
  
- This snippet from his article is extremely useful in understanding the different variants of the kernel cache. Once I begin the development of HTool I now already have a basis to work from when further researching the kernel cache format. This means my solution will be able to support as many different versions of iOS firmware files as possible. 
+ This snippet from his research article is particularly useful. For the project to truly be a solution to the problem it needs to, at the very least, support all 64-bit variants of the kernel cache. This snippet gives us a basis for understanding three of these variants. 
  
- Unfortunately, however, there is zero documentation on the new kernel cache format introduced in iOS 15. The "merged-style" that Azad mentions was used from iOS 12 to iOS 14, when it was replaced with the new "fileset-style". This is something I would have to investigate myself by reverse engineering the files. The initial development of HTool as a Mach-O parser would be the first step here, as it would allow me to visualise the kernel cache mach-o and compare with older versions to see what has changed. 
+ Kernel caches from iOS versions earlier than iOS 11, and newer than iOS 12 will need further investigation. 
+ 
+ Unfortunately there is no documentation on the kernel cache format introduced in iOS 15. The "merged-style" format that Azad mentions is introduced in iOS 12 has been replaced with the new "fileset-style". This is an area I would have to investigate and research during the development of the project. The initial development of HTool's Mach-O parser would significantly help this effort, as I would be able to analyse the different code segments and observe where the KEXTs are placed. 
+
+ 
+ \subsubsection{Security features}
+ 
+ As well as being able to detect and handle the different formats of Kernel Cache, HTool will also need to be able to detect and handle different security features, as well as disassemble the binaries. 
+ 
+ One example would be Pointer Authentication. Brandon Azad has also written an in-depth article on the PAC implementation on iPhone XS\cite{azad-pac-indepth}. Azad noticed five different types of tagged pointers, and created a formula for calculating where a pointer starts relative to a PAC tag:
+ 
+ \[ A + ((P >> 49) & ~0x3) \]
+ 
+ Another example would be Kernel Patch Protection. This is covered by Sijun Chu and Hao Wu in their "Research on Offense and Defense Technology for iOS Kernel Security Mechanism"\cite{sijun-kernel-paper} research paper published in 2018, and by well-known security researcher Luca Todesco (aka Qwertyoruiop) in many of his conference presentations. Although this is a security mechanism that is no longer used in modern versions of iOS, it is still a goal to have the project support analysis of different security mechanisms across a range of iOS versions.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
  
  

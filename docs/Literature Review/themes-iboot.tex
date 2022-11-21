@@ -1,0 +1,13 @@
+\subsection{iBoot}
+
+iBoot is the collective name given to the boot loader components of Apple's iOS and macOS devices. It's made up of the SecureROM, LLB, iBSS, iBEC and iBoot (or iBootStage2). These components serve different purposes, for example iBSS runs when a software updated is being performed and iBEC when the device fails to boot. LLB, short for Low Level Bootloader, used to be a separate component but has since been essentially made redundant. \cite{find-reference}.
+
+The SecureROM is the most secretive component on an iOS/macOS device. It's a piece of software that is burned into the CPU, or Application Processor as Apple refers to it, during manufacturing. It cannot be modified. This means that if a security vulnerability is found it cannot be fixed without a CPU design revision.
+
+This makes bugs in the SecureROM particularly sought after. However, it is not possible to obtain the SecureROM's code without first either having a vulnerability in the SecureROM itself, or one in iBoot that allow for code execution to dump memory. 
+
+This leads us on to iBoot. The SecureROMs job is to load and decrypt iBoot into memory and jump to it, with iBoot then loading and decompressing the kernel. The iBoot firmware image does not just contain iBoot - it contains firmware for other device components such as the storage controller and power management. \cite{rasegen-github}
+
+As well as this, iBoot is a very complex piece of software. Jonathan Levin mentions in his book "NewOSXBook" how the Relocation Loop works where iBoot "starts with a relocation loop to move the image to a specific virtual address". \cite{levin-newosxbook-iboot}. 
+
+Providing one has obtained decryption keys for an iBoot binary being able to determine what embedded firmwares are present and being able to split them up into separate files is a necessary feature of any reverse engineering tool. A security researcher who goes by the name "B1n4r1B01" demonstrated this in a Tweet \cite{binaryboy-iboot-tweet} showing how iBoot has a number of embedded firmwares. He also released this tool on Github with some further documentation \cite{rasegen-github}, however it has not been updated in a few years so it is possible newer versions of iBoot are different.
