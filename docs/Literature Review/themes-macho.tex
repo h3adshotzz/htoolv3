@@ -1,11 +1,39 @@
 \subsection{Mach-O File Format}
 
-Handling Mach-O files is a primary requirement of this project. All iOS and macOS applications are compiled as Mach-O executables and the XNU kernel is also compiled as a Mach-O. Essentially any executable code from the Kernel up will use Mach-O. This means that handling this file format is the first functionality that would need to be implemented into any solution.
+% how the theme is relevant to your problem
 
-In early 2020 I began developing a C library called libhelper\cite{github-libhelper} for working with strings, lists, compression, files, Apple's Image4 format and the Mach-O executable file format. The library provides APIs for working with Mach-O files and allow for a binary to be translated into a C structure that can then be used throughout a client program. While the API does provide a Mach-O parser, much is needed to be built on-top of it for the program to meet the specified requirement - and an understanding of the file format is required too. 
+Parsing Mach-O files is a primary requirement of this project. All iOS and macOS applications are compiled as Mach-O executables and the XNU kernel is also compiled as a Mach-O. Essentially any executable code from the Kernel up will use Mach-O. This means that handling this file format is the first functionality that would need to be implemented into any solution.
 
-I briefly cover the basics of the Mach-O format in an article I wrote on my blog[1]. I cover the Mach-O header, load commands and segment commands, and how these can be handled in C. However, the article doesn't act as a user guide for libhelper, nor does it cover some other aspects of Mach-O files such as the different types, code signing and entitlements as it was only meant to be a quick-to-read introduction.
 
-An article published by Scott Lester, however, does mention these areas in far greater detail. His blog post "A look at Apple Executable Files"\cite{lester-macho} covers the file format in much greater detail. More importantly, Lester discusses how code signing and entitlement information is embedded into segment commands - again something Libhelper currently does not have support for. In the past only iOS binaries required code signing, but in more recent versions of macOS it's become something of a soft-requirement and therefore will be an important feature of any application that claims to be able to analyse Mach-O files. These missing features could either be implemented within libhelper directly, or built on-top as part of HTool.
+% a comparison of the findings from the sources relevant to your problem
 
-Lester's article is more useful in the context of the problem as it covers both the Mach-O format in far greater detail than anyone with exception of Apple's developer documentation, and discusses aspects such as code signing and entitlements. While my own article does introduce libhelper, which will be extensively used in HTool, I do not go into sufficient detail in the article regarding the file format.
+%% Libhelper
+
+In 2020 I developed an open-source library called The Libhelper Project\cite{github-libhelper} written in C. This library provided APIs for working with strings, lists, compression, file handling, Apple's Image4 format and Mach-O files. With regards to Mach-O files, the library takes a given file and translates this into a C structure - however it does not do any further analysis of the files. To make use of the parsed file an application, such as HTool, would build on top of this API to provide the required functionality to match that of existing solutions.
+
+%% Scott Lester Mach-O analysis
+
+An article published by Scott Lester analyses Mach-O files in significant detail. His blog post "A look at Apple Executable Files"\cite{lester-macho} covers the basis of Mach-O files like the header, load commands and segment commands, however he also explores more complex aspects such as how code-signing is embedded in special segment commands - something libhelper does not support and would need to be implemented in HTool.
+
+%% My own analysis
+
+I briefly cover the basics of the Mach-O format in an article I wrote on my blog\cite{moulton-macho}. I cover the Mach-O header, load commands and segment commands, and how these can be handled in C. However, the article doesn't act as a user guide for libhelper, nor does it cover some other aspects of Mach-O files such as the different types, code signing and entitlements as it was only meant to be a quick-to-read introduction.
+
+
+% what you learnt collectively from these sources
+
+Lester's article is more useful in the context of the problem as it covers both the Mach-O format in far greater detail than anyone with exception of Apple's developer documentation, and discusses aspects such as code signing and entitlements - this is especially important information as code-signing is something I am not overly familiar with but will need to implement support for in HTool.
+
+While my own article does introduce libhelper, which will be extensively used in HTool, I do not go into sufficient detail in the article regarding the file format.
+
+% how the findings have influenced your initial solutions
+
+My findings from Lester's article have influenced my initial solution as I now have a basic understanding of code-signing and entitlements in the context of Mach-O files, and therefore have a basis to implement support for these into the solution. As JTool already has support for these it will be an important feature to ensure HTool can match JTool's functionality.
+
+
+
+%In early 2020 I began developing a C library called libhelper\cite{github-libhelper} for working with strings, lists, compression, files, Apple's Image4 format and the Mach-O executable file format. The library provides APIs for working with Mach-O files and allow for a binary to be translated into a C structure that can then be used throughout a client program. While the API does provide a Mach-O parser, much is needed to be built on-top of it for the program to meet the specified requirement - and an understanding of the file format is required too. 
+
+%I briefly cover the basics of the Mach-O format in an article I wrote on my blog[1]. I cover the Mach-O header, load commands and segment commands, and how these can be handled in C. However, the article doesn't act as a user guide for libhelper, nor does it cover some other aspects of Mach-O files such as the different types, code signing and entitlements as it was only meant to be a quick-to-read introduction.
+
+%An article published by Scott Lester, however, does mention these areas in far greater detail. His blog post "A look at Apple Executable Files"\cite{lester-macho} covers the file format in much greater detail. More importantly, Lester discusses how code signing and entitlement information is embedded into segment commands - again something Libhelper currently does not have support for. In the past only iOS binaries required code signing, but in more recent versions of macOS it's become something of a soft-requirement and therefore will be an important feature of any application that claims to be able to analyse Mach-O files. These missing features could either be implemented within libhelper directly, or built on-top as part of HTool.

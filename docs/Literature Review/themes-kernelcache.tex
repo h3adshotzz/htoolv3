@@ -1,5 +1,33 @@
 \subsection{Kernel Cache}
 
+% how the theme is relevant to your problem
+
+The "Kernel Cache" is a firmware file found on iOS, and now macOS with the introduction of the T2 security co-processor and ARM-based CPUs. The kernel cache is a combination of the XNU kernel binary and a collection of "Kernel Extensions". These kernel extensions are typically used for device-specific functionality, like storage or power management, with most common code found in the XNU kernel.
+
+
+% a comparison of the findings from the sources relevant to your problem
+
+\subsubsection{Cache File Format}
+
+%% iPhone Wiki
+
+%% Brandon Azad tagged pointers
+
+%% NewOSXBook ?? 
+
+
+\subsubsection{Security features}
+
+
+% what you learnt collectively from these sources
+
+% how the findings have influenced your initial solutions
+
+
+
+
+
+
 The "Kernel Cache" is one of the firmware files found on an iOS, and now macOS with the introduction of the T2 security co-processor and ARM-based CPUs. The Kernel Cache is a combination of the XNU kernel binary and the "Kernel Extensions", or KEXTs, required for each device.\cite{kcache-iphonewiki}
 
 The XNU kernel and its associated KEXTs are the source of the vast majority of iOS and macOS security vulnerabilities. However the file format is proprietary and often depends on the device or iOS version. Different iOS devices and versions also have different security mitigations/features. 
@@ -33,9 +61,13 @@ Azad observed the following; "There appear to be at least 3 distinct kernelcache
  
  As well as being able to detect and handle the different formats of Kernel Cache, HTool will also need to be able to detect and handle different security features, as well as disassemble the binaries. 
  
- One example would be Pointer Authentication. Brandon Azad has also written an in-depth article on the PAC implementation on iPhone XS\cite{azad-pac-indepth}. Azad noticed five different types of tagged pointers, and created a formula for calculating where a pointer starts relative to a PAC tag:
+ One example would be Pointer Authentication. Brandon Azad has also written an in-depth article on the PAC implementation on iPhone XS\cite{azad-pac-indepth}. Azad noticed five different types of tagged pointers, and created a formula for calculating where a pointer starts relative to a PAC tag. 
  
- \[ A + ((P >> 49) & ~0x3) \]
+ Where \textbf{P} is a tagged pointer, and \textbf{A} is the address of that tagged pointer:
+ 
+ \begin{verbatim}
+ 	A + ((P >> 49) & ~0x3)
+ \end{verbatim}
  
  Another example would be Kernel Patch Protection. This is covered by Sijun Chu and Hao Wu in their "Research on Offense and Defense Technology for iOS Kernel Security Mechanism"\cite{sijun-kernel-paper} research paper published in 2018, and by well-known security researcher Luca Todesco (aka Qwertyoruiop) in many of his conference presentations. Although this is a security mechanism that is no longer used in modern versions of iOS, it is still a goal to have the project support analysis of different security mechanisms across a range of iOS versions.
  
