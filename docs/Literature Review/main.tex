@@ -3,7 +3,7 @@
 \usepackage{multicol}
 \usepackage{babel}
 \usepackage{csquotes}
-\usepackage[style=numeric,backend=biber]{biblatex}
+\usepackage[style=authoryear,backend=biber]{biblatex}
 \usepackage[margin=1in]{geometry}
 
 \title{Literature Review}
@@ -23,21 +23,16 @@
 \input{themes-macho.tex}
 \input{themes-kernelcache.tex}
 \input{themes-iboot.tex}
+\input{themes-macos.tex}
 
-\input{themes-macos-and-reverse-engineering.tex}
 \input{themes-existing-solutions.tex}
 
 \input{summary}
-
-% rewrite
-\input{themes-macos.tex}
-\input{themes-reverse-engineering.tex}
-
-% add a section discussing existing solutions and why there needs to be a new one.
-% table of comparison of existing solutions, why this solution is better than existing solutions.
 
 \end{multicols}
 
 \pagebreak
 \printbibliography
+%\input{references.tex}
+
 \end{document}

@@ -1,10 +1,16 @@
 \subsection{Reverse Engineering}
 
-Reverse Engineering is the primary method of finding software bugs and vulnerabilities on Apple platforms. While other techniques are used, such as code auditing, it would be difficult to discover, document and develop a proof-of-concept for a security bug without any reverse engineering.
+% how the theme is relevant to your problem
 
-What does this mean in the context of the HTool project? While this project could never hope to imitate the functionality of applications like IDA64, which are full professional reverse engineering and decompilation tools, HTool needs to be able to match the functionality of both JTool and objdump. What these two applications allow is for the disassembly of provided binaries.
+Reverse Engineering is an important technique for discovering security vulnerabilities in systems. While other techniques can be used, such as simply auditing the open-source components of the XNU kernel, its unlikely any vulnerabilities would be discovered without any reverse engineering. 
 
-For example, one wants to disassemble the code in an iOS kernel binary between two addresses, a tool named objdump that is shipped with the Xcode Developer Tools can be invoked like so:
+%\cite{https://www.techtarget.com/searchsoftwarequality/definition/reverse-engineering#:~:text=Reverse%2Dengineering%20is%20often%20used,in%20microprocessors%20using%20reverse%2Dengineering.}
+
+There are already tools available for large reverse engineering efforts, such as attempting to work out how a new kernel extension works - this is where expensive programs like IDA64 are useful, they can analyse, disassemble and decompile entire binaries. However, it is not efficient to load a binary into IDA, especially large ones, just to check a few instructions at a particular address. 
+
+For this use case, having quick command line tools that can disassemble code at a given address is useful. This feature is available in JTool and provided by the developer tool objdump - therefore adding this into HTool would be ideal.
+
+A real-world example of the usefulness of these tools would be the following, where I needed to compare some code from the open-source XNU kernel and a recently-shipped kernel on iOS. I used objdump by specifying the file name, a start address and stop address. The output was the following:
 
 \begin{verbatim}
 $ objdump -D kcache-iphone14-5-ios15.arm64 
@@ -30,6 +36,22 @@ fffffff008310154:  	mov	sp, x0
 
 There are two possible options for implementing this kind of functionality. Option 1 would be to develop and implement a completely new and custom disassembly framework, something that is a significant challenge and would require extensive knowledge of the ARM architecture and the ARM reference manual \cite{}.
 
-The second option would be to make use of an existing framework such as Capstone Engine. 
+The second option would be to make use of an existing framework such as Capstone Engine.
 
-< check and come back to this >
+% a comparison of the findings from the sources relevant to your problem
+
+
+% what you learnt collectively from these sources
+
+
+% how the findings have influenced your initial solutions
+
+
+
+
+
+https://www.techtarget.com/searchsoftwarequality/definition/reverse-engineering#:~:text=Reverse%2Dengineering%20is%20often%20used,in%20microprocessors%20using%20reverse%2Dengineering.
+
+
+
+

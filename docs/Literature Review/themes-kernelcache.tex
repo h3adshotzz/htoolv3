@@ -2,21 +2,23 @@
 
 % how the theme is relevant to your problem
 
-The "Kernel Cache" is a firmware file found on iOS, and now macOS with the introduction of the T2 security co-processor and ARM-based CPUs. The kernel cache is a combination of the XNU kernel binary and a collection of "Kernel Extensions". These kernel extensions are typically used for device-specific functionality, like storage or power management, with most common code found in the XNU kernel.
+The "Kernel Cache" is a firmware file found on iOS, and now macOS with the introduction of the T2 security co-processor and ARM-based CPUs. (\cite{esser-hackers-handbook} page 249, \cite{levin-os-internals-vol3} page 470) The kernel cache is a combination of the XNU kernel binary and a collection of "Kernel Extensions". These kernel extensions are typically used for device-specific functionality, like storage or power management, with most common code found in the XNU kernel. (\cite{esser-hackers-handbook}, page 249)
 
 
 % a comparison of the findings from the sources relevant to your problem
 
-The kernel is the primary source of discovered security vulnerabilities, so support and understanding of the kernel format is vital for this project. Where Mach-O's have extensive public documentation, there is a lack of in-depth research into the format of the kernel. There are two possible reasons for this, the first being Apple's commitment to "Security through Obscurity"\cite{security-through-obscurity}, the belief that if they keep as much of the platform a secret it is less likely that security vulnerabilities will be found. The second being the fact the format is tweaked every few versions of iOS.
+The Kernel (including kernel extensions/drivers) is the source of most vulnerabilities on Apple platforms, as can be seen from the iOS 16 Security Updates (\cite{apple-ios16-security-content}). Therefore, support and understanding of the kernel format is vital for this project. 
+% https://support.apple.com/en-gb/HT213489
+
+Where Mach-O's have extensive public documentation, there is a lack of in-depth research into the format of the kernel. There are two possible reasons for this, the first being Apple's commitment to "Security through Obscurity" (\cite{security-through-obscurity}), the belief that if they keep as much of the platform a secret it is less likely that security vulnerabilities will be found. The second being the fact the format is tweaked every few versions of iOS.
 
 The topic of the caches format has not been something that has been the centre of attention, instead it is typically a side note in some related research.
 
-
 %% Brandon Azad tagged pointers
 
-Brandon Azad, formerly of Google's Project Zero security research team, published in 2018 an article analysing a new security feature introduced in iOS 12 entitled "Analysing the iOS 12 kernel caches tagged pointers"\cite{azad-tagged-pointers}. The primary focus of the article was to explore the introduction of the ARMv8.3 architecture and it associated Pointer Authentication\cite{rutland-pac-slides} extension, or PAC. A side note of his research into PAC was that he noticed the change in format between iOS 12 and iOS 11, particularly that certain segments such as \_\_TEXT and \_\_TEXT\_EXEC, which hold executable code, are now larger, whereas \_\_PRELINK\_INFO was missing some XML data that was used as a map to determine where KEXTs resided in the cache. 
+Brandon Azad, formerly of Google's Project Zero security research team, published in 2018 an article entitled "Analysing the iOS 12 kernel caches tagged pointers" (\cite{azad-tagged-pointers}). The primary focus of the article was to explore the introduction of the ARMv8.3 architecture and it associated Pointer Authentication (\cite{rutland-pac-slides}) extension, or PAC. A side note of his research was that he noticed a change in the format of the kernel cache between iOS 12 and iOS 11, particularly that certain segments such as \_\_TEXT and \_\_TEXT\_EXEC, which hold executable code, are now larger, whereas \_\_PRELINK\_INFO was missing some XML data that was used as a map to determine where KEXTs resided in the cache. 
 
-Azad observed the following: "There appear to be at least 3 distinct kernel cache formats". The three formats he has observed are:
+Azad observed that: "There appear to be at least 3 distinct kernel cache formats" (\cite{azad-tagged-pointers}). The three formats being:
 
 \begin{enumerate}
 	\item iOS 11: Format used on iOS 10 and 11. It uses a split-kext style, untagged pointers and has a few thousand symbols.
@@ -27,24 +29,26 @@ Azad observed the following: "There appear to be at least 3 distinct kernel cach
 
 %% security mitigations
 
-Along with support for the different formats of the kernel cache, HTool will need to be able to detect any known and identifiable security mitigations. One example would be pointer authentication. Brandon Azad authored an additional piece of pointer authentication, focusing more specifically on the iPhone XS\cite{azad-pac-indepth}.
+Along with support for the various different formats of the kernel cache, HTool ideally should able to detect any known and identifiable security mitigations. One example would be pointer authentication. Brandon Azad authored an additional article on pointer authentication "Examining Pointer Authentication on the iPhone XS", focusing more specifically on the iPhone XS (\cite{azad-pac-indepth}).
 
-However, Azad's first article on PAC demonstrates an interesting concept for an analysis tool - observing the types of pointer tagging, what segments they occur in, and how often. Azad noticed five different types of tagged pointers, and created a formula for calculating where a pointer starts relative to a PAC tag. 
- 
- Where \textbf{P} is a tagged pointer, and \textbf{A} is the address of that tagged pointer:
- 
+Azad demonstrated a script for detecting the different types of pointer tagging used, and which areas of the code they were used. This concept could possibly be a useful feature of HTool. He also created a formula for calculating where a pointer starts relative to a tag, where \textbf{P} is the tagged pointer, and \textbf{A} is the address of that tagged pointer:
+
  \begin{verbatim}
  	A + ((P >> 49) & ~0x3)
  \end{verbatim}
  
-  Another example would be Kernel Patch Protection. This is covered by Sijun Chu and Hao Wu in their "Research on Offense and Defense Technology for iOS Kernel Security Mechanism"\cite{sijun-kernel-paper} research paper published in 2018, and by well-known security researcher Luca Todesco (aka Qwertyoruiop) in many of his conference presentations. Although this is a security mechanism that is no longer used in modern versions of iOS, it is still a goal to have the project support analysis of different security mechanisms across a range of iOS versions.
+ A further example would be Kernel Patch Protection. Sijun Chu and Hao Wu cover this in their paper "Research on Offense and Defense Technology for iOS Kernel Security Mechanism" (\cite{sijun-kernel-paper}) published in 2018. Security researcher Xerub, of Dataflow Security, also authored an in-depth technical writeup of how KPP works (\cite{xerub-tick-tock}). Although this is a security mechanism that is no longer used in modern versions of iOS, it is still a goal to have the project support analysis of different security mechanisms across a range of iOS versions.
  
 
 % what you learnt collectively from these sources
-
-Azad's research was particularly useful as it details three existing kernel cache formats, leaving only pre-iOS 10 and post-iOS 12 for me to investigate myself. Unfortunately there is no documentation on the kernel cache format introduced in iOS 15. The "merged-style" format that Azad mentions is introduced in iOS 12 has been replaced with a new "fileset-style". Again, this is an area that I would have to investigate myself. The initial development of HTool's Mach-O parser would be useful here as I could analyse the changes in the segments between the different iOS versions.
-
 % how the findings have influenced your initial solutions
+
+The two articles written by Brandon Azad (\cite{azad-tagged-pointers}, \cite{azad-pac-indepth}) were useful as he details three existing kernel cache formats and the versions they were used in, as well as some technical details of Apple's implementation of Pointer Authentication.
+
+Unfortunately there is currently no documentation on the other Kernel Cache formats, leaving pre-iOS 10 and post-iOS 12 formats for me to investigate myself as part of this project. The "merged style" format (\cite{azad-tagged-pointers}) that Azad mentions is introduced in iOS 12 has been replaced with a new "fileset style" in iOS 15, and further tweaked in iOS 16. The initial development of HTool as a Mach-O parser would be useful here, as analysing segments such as \_\_PRELINK\_INFO where KEXT information is kept is required to understand any changes made between versions.
+
+Chu and Wu's paper, along with Xerub's article, were also useful for understanding Kernel Patch Protection. Xerub's writeup in particular is helpful in gaining an understanding as to whether implementing an algorithm for detecting KPP is both useful and feasible - something that will require further practical research, i.e. reverse engineering iOS 9 Kernel's myself. 
+
 
 
 

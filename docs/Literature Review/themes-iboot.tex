@@ -2,29 +2,26 @@
 
 % how the theme is relevant to your problem
 
-iBoot is the collective name given to the boot loader components of Apple's iOS and macOS devices\cite{levin-newosxbook-iboot}. It is made up collectively of the SecureROM, LLB, iBSS, iBEC and iBoot (or iBootStage2). These components serve different purposes; iBSS runs when the device is being updated, iBEC when it fails to boot, and LLB has been made redundant in recent versions. iBootStage2, or as its primarily known "iBoot" is the main boot loader.
+iBoot is the collective name given to the boot loader components of Apple's iOS and macOS devices. It is made up collectively of the SecureROM, LLB, iBSS, iBEC and iBoot (or iBootStage2). These components serve different purposes; iBSS runs when the device is being updated, iBEC when it fails to boot, and LLB has been made redundant in recent versions. iBootStage2, or as its primarily known "iBoot" is the main boot loader. (\cite{levin-os-internals-vol2-iboot})
 
-The SecureROM is the most secretive component on an iOS/macOS device. It's a piece of software that is burned into the CPU, or Application Processor as Apple refers to it, during manufacturing. It cannot be modified. This means that if a security vulnerability is found it cannot be fixed without a CPU design revision.
+The SecureROM is the most secure component of an iOS/macOS device. It's a piece of software that is burned into the CPU, or Application Processor as Apple refers to it, during manufacturing. It cannot be modified. This means that if a security vulnerability is found it is extremely powerful and cannot be fixed without a CPU design revision. (\cite{esser-hackers-handbook}, Page 300)
 
-Bugs in the SecureROM and iBoot are particularly sought after due to the significant control they have over the device. Some SecureROM binaries have been posted online, primarily on a website known as securerom.fun, and iBoot binaries are regularly decrypted and posted online too. Therefore, supporting these binaries is required. 
+Bugs in the SecureROM and iBoot are particularly sought after due to the significant control they have over the device. Some SecureROM binaries have been posted online, primarily on the website securerom.fun, and iBoot binaries are regularly decrypted and posted online too. Therefore, supporting these binaries is required. iBoot exploits, while patchable, are almost as powerful as SecureROM exploits. (\cite{esser-hackers-handbook}, Page 300-301)
 
 
 % a comparison of the findings from the sources relevant to your problem
 
-As documented by a security researcher known as "B1n4r1b01", iBoot has several embedded firmwares as well as the actual iBoot binary. There is not a well-defined structure like there is with the Kernel Cache, instead it appears they're just appended one after the other. B1n4r1b01 demonstrates this in a Tweet where he shows off a tool he developed for detecting these embedded binaries\cite{binaryboy-iboot-tweet}.
+A security researcher known only as "B1n4r1b01" noticed that iBoot has several embedded firmwares as well as the actual iBoot binary. There is no well-defined structure like there is with the Kernel Cache, instead it appears the firmwares are just appended one after the other. In a Tweet posted by B1n4r1b01, he demonstrates a tool he developed that can detect the embedded firmwares in a given iBoot binary (\cite{binaryboy-iboot-tweet}).
 
-He adds some further documentation on the Github page for the tool - Rasegen. He details the different firmwares, such as storage and power management, as well as the devices that they are found on. This tool though has not been updated in a few years and it is possible that either the format has changed, or additional firmwares have been added. 
+He adds some further details on the Github page for the tool - Rasegen (\cite{rasegen-github}). He documents the different firmwares, such as storage and power management, as well as the devices that they are found on. However, this tool has not been updated in a few years and it is possible that the format has changed or additional firmwares have been added. 
 
-Jonathan Levin, another security researcher who previously focused on iOS, and then moved onto Android, and happens to be the author of JTool, has written multiple books on the topic of Apple platform security. His book, "*OS Internals: Volume II", covers in detail iBoot \cite{levin-newosxbook-iboot} , it's function and how it works. Importantly, he discusses the first code that iBoot runs and how it essentially relocates itself in memory. 
-
-
+Jonathan Levin, a security researcher who previously focused on iOS and then moved onto Android, also the author of JTool, has written multiple books on the topic of Apple platform security. In his book *OS Internals: Volume II, Levin documents the entire boot process of an iPhone, from the SecureROM to LLB to iBoot to the Kernel, as well as the threat model of iBoot - particularly the vulnerability of the USB stack where most iBoot and SecureROM exploits have been found. He also discusses iBoot's "Relocation Loop", a clever piece of code where iBoot finds itself in memory and relocates to a specific address. (\cite{levin-os-internals-vol2-iboot})
 
 % what you learnt collectively from these sources
-
-These two sources have been useful in detailing the inner-workings of iBoot and SecureROM and help form a basis to what will be a feature of HTool that is able to analyse these files, determine the version, device and any other useful information (for iBoot, finding the relocation loop for example).
-
-While B1n4r1b01's research into embedded firmwares in iBoot is useful for understanding the structure of the files, Levin's book's offer a level of detail that isn't matched by anyone else.
-
 % how the findings have influenced your initial solutions
+
+The Tweet and Github repository from B1n4r1b01 is helpful in understanding that decrypted iBoot binaries contain multiple firmwares that need to be identified. When it comes to developing the algorithm for analysing iBoot binaries, the open-source code he has released will be a helpful reference and basis for my implementation,
+
+Jonathan Levin's chapter on iBoot, and the book as a whole, provide an excellent reference and source of information for the internals of iOS and macOS. His extensive research and knowledge on the topic make it a very reliable source, the level of detail isn't matched by anyone else. 
 
 

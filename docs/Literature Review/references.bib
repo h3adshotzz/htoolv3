@@ -1,109 +1,183 @@
+
+% Primarily cited in introduction.tex
+
+@ONLINE{levin-jtool,
+    title = {jtool - Taking the O out of otool(1), and so much more},
+    author = {{Jonathan Levin}},
+    year = {2021},
+    url = {http://www.newosxbook.com/tools/jtool.html},
+    urldate = {2022-11-15}
+}
+
+@ONLINE{hexrays-ida64-pro,
+    title = {Hex-Rays - IDA Pro},
+    author = {{hex-rays}},
+    year = {2022},
+    url = {https://hex-rays.com/ida-pro/},
+    urldate = {2022-11-15}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Primarily cited in themes-macho.tex
+
+@ONLINE{h3adsh0tzz-libhelper,
+    title = {The Libhelper Project},
+    author = {{Harry Moulton}},
+    year = {2020},
+    url = {https://github.com/h3adshotzz/libhelper},
+    urldate = {2022-11-16}
+}
+
 @ONLINE{lester-macho,
 	title = {A look at Apple executable files},
 	author = {{Scott Lester}},
 	year = {2020},
-	url = {https://redmaple.tech/blogs/macho-files/}
+	url = {https://redmaple.tech/blogs/macho-files/},
+    urldate = {2022-11-16}
 }
 
 @ONLINE{moulton-macho,
 	title = {Mach-O File Format: Introduction},
 	author = {{Harry Moulton}},
 	year = {2020},
-	url = {https://h3adsh0tzz.com/posts/macho-file-format}
+	url = {https://h3adsh0tzz.com/posts/macho-file-format},
+    urldate = {2022-11-16}
 }
 
-@ONLINE{github-libhelper,
-	title = {The Libhelper Project, Github},
-	author = {Harry Moulton},
-	year = {2020-2022},
-	url = {https://github.com/h3adshotzz/libhelper/tree/3.0.0}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Primarily cited in themes-kernelcache.tex
+
+@BOOK{esser-hackers-handbook,
+    title = {iOS Hackers Handbook},
+    author = {{Charlie Miller \& Stefan Esser}},
+    year = {2012},
+    pages = {249, 300}, % 249 old kernelcache definition, 300 iboot exploit
+    publisher = {John Wiley \& Sons, Inc},
+    isbn = {978-1-118-20412-2}
 }
 
+@BOOK{levin-os-internals-vol3,
+    title = {*OS Internals: Volume II Security and Insecurity},
+    author = {{Jonathan Levin}},
+    year = {2016},
+    pages = {470}, % XNU definition
+    publisher = {Technologeeks.com},
+    isbn = {978-0-9910555-3-1}
+}
 
+@ONLINE{apple-ios16-security-content,
+    title = {About the security content of iOS 16.1 and iPadOS 16},
+    author = {{Apple Inc}},
+    year = {2022},
+    url = {https://support.apple.com/en-gb/HT213489},
+    urldate = {2022-11-17}
+}
 
 @ONLINE{security-through-obscurity,
 	title = {Security through Obscurity},
 	author = {Wikipedia},
 	year = {2019},
-	url = {https://en.wikipedia.org/wiki/Security_through_obscurity}
-}
-
-@ONLINE{kcache-iphonewiki,
-	title = {Kernelcache},
-	author = {{iPhoneWiki}},
-	year = {2019},
-	url = {https://www.theiphonewiki.com/wiki/Kernelcache}
+	url = {https://en.wikipedia.org/wiki/Security_through_obscurity},
+    urldate = {2022-11-18}
 }
 
 @ONLINE{azad-tagged-pointers,
 	title = {Analyzing the iOS 12 kernelcache's tagged pointers},
 	author = {{Brandon Azad}},
 	year = {2018},
-	url = {https://bazad.github.io/2018/06/ios-12-kernelcache-tagged-pointers/}
+	url = {https://bazad.github.io/2018/06/ios-12-kernelcache-tagged-pointers/},
+    urldate = {2022-11-18}
 }
 
 @ONLINE{azad-pac-indepth,
 	title = {Examining Pointer Authentication on the iPhone XS},
 	author = {{Brandon Azad}},
 	year = {2018},
-	url = {https://googleprojectzero.blogspot.com/2019/02/examining-pointer-authentication-on.html}
+	url = {https://googleprojectzero.blogspot.com/2019/02/examining-pointer-authentication-on.html},
+    urldate = {2022-11-19}
 }
 
 @ONLINE{rutland-pac-slides,
 	title = {ARMv8.3 Pointer Authentication},
 	author = {{Mark Rutland}},
 	year = {2017},
-	url = {https://events.static.linuxfound.org/sites/events/files/slides/slides_23.pdf}
+	url = {https://events.static.linuxfound.org/sites/events/files/slides/slides_23.pdf},
+    urldate = {2022-11-19}
 }
 
-
+@ONLINE{xerub-tick-tock,
+    title = {Tick (FPU) Tock (IRQ)},
+    author = {{xerub}},
+    year = {2017},
+    url = {https://xerub.github.io/ios/kpp/2017/04/13/tick-tock.html},
+    urldate = {2022-11-19}
+}
 
 @ONLINE{sijun-kernel-paper,
-	title = {Research on Offense and Defense Technology for iOS Kernel Security Mechanism },
-	author = {{Sijun Chu & Hao Wu}},
+	title = {Research on Offense and Defense Technology for iOS Kernel Security Mechanism},
+	author = {{Sijun Chu \& Hao Wu}},
 	year = {2018},
-	url = {https://aip.scitation.org/doi/pdf/10.1063/1.5033796}
+	url = {https://aip.scitation.org/doi/pdf/10.1063/1.5033796},
+    urldate = {2022-11-20}
 }
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Primarily cited in themes-iboot.tex
+
+@BOOK{levin-os-internals-vol2-iboot,
+    title = {*OS: iBoot},
+    author = {{Jonathan Levin}},
+    year = {2019},
+    publisher = {Technologeeks.com},
+    note = {\url{http://newosxbook.com/bonus/iboot.pdf}(visited 2022-11-20)}
+}
 
 @ONLINE{rasegen-github,
 	title = {rasengan - extract various firmware blobs from iBoot},
 	author = {{b1n4r1b01}},
 	year = {2020},
-	url = {https://github.com/b1n4r1b01/rasengan}
+	url = {https://github.com/b1n4r1b01/rasengan},
+    urldate = {2022-11-21}
 }
 
 @ONLINE{binaryboy-iboot-tweet,
 	title = {A13 iBoots have 4 embedded firmwares},
 	author = {{b1n4r1b01}},
 	year = {2020},
-	url = {https://twitter.com/b1n4r1b01/status/1237413317901082626}
+	url = {https://twitter.com/b1n4r1b01/status/1237413317901082626},
+    urldate = {2022-11-21}
 }
 
-@ONLINE{levin-newosxbook-iboot,
-	title = {*OS Internals Volume II},
-	author = {{Jonathan Levin}},
-	year = {2019},
-	url = {http://newosxbook.com/bonus/iBoot.pdf}
-}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-@ONLINE{apple-system-kernel-macos,
-    title = {System and Kernel Extensions in macOS},
-    author = {{Apple}},
-    year = {2021},
-    url = {https://support.apple.com/en-gb/guide/deployment/depa5fb8376f/web}
-}
+% Primarily cited in themes-macos.tex
 
 @ONLINE{duo-labs-t2-intro,
     title = {Apple iMac Pro and Secure Storage},
     author = {{Pepijn Bruienne}},
     year = {2018},
-    url = {https://duo.com/blog/apple-imac-pro-and-secure-storage}
+    url = {https://duo.com/blog/apple-imac-pro-and-secure-storage},
+    urldate = {2022-11-21}
 }
 
+@ONLINE{martin-hackernews-macos-kernel,
+    title = {Hector Martin macOS Kernel location},
+    author = {{Hector Martin}},
+    year = {2021},
+    url = {https://news.ycombinator.com/item?id=26114623},
+    urldate = {2022-11-21}
+}
 
-
-
+@ONLINE{hoakley-extensions-kernel,
+    title = {Extensions are moving away from the Kernel},
+    author = {{Hoakley}},
+    year = {2021},
+    url = {https://eclecticlight.co/2021/07/07/extensions-are-moving-away-from-the-kernel/},
+    urldate = {2022-11-21}
+}
 
 
 

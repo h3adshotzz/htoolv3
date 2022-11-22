@@ -2,22 +2,22 @@
 
 % how the theme is relevant to your problem
 
-Parsing Mach-O files is a primary requirement of this project. All iOS and macOS applications are compiled as Mach-O executables and the XNU kernel is also compiled as a Mach-O. Essentially any executable code from the Kernel up will use Mach-O. This means that handling this file format is the first functionality that would need to be implemented into any solution.
+Parsing Mach-O files will be a primary requirement of this project. All iOS and macOS applications are compiled as Mach-O executables as well as the XNU kernel. Essentially any executable code with the exception of the boot loader use the Mach-O format. This means that handling this file format is the first functionality that would need to be implemented into any solution.
 
 
 % a comparison of the findings from the sources relevant to your problem
 
 %% Libhelper
 
-In 2020 I developed an open-source library called The Libhelper Project\cite{github-libhelper} written in C. This library provided APIs for working with strings, lists, compression, file handling, Apple's Image4 format and Mach-O files. With regards to Mach-O files, the library takes a given file and translates this into a C structure - however it does not do any further analysis of the files. To make use of the parsed file an application, such as HTool, would build on top of this API to provide the required functionality to match that of existing solutions.
+In 2020 I developed an open-source library called The Libhelper Project (\cite{h3adsh0tzz-libhelper}) written in C. This library provided APIs for working with strings, lists, compression, file handling, Apple's Image4 format and Mach-O files. With regards to Mach-O files, the library takes a given file and translates this into a C structure - however it does not do any further analysis of the files. To make use of the parsed file an application, such as HTool, would build on top of this API to provide the required functionality to match that of existing solutions.
 
 %% Scott Lester Mach-O analysis
 
-An article published by Scott Lester analyses Mach-O files in significant detail. His blog post "A look at Apple Executable Files"\cite{lester-macho} covers the basis of Mach-O files like the header, load commands and segment commands, however he also explores more complex aspects such as how code-signing is embedded in special segment commands - something libhelper does not support and would need to be implemented in HTool.
+An article published by Scott Lester, Cyber Security Director at Red Maple Technologies, analyses Mach-O files in significant detail. The article "A look at Apple Executable Files" (\cite{lester-macho}) covers the basis of Mach-O files like the header, load commands and segment commands, however he also explores more complex aspects such as how code-signing is embedded in special segment commands - something libhelper does not support and would need to be implemented in HTool.
 
 %% My own analysis
 
-I briefly cover the basics of the Mach-O format in an article I wrote on my blog\cite{moulton-macho}. I cover the Mach-O header, load commands and segment commands, and how these can be handled in C. However, the article doesn't act as a user guide for libhelper, nor does it cover some other aspects of Mach-O files such as the different types, code signing and entitlements as it was only meant to be a quick-to-read introduction.
+I briefly cover the basics of the Mach-O format in an article I wrote on my blog entitled "Mach-O File Format: Introduction" (\cite{moulton-macho}). I also cover the Mach-O header, load commands and segment commands, and how these can be handled in C. However, the article doesn't act as a user guide for libhelper, nor does it cover some other aspects of Mach-O files such as the different types, code signing and entitlements as it was only meant to be a quick-to-read introduction.
 
 
 % what you learnt collectively from these sources
@@ -28,7 +28,7 @@ While my own article does introduce libhelper, which will be extensively used in
 
 % how the findings have influenced your initial solutions
 
-My findings from Lester's article have influenced my initial solution as I now have a basic understanding of code-signing and entitlements in the context of Mach-O files, and therefore have a basis to implement support for these into the solution. As JTool already has support for these it will be an important feature to ensure HTool can match JTool's functionality.
+My findings from Lester's article have influenced my initial solution as I now have a better understanding of code-signing and entitlements in the context of Mach-O files, and therefore have a basis to implement support for these into the solution. As JTool already has support for these it will be an important feature to ensure HTool can match JTool's functionality.
 
 
 
