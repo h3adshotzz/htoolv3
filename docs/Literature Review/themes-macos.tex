@@ -1,11 +1,48 @@
-\subsection{macOS Differences}
+\subsection{macOS}
 
-macOS has typically been very different to that of iOS and other mobile operating systems. It did not have a Kernel Cache, instead it shipped a plain Mach-O Kernel binary, and separate Kernel Extensions split into user and kernel land \cite{apple-system-kernel-macos}.
+% how the theme is relevant to your problem
 
-However since the introduction of the T2 security co-processor, codenamed iBridge, macOS has gradually moved towards the security model of iOS. Pepijn Bruienne undertook a deep-dive into this new chip in his paper from 2018\cite{duo-labs-t2-intro}. iBridge used the same A10 processor as the iPhone 7, and ran a slimmed-down version of watchOS, which Apple named BridgeOS.
+In the past macOS has typically remained a less restricted and locked-down operating system compared to iOS. macOS did not have a Kernel Cache, instead the OS shipped with a "Base Image" that contained an XNU kernel binary located at a specific directory, and kernel extensions located at another, separated into user-space and kernel-space KEXTs. They were all Mach-O's, they just weren't bundled together in a single file like with other Apple operating systems.
 
-Because this new chips primary function was security, and the new Secure Boot architecture on Mac's, this obviously became a target for security researchers. However, because the system is similar to that of watchOS it doesn't require any additional functionality to be analysed - in theory a tool developed for iOS firmware analysis would work just fine for BridgeOS.
+% a comparison of the findings from the sources relevant to your problem
 
-Where things begin to change is the introduction of ARM-based "Apple Silicon" machines. These machines had a vastly different security architecture. No more third party kernel extensions, and macOS now used a Kernel Cache too, helpfully with its own strange proprietary format. 
+There are two types of Mac's that used ARM-based processors. First are the T2 Mac's, and second are the "Apple Silicon" Mac's.
 
-< discuss https://news.ycombinator.com/item?id=26113488, find info on macOS kernel collections >
+A "T2-enabled Mac" is a macOS device that uses an Intel x86\_64 processor as its primary Application Processor, and an ARM-based chip, typically a design from an older generation iPhone, that is used as a security co-processor. On these machines, the T2 handles a Secure Boot chain, Apple Pay and Touch ID. \cite{duo-labs-t2-intro}
+
+The T2 acts essentially as its own system, handling requests for the main processor. It runs a slimmed-down version of watchOS, and therefore uses the same system architecture as iOS devices (watchOS is a derivative of iOS), known as BridgeOS. This OS has a Kernel Cache that acts the same as it does on iOS, therefore a tool designed for analysing firmware files of iOS devices would work just fine with BridgeOS.
+
+The second type is an "Apple Silicon" Mac. These machines use ARM-based processors designed by Apple, much like in the iPhone or iPad. There is no need for a T2 chip on these machines, so BridgeOS is not present, however macOS has been modified so that it too uses a Kernel Cache in much the same way. Linux kernel developer Hector Martin, who is currently heading a project to port the Linux Kernel to the ARM-based Mac's, notes the following about the Kernel cache on macOS:
+
+\begin{verbatim}
+	"The built-in bootloader actually boots iBoot2 
+	from /System/Volumes/Preboot/(UUID)/boot/(long 
+	hash)/usr/standalone/firmware/iBoot.img4, and 
+	that then loads the Darwin kernel from /System/
+	Volumes/Preboot/(UUID)/boot/(long hash)/System/
+	Library/Caches/com.apple.kernelcaches/kernelcache."
+\end{verbatim}
+
+From this, we now understand that ARM-based Mac's use the same kernel cache as iOS and BridgeOS, and most likely the same format too (the Kernel cache format appears to be dependent on either OS version or CPU). Therefore, like BridgeOS, support for the Mac's cache file should be automatic. 
+
+On Intel-based Mac's, however, there is again a different format. Intel-based Mac's do not use a Kernel Cache file, rather they store the plain XNU kernel Mach-O file at one directory, /System/Library/Kernels/kernel, and make use of a concept called "Kernel Collections"
+
+A blog run by an individual who goes by the name "hoakley" discussed the differences between x86 and arm-based mac kernel's in an article entitled "Extensions are moving away from the kernel".
+
+In this article he identifies a number of things. Firstly that there are three types of "Kernel Collections", the "Boot Kext Collection (BKC)", "System Kext Collection (SKC)", and "Auxiliary Kext Collection (AKC)".
+
+The Boot Kext Collection is used on both ARM and x86\_64 (Intel) Mac's. On ARM, the KEXTs in the BKC are found in the Kernel Cache, and on x86\_64 they are found in the BootKextCollection.kc file under /System/Library/KernelCollections/.
+
+The System Kext Collection is only used on x86\_64, it is not used on ARM-based models. This is found in the same locations as the BKC, and is named SystemKextCollection.kc. 
+
+Finally, the Auxiliary Kext Collection is only typically found on x86\_64 systems, where it is managed by the kernelmanagerd service. On ARM platforms, it can only be found if the system is placed in low-security mode, otherwise it's ignored completely. \cite{hoakley-kexts}.
+
+
+% what you learnt collectively from these sources
+
+The information that these sources have provided has given me a good understanding of the way the Kernel is implemented on macOS. iBoot is the same on all platforms so there isn't much else to learn there, but the way the kernel and extensions worked on macOS was an area I was not familiar with prior to this project.
+
+% how the findings have influenced your initial solutions
+
+The findings have given me both the knowledge and confidence to implement support for analysing and reverse engineering the kernel, kernel cache and kernel collections on macOS for both Intel and ARM architectures into HTool. 
+
