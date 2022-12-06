@@ -16,7 +16,7 @@ The topic of the caches format has not been something that has been the centre o
 
 %% Brandon Azad tagged pointers
 
-Brandon Azad, formerly of Google's Project Zero security research team, published in 2018 an article entitled "Analysing the iOS 12 kernel caches tagged pointers" (\cite{azad-tagged-pointers}). The primary focus of the article was to explore the introduction of the ARMv8.3 architecture and it associated Pointer Authentication (\cite{rutland-pac-slides}) extension, or PAC. A side note of his research was that he noticed a change in the format of the kernel cache between iOS 12 and iOS 11, particularly that certain segments such as \_\_TEXT and \_\_TEXT\_EXEC, which hold executable code, are now larger, whereas \_\_PRELINK\_INFO was missing some XML data that was used as a map to determine where KEXTs resided in the cache. 
+Brandon Azad, formerly of Google's Project Zero security research team, published in 2018 an article entitled "Analysing the iOS 12 kernel caches tagged pointers" (\cite{azad-tagged-pointers}). The primary focus of the article was to explore the introduction of the ARMv8.3 architecture and its associated Pointer Authentication (\cite{rutland-pac-slides}) extension, or PAC. A side note of his research was that he noticed a change in the format of the kernel cache between iOS 12 and iOS 11, particularly that certain segments such as \_\_TEXT and \_\_TEXT\_EXEC, which hold executable code, are now larger, whereas \_\_PRELINK\_INFO was missing some XML data that was used as a map to determine where KEXTs resided in the cache. 
 
 Azad observed that: "There appear to be at least 3 distinct kernel cache formats" (\cite{azad-tagged-pointers}). The three formats being:
 
