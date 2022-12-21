@@ -144,6 +144,9 @@ int main(int argc, char **argv)
         return HTOOL_RETURN_FAILURE;
     }
     client->filename = filename;
+#if HTOOL_DEBUG
+    debugf ("client->filename: %s\n", client->filename);
+#endif
 
     /**
      *  work out which command has been invoked. Use the `optind` index from getopt.h
@@ -166,6 +169,7 @@ int main(int argc, char **argv)
         if (!strcmp (c->cmdname, cmdname))
 #if HTOOL_DEBUG
         {
+            debugf ("matched command: %s\n", cmdname);
             int res = c->handler (client, argc, argv);
             debugf ("res: %d\n", res);
             return res;

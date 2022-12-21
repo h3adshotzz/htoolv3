@@ -60,8 +60,17 @@ struct command {
 
 
 /**
+ *  \brief      Macro for checking if a given bitmask is set on a value. The `flags`
+ *              value would be, for example, client->cmd or client->opts, whereas
+ *              the `mask` would be HTOOL_CLIENT_CMDFLAG_MACHO.
+ *
+ */
+#define HTOOL_CLIENT_CHECK_FLAG (flags, mask)              ((flags & mask) == mask) ? 1 : 0
+
+
+/**
  *  List of flags and options for htool. These are set when parsing the command line
- *  arguments in main.c. To check if a flag is set, use the function:
+ *  arguments in main.c. To check if a flag is set, use the macro:
  *
  *      htool_client_check_flags (client_flags, mask);
  *
