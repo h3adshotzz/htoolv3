@@ -13,79 +13,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef __HTOOL_HTOOL_H__
-#define __HTOOL_HTOOL_H__
-
-#include <libhelper-file.h>
-
-#include "version.h"
-
-#define HTOOL_DEBUG 1
-
-
-/**
- * \brief       The htool_client_t struct is created once the tool starts running
- *              and is used to retain information for the current instance, such as
- *              the command the tool was run with, the parsed file, optional flags
- *              and other properties.
- *
- *              The aim here is to prevent too many parameters being parsed around,
- *              so everything is stored in a single structure.
- *
- */
-typedef struct __htool_client           htool_client_t;
-struct __htool_client
-{
-    /* Loaded file info */
-    char                *filename;  // loaded file path
-    char                *args;      // argument string
-
-    /* Flags */
-    uint32_t             cmd;       // command
-    uint32_t             opts;      // command options
-    char                *arch;      // --arch value.
-
-    /* Parsed binary */
-    //htool_binary_t      *bin;       // parsed `filename`
-};
-
-/**
- * \brief       CLI Command option struct.
- *
- */
-struct command {
-    char        *cmdname;
-    int          (*handler)(htool_client_t*, int, char*);
-};
-
-
-/**
- *  \brief      Macro for checking if a given bitmask is set on a value. The `flags`
- *              value would be, for example, client->cmd or client->opts, whereas
- *              the `mask` would be HTOOL_CLIENT_CMDFLAG_MACHO.
- *
- */
-#define HTOOL_CLIENT_CHECK_FLAG (flags, mask)              ((flags & mask) == mask) ? 1 : 0
-
-
-/**
- *  List of flags and options for htool. These are set when parsing the command line
- *  arguments in main.c. To check if a flag is set, use the macro:
- *
- *      htool_client_check_flags (client_flags, mask);
- *
- */
-#define HTOOL_CLIENT_CMDFLAG_MACHO          0x10000000
-#define HTOOL_CLIENT_MACHO_OPT_ARCH         (1 << 1)
-#define HTOOL_CLIENT_MACHO_OPT_HEADER       (1 << 2)
-#define HTOOL_CLIENT_MACHO_OPT_LCMDS        (1 << 3)
-#define HTOOL_CLIENT_MACHO_OPT_LIBS         (1 << 4)
-#define HTOOL_CLIENT_MACHO_OPT_SYMBOLS      (1 << 5)
-#define HTOOL_CLIENT_MACHO_OPT_SYMDBG       (1 << 6)
-#define HTOOL_CLIENT_MACHO_OPT_SYMSECT      (1 << 7)
-
-//#define
-
+#ifndef __HTOOL_VERSION_H__
+#define __HTOOL_VERSION_H__
 
 /**
  *  Exit codes
@@ -96,6 +25,60 @@ typedef enum htool_return_t
     HTOOL_RETURN_SUCCESS
 } htool_return_t;
 
+/**
+ * Error code
+*/
+#define HTOOL_ERROR_FILETYPE    0x000000001
 
 
-#endif /* __htool_htool_h__ */
+#define HTOOL_VERSION_NUMBER "2.0.0"
+#define HTOOL_VERSION_TAG "DEVELOPMENT"
+
+/**
+ *  Define a Target type for HTool to both display within the help
+ *  and other version information texts, and to determine platform
+ *  when it comes to specific libraries that are only defined on
+ *  one platform.
+ *
+ */
+#ifdef __APPLE__
+#   define BUILD_TARGET         "darwin"
+#   define BUILD_TARGET_CAP     "Darwin"
+#else
+#   define BUILD_TARGET         "linux"
+#   define BUILD_TARGET_CAP     "Linux"
+#endif
+
+
+/**
+ *  Define an Architecture type for HTool to both display within
+ *  the help and other version information texts, and to determine
+ *  architecture when it comes to platform-specific operations.
+ *
+ */
+#ifdef __x86_64__
+#   define BUILD_ARCH           "x86_64"
+#elif __arm__
+#   define BUILD_ARCH           "arm"
+#elif __arm64__
+#	define BUILD_ARCH			"arm64"
+#endif
+
+
+/**
+ *  HTool can run on Apple Silicon (ARM on Mac), however some features
+ *  may not operate correctly between the two architectures (x86 & arm64).
+ *  Define the macOS platform type, whether Apple Silicon or Intel.
+ *
+ */
+#define HTOOL_PLATFORM_TYPE_APPLE_SILICON       1
+#define HTOOL_PLATFORM_TYPE_INTEL_GENUINE       2
+
+#if defined(__arm64__) && defined(__APPLE__)
+#   define HTOOL_MACOS_PLATFORM_TYPE            HTOOL_PLATFORM_TYPE_APPLE_SILICON
+#else
+#   define HTOOL_MACOS_PLATFORM_TYPE            HTOOL_PLATFORM_TYPE_INTEL_GENUINE
+#endif
+
+
+#endif /* __htool_version_h__ */
