@@ -18,16 +18,23 @@
 
 #include <libhelper.h>
 #include <libhelper-logger.h>
+#include <libhelper-macho.h>
+#include <libhelper-file.h>
 
+#include "htool-loader.h"
+#include "htool-client.h"
 #include "htool.h"
-#include "usage.h"
+
 #include "colours.h"
+#include "usage.h"
 
 
 /* Command handler functions */
 
 static htool_return_t
-handle_command_file (htool_client_t *client, int argc, char *argv[]);
+handle_command_file (htool_client_t *client);
+static htool_return_t
+handle_command_macho (htool_client_t *client); 
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -35,7 +42,7 @@ handle_command_file (htool_client_t *client, int argc, char *argv[]);
 /* Command optins definitions, using getopt.h option structs */
 
 /* standard cli options */
-static struct option standardopts[] = {
+static struct option standard_opts[] = {
     { "help",       no_argument,    NULL,   'h' },
     { "version",    no_argument,    NULL,   'v' },
 
@@ -43,8 +50,12 @@ static struct option standardopts[] = {
 };
 
 /* macho options */
-static struct option machoopts[] = {
-    { NULL,         0,              NULL,   0}
+static struct option macho_cmd_opts[] = {
+    { "help",       no_argument,    NULL,   'H' },
+    { "header",     no_argument,    NULL,   'h' },
+    { "loadcmd",    no_argument,    NULL,   'l' },
+    
+    { NULL,         0,              NULL,   0   }
 };
 
 
@@ -53,7 +64,7 @@ static struct option machoopts[] = {
  */
 static struct command commands[] = {
     { "file",       handle_command_file     },
-    //{ "macho",      handle_command_macho    },
+    { "macho",      handle_command_macho    },
     { NULL,         NULL                    }
 };
 
@@ -64,8 +75,56 @@ static struct command commands[] = {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static htool_return_t handle_command_file (htool_client_t *client, int argc, char *argv[])
+static htool_return_t handle_command_file (htool_client_t *client)
 {
+    errorf ("Error: `file` not implemented.\n");
+    return HTOOL_RETURN_FAILURE;
+}
+
+static htool_return_t handle_command_macho (htool_client_t *client)
+{
+    /* reset getopt */
+    optind = 1;
+    opterr = 1;
+
+    /* set the appropriate flag for the client struct */
+    client->cmd |= HTOOL_CLIENT_CMDFLAG_MACHO;
+
+    /* parse the `file` options */
+    int opt = 0;
+    int optindex = 0;
+    while ((opt = getopt_long (client->argc, client->argv, "hlA", macho_cmd_opts, &optindex)) > 0) {
+        switch (opt) {
+
+            /* -h, --header */
+            case 'h':
+                client->opts |= HTOOL_CLIENT_MACHO_OPT_HEADER;
+                break;
+
+            /* -l, --loadcmd */
+            case 'l':
+                client->opts |= HTOOL_CLIENT_MACHO_OPT_LCMDS;
+                break;
+
+            /* default, print usage */
+            case 'H':
+            default:
+                macho_subcommand_usage (client->argc, client->argv, 0);
+                return HTOOL_RETURN_FAILURE;
+        }
+    }
+
+    /* load the `filename` as a htool_binary_t */
+    client->bin = htool_binary_load_and_parse (client->filename);
+    htool_binary_t *bin = client->bin;
+
+
+
+
+    debugf ("client->opt: 0x%08x\n", client->opts);
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER) debugf ("\tHTOOL_CLIENT_MACHO_OPT_HEADER\n");
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_LCMDS) debugf ("\tHTOOL_CLIENT_MACHO_OPT_LCMDS\n");
+
     return HTOOL_RETURN_SUCCESS;
 }
 
@@ -117,13 +176,13 @@ int main(int argc, char **argv)
      */
     int opt = 0, optindex = 0;
     opterr = 0;
-    while ((opt = getopt_long (argc, argv, "hvA", standardopts, &optindex)) > 0) {
+    while ((opt = getopt_long (argc, argv, "hvA", standard_opts, &optindex)) > 0) {
         switch (opt) {
 
             /* --help command */
             case 'h':
-                general_usage (argc, argv, 1);
-                return HTOOL_RETURN_SUCCESS;
+                client->opts |= HTOOL_CLIENT_GENERIC_OPT_HELP;
+                break;
 
             /* --version command */
             case 'v':
@@ -136,14 +195,21 @@ int main(int argc, char **argv)
         }
     }
 
-    /* get the filename from the arg list */
+    /* set client->argv and ->argc */
+    client->argv = argv;
+    client->argc = argc;
+
+    for (int i = 0; i < argc; i++)
+        debugf ("[%d]: %s\n", i, argv[i]);
+
+    /* try to get the filename */
     char *filename = argv[argc - 1];
     if (!filename) {
         errorf ("Error: invalid filename.\n");
         general_usage (argc, argv, 0);
-        return HTOOL_RETURN_FAILURE;
+        return EXIT_FAILURE;
     }
-    client->filename = filename;
+    client->filename = strdup (filename);
 #if HTOOL_DEBUG
     debugf ("client->filename: %s\n", client->filename);
 #endif
@@ -170,12 +236,12 @@ int main(int argc, char **argv)
 #if HTOOL_DEBUG
         {
             debugf ("matched command: %s\n", cmdname);
-            int res = c->handler (client, argc, argv);
+            int res = c->handler (client);
             debugf ("res: %d\n", res);
             return res;
         }
 #else
-            return c->handler (client, argc, argv);
+            return c->handler (client);
 #endif
     }
 

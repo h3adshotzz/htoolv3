@@ -31,4 +31,5 @@ target_sources(htool
     PUBLIC
         main.c
         usage.c
+        loader.c
 )
