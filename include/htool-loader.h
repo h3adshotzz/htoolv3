@@ -39,12 +39,33 @@
 
 
 /**
- *  The HTOol Binary structure has a flag value ...
+ *  The HTool Binary structure has a flag value used to describe a range
+ *  of things about the loaded file, this includes the file type, the
+ *  firmware component type, etc. The current format, as of 1.0, is:
  *
  *      flag = 0x00000000
  *               8      1
  *
+ *  [1]     -   Describes the detected "Firmware Type", this could be iBoot,
+ *              the Kernel, SEP, or something else.
  *
+ *  [2]     -   Undefined.
+ *
+ *  [3]     -   Undefined.
+ *
+ *  [4]     -   Undefined.
+ *
+ *  [5]     -   Undefined.
+ *
+ *  [6]     -   Undefined.
+ *
+ *  [7]     -   Undefined.
+ *
+ *  [8]     -   Describes the "File Type", this could be a 32-bit Mach-O,
+ *              64-bit Mach-O, FAT or DYLD Shared Cache. These masks enable
+ *              other features, for example if the value is set as a Mach-O
+ *              then the `macho_list` structure will be treated as a single
+ *              Mach-O.
  *
  */
 #define HTOOL_BINARY_FILETYPE_RAWBINARY         0xa0000000
@@ -65,13 +86,21 @@
 typedef struct __htool_binary           htool_binary_t;
 struct __htool_binary
 {
+    /* htool_binary version */
     uint32_t        version;
 
+    /* raw data properties */
     unsigned char   *data;
     uint32_t        size;
     char            *filepath;
 
+    /* flags */
     uint32_t        flags;
+
+    /* filetype-specific fields */
+    fat_info_t      *fat_info;
+    HSList          *macho_list;
+    //elf_t           *elf;
 
     uint32_t debug;
 };
