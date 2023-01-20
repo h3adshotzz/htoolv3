@@ -239,6 +239,14 @@ htool_print_load_commands (htool_client_t *client)
                     htool_print_dylib_command (macho->dylibs, dylib_count);
                     break;
 
+                /* Sub Framework Load Commands */
+                case LC_SUB_CLIENT:
+                case LC_SUB_LIBRARY:
+                case LC_SUB_UMBRELLA:
+                case LC_SUB_FRAMEWORK:
+                    htool_print_sub_framework_command (macho, info, rawlc);
+                    break;
+
                 default:
                     warningf ("Load Command (%s) not implemented.\n", mach_load_command_get_name (lc));
                     break;
@@ -312,5 +320,20 @@ htool_print_dylib_command (HSList *dylibs, int dylib_count)
             lc->dylib.compatibility_version >> 16,
             (lc->dylib.compatibility_version >> 8) & 0xff,
             lc->dylib.compatibility_version & 0xff);
+}
 
+void
+htool_print_sub_framework_command (macho_t *macho, mach_load_command_info_t *info, void *lc_raw)
+{
+    /**
+     *  This covers LC_SUB_CLIENT, LC_SUB_LIBRARY, LC_SUB_UMBRELLA and
+     *  LC_SUB_FRAMEWORK commands. They all have the same structure, so
+     *  we can just use one struct for them all.
+     */
+    mach_load_command_t *lc = (mach_load_command_t *) lc_raw;
+    union lc_str *str = (union lc_str *) lc_raw + 8;
+
+    printf (YELLOW "  %-20s" RESET, mach_header_get_file_type_string (lc->cmd));
+    printf (BOLD DARK_WHITE "  Name: " RESET DARK_GREY "%s" RESET,
+            mach_load_command_load_string (macho, lc->cmdsize, sizeof (mach_sub_framework_command_t), info->offset, str->offset));
 }

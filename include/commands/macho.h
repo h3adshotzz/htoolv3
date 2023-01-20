@@ -39,6 +39,8 @@ void
 htool_print_fat_header_from_struct (fat_info_t *info, int expand);
 void
 htool_print_dylib_command (HSList *dylibs, int dylib_count);
+void
+htool_print_sub_framework_command (macho_t *macho, mach_load_command_info_t *info, void *lc_raw);
 
 
 #endif /* __htool_command_macho_h__ */
