@@ -251,6 +251,7 @@ htool_binary_detect_macho (htool_binary_t *bin, uint32_t magic)
 macho_t *
 htool_binary_select_arch (htool_binary_t *bin, char *arch_name)
 {
+    debugf ("htool_binary_select_arch: arch_name: %s\n", arch_name);
     for (int i = 0; i < h_slist_length (bin->fat_info->archs); i++) {
         fat_arch_t *arch = (fat_arch_t *) h_slist_nth_data (bin->fat_info->archs, i);
         char *cpu_name = mach_header_get_cpu_string (arch->cputype, arch->cpusubtype);

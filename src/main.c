@@ -28,6 +28,9 @@
 #include "colours.h"
 #include "usage.h"
 
+/* headers for commands */
+#include "commands/macho.h"
+
 
 /* Command handler functions */
 
@@ -51,11 +54,12 @@ static struct option standard_opts[] = {
 
 /* macho options */
 static struct option macho_cmd_opts[] = {
-    { "help",       no_argument,    NULL,   'H' },
-    { "header",     no_argument,    NULL,   'h' },
-    { "loadcmd",    no_argument,    NULL,   'l' },
+    { "arch",       required_argument,  NULL,   'a' },
+    { "help",       no_argument,        NULL,   'H' },
+    { "header",     no_argument,        NULL,   'h' },
+    { "loadcmd",    no_argument,        NULL,   'l' },
     
-    { NULL,         0,              NULL,   0   }
+    { NULL,         0,                  NULL,    0  }
 };
 
 
@@ -96,6 +100,12 @@ static htool_return_t handle_command_macho (htool_client_t *client)
     while ((opt = getopt_long (client->argc, client->argv, "hlA", macho_cmd_opts, &optindex)) > 0) {
         switch (opt) {
 
+            /* -a, --arch */
+            case 'a':
+                client->opts |= HTOOL_CLIENT_MACHO_OPT_ARCH;
+                client->arch = strdup ((const char *) optarg);
+                break;
+
             /* -h, --header */
             case 'h':
                 client->opts |= HTOOL_CLIENT_MACHO_OPT_HEADER;
@@ -114,16 +124,35 @@ static htool_return_t handle_command_macho (htool_client_t *client)
         }
     }
 
-    /* load the `filename` as a htool_binary_t */
+    printf ("**********\n");
+    printf ("MACHO-DEBUG: \tclient->opt: 0x%08x\n", client->opts);
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_ARCH)     printf ("MACHO-DEBUG: \tclient->arch: %s\n", client->arch);
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)   printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_HEADER\n");
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_LCMDS)    printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_LCMDS\n");
+    printf ("**********\n\n");
+
+    /**
+     *  Create and load a htool_binary_t
+     */
     client->bin = htool_binary_load_and_parse (client->filename);
     htool_binary_t *bin = client->bin;
 
+    /**
+     *  Option:             -h, --header
+     *  Description:        Print out the header of a Mach-O, DYLD Shared Cache or
+     *                      a FAT/Universal Binary.
+     */
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)
+        htool_print_header (client);
+    
+    /**
+     *  Option:             -l. --loadcmd
+     *  Description:        Print out the Load and Segment Commands contained in a
+     *                      Mach-O file.
+     */
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_LCMDS)
+        htool_print_load_commands (client);
 
-
-
-    debugf ("client->opt: 0x%08x\n", client->opts);
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER) debugf ("\tHTOOL_CLIENT_MACHO_OPT_HEADER\n");
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_LCMDS) debugf ("\tHTOOL_CLIENT_MACHO_OPT_LCMDS\n");
 
     return HTOOL_RETURN_SUCCESS;
 }
@@ -249,29 +278,3 @@ int main(int argc, char **argv)
     general_usage (argc, argv, 0);
     return HTOOL_RETURN_SUCCESS;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

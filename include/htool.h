@@ -27,8 +27,21 @@ typedef enum htool_return_t
 
 /**
  * Error code
-*/
+ */
 #define HTOOL_ERROR_FILETYPE    0x000000001
+
+/**
+ * Colour codes
+ */
+#define WHITE           "\x1b[38;5;254m"
+#define DARK_WHITE      "\x1b[38;5;251m"
+#define DARK_GREY       "\x1b[38;5;243m"
+#define YELLOW          "\x1b[38;5;214m"
+#define DARK_YELLOW     "\x1b[38;5;94m"
+#define RED             "\x1b[38;5;88m"
+#define BLUE            "\x1b[38;5;32m"
+#define RESET           "\x1b[0m"
+#define BOLD            "\x1b[1m"
 
 
 #define HTOOL_VERSION_NUMBER "2.0.0"

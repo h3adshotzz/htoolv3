@@ -67,7 +67,7 @@ struct command {
  *              the `mask` would be HTOOL_CLIENT_CMDFLAG_MACHO.
  *
  */
-#define HTOOL_CLIENT_CHECK_FLAG(flags, mask)              ((flags & mask) == mask) ? 1 : 0
+#define HTOOL_CLIENT_CHECK_FLAG(flags, mask)              (((flags & mask) == mask) ? 1 : 0)
 
 
 /**
