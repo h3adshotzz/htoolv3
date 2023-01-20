@@ -41,6 +41,14 @@ void
 htool_print_dylib_command (HSList *dylibs, int dylib_count);
 void
 htool_print_sub_framework_command (macho_t *macho, mach_load_command_info_t *info, void *lc_raw);
+void
+htool_print_prebound_dylib_command (macho_t *macho, mach_load_command_info_t *info);
+void
+htool_print_dylinker_command (macho_t *macho, mach_load_command_info_t *info);
+void
+htool_print_linkedit_data_command (void *cmd);
+void
+htool_print_dylid_info_command (void *cmd);
 
 
 #endif /* __htool_command_macho_h__ */

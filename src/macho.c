@@ -247,6 +247,36 @@ htool_print_load_commands (htool_client_t *client)
                     htool_print_sub_framework_command (macho, info, rawlc);
                     break;
 
+                /* Prebound Dylib Command */
+                case LC_PREBOUND_DYLIB:
+                    htool_print_prebound_dylib_command (macho, info);
+                    break;
+
+                /* Dynamic Linker Command */
+                case LC_ID_DYLINKER:
+                case LC_LOAD_DYLINKER:
+                case LC_DYLD_ENVIRONMENT:
+                    htool_print_dylinker_command (macho, info);
+                    break;
+
+                /* Linkedit Data Command */
+                case LC_CODE_SIGNATURE:
+                case LC_SEGMENT_SPLIT_INFO:
+                case LC_FUNCTION_STARTS:
+                case LC_DATA_IN_CODE:
+                case LC_DYLIB_CODE_SIGN_DRS:
+                case LC_LINKER_OPTIMIZATION_HINT:
+                case LC_DYLD_EXPORTS_TRIE:
+                case LC_DYLD_CHAINED_FIXUPS:
+                    htool_print_linkedit_data_command (rawlc);
+                    break;
+
+                /* Dynamic Linker Info */
+                case LC_DYLD_INFO:
+                case LC_DYLD_INFO_ONLY:
+                    htool_print_dylid_info_command (rawlc);
+                    break;
+
                 default:
                     warningf ("Load Command (%s) not implemented.\n", mach_load_command_get_name (lc));
                     break;
@@ -336,4 +366,69 @@ htool_print_sub_framework_command (macho_t *macho, mach_load_command_info_t *inf
     printf (YELLOW "  %-20s" RESET, mach_header_get_file_type_string (lc->cmd));
     printf (BOLD DARK_WHITE "  Name: " RESET DARK_GREY "%s" RESET,
             mach_load_command_load_string (macho, lc->cmdsize, sizeof (mach_sub_framework_command_t), info->offset, str->offset));
+}
+
+void
+htool_print_prebound_dylib_command (macho_t *macho, mach_load_command_info_t *info)
+{
+    mach_prebound_dylib_command_t *lc = info->lc;
+
+    printf (YELLOW "  %s\n" RESET, mach_load_command_get_name (lc));
+
+    printf (BOLD DARK_WHITE "            Path: " RESET DARK_GREY "%s\n" RESET,
+            mach_load_command_load_string (macho, lc->cmdsize, sizeof (mach_prebound_dylib_command_t), info->offset, lc->name.offset));
+    printf (BOLD DARK_WHITE "         Modules: " RESET DARK_GREY "%d\n" RESET,
+            lc->nmodules);
+    printf (BOLD DARK_WHITE "  Linked Modules: " RESET DARK_GREY "%s\n" RESET,
+            mach_load_command_load_string (macho, lc->cmdsize, sizeof (mach_prebound_dylib_command_t), info->offset, lc->linked_modules.offset));
+}
+
+void
+htool_print_dylinker_command (macho_t *macho, mach_load_command_info_t *info)
+{
+    mach_dylinker_command_t *lc = (mach_dylinker_command_t *) info->lc;
+
+    printf (YELLOW "  %-20s" RESET BOLD DARK_WHITE "%-20s" RESET DARK_GREY "%s\n" RESET,
+            mach_load_command_get_name (lc),
+            "Dylinker Path: ",
+            mach_load_command_load_string (macho, lc->cmdsize, sizeof (mach_dylinker_command_t), info->offset, lc->name.offset));
+}
+
+void
+htool_print_linkedit_data_command (void *cmd)
+{
+    mach_linkedit_data_command_t *lc = (mach_linkedit_data_command_t *) cmd;
+
+    printf (YELLOW "  %-27s" RESET, mach_load_command_get_name ((mach_load_command_t *) cmd));
+    printf (BOLD DARK_WHITE "%-20s" RESET DARK_GREY "0x%08x (%d bytes)\n",
+            "Offset:", lc->dataoff, lc->datasize);
+}
+
+void
+htool_print_dylid_info_command (void *cmd)
+{
+    mach_dyld_info_command_t *lc = (mach_dyld_info_command_t *) cmd;
+
+    printf (YELLOW "%s\n" RESET, mach_load_command_get_name ((mach_load_command_t *) cmd));
+    printf (BOLD DARK_YELLOW "  %-12s%-8s%s\n", "Info", "Size", "Offset" DARK_YELLOW BOLD RESET);
+
+    // rebase
+    printf (BOLD DARK_WHITE "  %-12s" RESET, "Rebase");
+    printf (DARK_GREY "%-8d0x%08x → 0x%08x\n" RESET, lc->rebase_size, lc->rebase_off, lc->rebase_off + lc->rebase_size);
+
+    // bind
+    printf (BOLD DARK_WHITE "  %-12s" RESET, "Bind");
+    printf (DARK_GREY "%-8d0x%08x → 0x%08x\n" RESET, lc->bind_size, lc->bind_off, lc->bind_off + lc->bind_size);
+
+    // weak bind
+    printf (BOLD DARK_WHITE "  %-12s" RESET, "Weak Bind");
+    printf (DARK_GREY "%-8d0x%08x → 0x%08x\n" RESET, lc->weak_bind_size, lc->weak_bind_off, lc->weak_bind_off + lc->weak_bind_size);
+
+    // lazy bind
+    printf (BOLD DARK_WHITE "  %-12s" RESET, "Lazy Bind");
+    printf (DARK_GREY "%-8d0x%08x → 0x%08x\n" RESET, lc->lazy_bind_size, lc->lazy_bind_off, lc->lazy_bind_off + lc->lazy_bind_size);
+
+    // export
+    printf (BOLD DARK_WHITE "  %-12s" RESET, "Export");
+    printf (DARK_GREY "%-8d0x%08x → 0x%08x\n" RESET, lc->export_size, lc->export_off, lc->export_off + lc->export_size);
 }
