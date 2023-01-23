@@ -49,6 +49,8 @@ void
 htool_print_linkedit_data_command (void *cmd);
 void
 htool_print_dylid_info_command (void *cmd);
+void
+htool_print_thread_state_command (void *lc_raw);
 
 
 #endif /* __htool_command_macho_h__ */

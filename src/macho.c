@@ -15,6 +15,9 @@
 
 #include <time.h>
 
+/* libhelper doesn't implement support for arm thread state */
+#include <mach/arm/thread_status.h>
+
 #include "commands/macho.h"
 
 /* return values for select_macho_arch */
@@ -22,6 +25,10 @@
 #define SELECT_MACHO_ARCH_FAIL_NO_ARCH     1
 #define SELECT_MACHO_ARCH_IS_FAT           2
 #define SELECT_MACHO_ARCH_IS_MACHO         3
+
+// tmp
+static void
+_thread_test_print (void *lc_raw);
 
 static int
 _select_macho_arch (htool_client_t *client, macho_t **macho)
@@ -277,6 +284,12 @@ htool_print_load_commands (htool_client_t *client)
                     htool_print_dylid_info_command (rawlc);
                     break;
 
+                /* Thread Command */
+                case LC_THREAD:
+                case LC_UNIXTHREAD:
+                    htool_print_thread_state_command (rawlc);
+                    break;
+
                 default:
                     warningf ("Load Command (%s) not implemented.\n", mach_load_command_get_name (lc));
                     break;
@@ -431,4 +444,153 @@ htool_print_dylid_info_command (void *cmd)
     // export
     printf (BOLD DARK_WHITE "  %-12s" RESET, "Export");
     printf (DARK_GREY "%-8d0x%08x → 0x%08x\n" RESET, lc->export_size, lc->export_off, lc->export_off + lc->export_size);
+}
+
+/*
+
+SOME CODE FOR HANDLING BYTE SWAPS IF THE MACHINE IS A DIFFERENT
+ENDIAN TO THE TARGET FILE
+
+typedef struct {
+    uint32_t cmd;
+    uint32_t cmdsize;
+
+    uint32_t flavour;
+    uint32_t count;
+
+    arm_thread_state64_t state;
+} thread_test;
+
+enum byte_sex {
+    UNKNOWN_BYTE_SEX,
+    BIG_ENDIAN_BYTE_SEX,
+    LITTLE_ENDIAN_BYTE_SEX
+};
+
+static long long
+SWAP_LONG_LONG (long long ll)
+{
+	union {
+	    char c[8];
+	    long long ll;
+	} in, out;
+	in.ll = ll;
+	out.c[0] = in.c[7];
+	out.c[1] = in.c[6];
+	out.c[2] = in.c[5];
+	out.c[3] = in.c[4];
+	out.c[4] = in.c[3];
+	out.c[5] = in.c[2];
+	out.c[6] = in.c[1];
+	out.c[7] = in.c[0];
+
+    printf ("in: 0x%016llx\nout: 0x%016llx\n", in.ll, out.ll);
+	return(out.ll);
+}
+
+#define SWAP_INT(a)  ( ((a) << 24) | \
+		      (((a) << 8) & 0x00ff0000) | \
+		      (((a) >> 8) & 0x0000ff00) | \
+	 ((unsigned int)(a) >> 24) )
+
+static void
+_swap_arm_thread_state64_t (arm_thread_state64_t *state)
+{
+    for (int i = 0; i < 29; i++)
+        state->__x[i] = SWAP_LONG_LONG (state->__x[i]);
+
+    state->__fp = SWAP_LONG_LONG (state->__fp);
+    state->__lr = SWAP_LONG_LONG (state->__lr);
+    state->__sp = SWAP_LONG_LONG (state->__sp);
+    //state->__pc = SWAP_LONG_LONG (state->__pc);
+    state->__cpsr = SWAP_INT (state->__cpsr);
+}*/
+
+void
+htool_print_thread_state_command (void *lc_raw)
+{
+    mach_thread_state_command_t *thread_command = (mach_thread_state_command_t *) lc_raw;
+
+    printf (YELLOW "  %s\n" RESET, mach_load_command_get_name ((mach_load_command_t *) thread_command));
+
+    printf (BOLD DARK_WHITE "   Flavour: " RESET);
+    if (thread_command->flavour == ARM_THREAD_STATE64) printf (DARK_GREY "ARM_THREAD_STATE64\n" RESET);
+    else if (thread_command->flavour == ARM_THREAD_STATE32) printf (DARK_GREY "ARM_THREAD_STATE32\n" RESET);
+    else printf (DARK_GREY "UNKNOWN_THREAD_STATE\n" RESET);
+
+    printf (BOLD DARK_WHITE "     Count: " RESET);
+    if (thread_command->count == ARM_THREAD_STATE64_COUNT) printf (DARK_GREY "ARM_THREAD_STATE64_COUNT\n" RESET);
+    else if (thread_command->count == ARM_THREAD_STATE32_COUNT) printf (DARK_GREY "ARM_THREAD_STATE32_COUNT\n" RESET);
+    else printf (DARK_GREY "UNKNOWN_THREAD_STATE_COUNT\n" RESET);
+
+    /* 64-bit thread state command */
+    if (thread_command->flavour == ARM_THREAD_STATE64) {
+
+        arm_thread_state64_t *cpu = (arm_thread_state64_t *) (lc_raw + sizeof (mach_thread_state_command_t));
+
+        printf (
+            "\t" BOLD DARK_WHITE " x0 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE " x1 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE " x2 " RESET DARK_GREY "0x%016llx\n"
+
+            "\t" BOLD DARK_WHITE " x3 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE " x4 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE " x5 " RESET DARK_GREY "0x%016llx\n"
+
+            "\t" BOLD DARK_WHITE " x6 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE " x7 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE " x8 " RESET DARK_GREY "0x%016llx\n"
+
+            "\t" BOLD DARK_WHITE " x9 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE "x10 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE "x11 " RESET DARK_GREY "0x%016llx\n"
+
+            "\t" BOLD DARK_WHITE "x12 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE "x13 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE "x14 " RESET DARK_GREY "0x%016llx\n"
+
+            "\t" BOLD DARK_WHITE "x15 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE "x16 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE "x17 " RESET DARK_GREY "0x%016llx\n"
+
+            "\t" BOLD DARK_WHITE "x18 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE "x19 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE "x20 " RESET DARK_GREY "0x%016llx\n"
+
+            "\t" BOLD DARK_WHITE "x21 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE "x22 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE "x23 " RESET DARK_GREY "0x%016llx\n"
+
+            "\t" BOLD DARK_WHITE "x24 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE "x25 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE "x26 " RESET DARK_GREY "0x%016llx\n"
+
+            "\t" BOLD DARK_WHITE "x27 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE "x28 " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE " fp " RESET DARK_GREY "0x%016llx\n"
+
+            "\t" BOLD DARK_WHITE " lr " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE " sp " RESET DARK_GREY "0x%016llx"
+            "\t" BOLD DARK_WHITE " pc " RESET DARK_GREY "0x%016llx\n"
+
+            "\t" BOLD DARK_WHITE "cpsr " RESET DARK_GREY "0x%08x\n",
+
+            cpu->__x[0], cpu->__x[1], cpu->__x[2], cpu->__x[3],
+            cpu->__x[4], cpu->__x[5], cpu->__x[6], cpu->__x[7],
+            cpu->__x[8], cpu->__x[9], cpu->__x[10], cpu->__x[11],
+            cpu->__x[12], cpu->__x[13], cpu->__x[14], cpu->__x[15],
+            cpu->__x[16], cpu->__x[17], cpu->__x[18], cpu->__x[19],
+            cpu->__x[20], cpu->__x[21], cpu->__x[22], cpu->__x[23],
+            cpu->__x[24], cpu->__x[25], cpu->__x[26], cpu->__x[27],
+            cpu->__x[28], cpu->__fp, cpu->__lr, cpu->__sp, cpu->__pc,
+            cpu->__cpsr);
+
+    /* 32-bit thread state command */
+    } else if (thread_command->flavour == ARM_THREAD_STATE32) {
+        warningf ("ARM_THREAD_STATE32 is not supported yet\n");
+
+    /* Unknown thread state command */
+    } else {
+        errorf ("Unknown thread state flavour: 0x%08x\n", thread_command->flavour);
+    }
 }
