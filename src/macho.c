@@ -290,6 +290,21 @@ htool_print_load_commands (htool_client_t *client)
                     htool_print_thread_state_command (rawlc);
                     break;
 
+                /* Symbol Table Command */
+                case LC_SYMTAB:
+                    htool_print_symtab_command (rawlc);
+                    break;
+
+                /* Dynamic Symbol Table Command */
+                case LC_DYSYMTAB:
+                    htool_print_dysymtab_command (rawlc);
+                    break;
+
+                /* UUID Command */
+                case LC_UUID:
+                    htool_print_uuid_command (rawlc);
+                    break;
+
                 default:
                     warningf ("Load Command (%s) not implemented.\n", mach_load_command_get_name (lc));
                     break;
@@ -593,4 +608,84 @@ htool_print_thread_state_command (void *lc_raw)
     } else {
         errorf ("Unknown thread state flavour: 0x%08x\n", thread_command->flavour);
     }
+}
+
+void
+htool_print_symtab_command (void *lc_raw)
+{
+    mach_symtab_command_t *lc = (mach_symtab_command_t *) lc_raw;
+
+    /* check no of symbols */
+    if (!lc->nsyms) {
+        printf (BLUE "  No Symbols\n" RESET);
+        return;
+    }
+
+    printf (YELLOW "  %s" RESET DARK_GREY "  %d symbols\n" RESET,
+            "LC_SYMTAB:", lc->nsyms);
+
+    /* symbol table offset, string table offset, string table size. */
+    printf (BOLD DARK_WHITE "  Symbol table offset:" RESET DARK_GREY "\t0x%08x\n",
+            lc->symoff);
+    printf (BOLD DARK_WHITE "  String table offset:" RESET DARK_GREY "\t0x%08x\n",
+            lc->stroff);
+    printf (BOLD DARK_WHITE "    String table size:" RESET DARK_GREY "\t%d Bytes\n",
+            lc->strsize);
+}
+
+void
+htool_print_dysymtab_command (void *lc_raw)
+{
+    mach_dysymtab_command_t *lc = (mach_dysymtab_command_t *) lc_raw;
+
+    printf (YELLOW "  %s:\n" YELLOW, mach_load_command_get_name ((mach_load_command_t *) lc_raw));
+
+    // local symbols
+    printf (BOLD DARK_WHITE "                Local Symbols: " RESET);
+    if (lc->nlocalsym) printf (DARK_GREY "%d at %d\n" RESET, lc->nlocalsym, lc->ilocalsym);
+    else printf (BLUE "None\n" RESET);
+
+    // external symbols
+    printf (BOLD DARK_WHITE "             External Symbols: " RESET);
+    if (lc->nextdefsym) printf (DARK_GREY "%d at %d\n" RESET, lc->nextdefsym, lc->iextdefsym);
+    else printf (BLUE "None\n" RESET);
+
+    // undefined symbols
+    printf (BOLD DARK_WHITE "            Undefined Symbols: " RESET);
+    if (lc->nundefsym) printf (DARK_GREY "%d at %d\n" RESET, lc->nundefsym, lc->iundefsym);
+    else printf (BLUE "None\n" RESET);
+
+    // toc
+    printf (BOLD DARK_WHITE "                          TOC: " RESET);
+    if (lc->ntoc) printf (DARK_GREY "%d entries at 0x%08x\n" RESET, lc->ntoc, lc->tocoff);
+    else printf (RED "No\n" RESET);
+
+    // modtab
+    printf (BOLD DARK_WHITE "                       Modtab: " RESET);
+    if (lc->nmodtab) printf (DARK_GREY "%d entries at 0x%08x\n" RESET, lc->nmodtab, lc->modtaboff);
+    else printf (RED "No\n" RESET);
+
+    // indirect symtab entries
+    printf (BOLD DARK_WHITE "      Indirect symtab entries: " RESET);
+    if (lc->nindirectsyms) printf (DARK_GREY "%d at 0x%08x\n" RESET, lc->nindirectsyms, lc->indirectsymoff);
+    else printf (RED "No\n" RESET);
+
+    // external relocation entries
+    printf (BOLD DARK_WHITE "  External Relocation Entries: " RESET);
+    if (lc->nextrel) printf (DARK_GREY "%d at 0x%08x\n" RESET, lc->nextrel, lc->extreloff);
+    else printf (BLUE "None\n" RESET);
+
+    // local relocation entries
+    printf (BOLD DARK_WHITE "     Local Relocation Entries: " RESET);
+    if (lc->nlocrel) printf (DARK_GREY "%d at 0x%08x\n" RESET, lc->nlocrel, lc->locreloff);
+    else printf (BLUE "None\n" RESET);
+}
+
+void
+htool_print_uuid_command (void *lc_raw)
+{
+    mach_uuid_command_t *lc = (mach_uuid_command_t *) lc_raw;
+
+    printf (YELLOW "  %-20s" RESET BOLD DARK_WHITE "%-20s" RESET DARK_GREY "%-10s\n" RESET,
+            "LC_UUID:", "UUID:", mach_load_command_uuid_parse_string (lc));
 }
