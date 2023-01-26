@@ -13,6 +13,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+/**
+ * NOTE:    This file handles the majority of the functionality of the `macho` 
+ *          command. However, handling of symbols is found in nm.c as much
+ *          functionality isn't implemented in Libhelper.
+*/
+
 #include <time.h>
 
 /* libhelper doesn't implement support for arm thread state */
@@ -110,7 +116,7 @@ htool_print_header (htool_client_t *client)
     }
 }
 
-void
+htool_return_t
 htool_print_load_commands (htool_client_t *client)
 {
     htool_binary_t *bin = client->bin;
@@ -340,9 +346,10 @@ htool_print_load_commands (htool_client_t *client)
         }
 
     }
+    return HTOOL_RETURN_SUCCESS;
 }
 
-void
+htool_return_t
 htool_print_shared_libraries (htool_client_t *client)
 {
     htool_binary_t *bin = client->bin;
@@ -384,6 +391,7 @@ htool_print_shared_libraries (htool_client_t *client)
                 mach_load_command_dylib_format_version (dylib->dylib.current_version));
         }
     }
+    return HTOOL_RETURN_SUCCESS;
 }
 
 

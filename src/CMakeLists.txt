@@ -33,4 +33,5 @@ target_sources(htool
         usage.c
         loader.c
         macho.c
+        nm.c
 )

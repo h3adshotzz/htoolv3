@@ -58,6 +58,10 @@ static struct option macho_cmd_opts[] = {
     { "help",       no_argument,        NULL,   'H' },
     { "header",     no_argument,        NULL,   'h' },
     { "loadcmd",    no_argument,        NULL,   'l' },
+    { "libs",       no_argument,        NULL,   'L' },
+    { "symbols",    no_argument,        NULL,   's' },
+    { "sym-dbg",    no_argument,        NULL,   'D' },
+    { "sym-sect",   no_argument,        NULL,   'C' },
     
     { NULL,         0,                  NULL,    0  }
 };
@@ -97,7 +101,7 @@ static htool_return_t handle_command_macho (htool_client_t *client)
     /* parse the `file` options */
     int opt = 0;
     int optindex = 0;
-    while ((opt = getopt_long (client->argc, client->argv, "hlLA", macho_cmd_opts, &optindex)) > 0) {
+    while ((opt = getopt_long (client->argc, client->argv, "hlLsDCA", macho_cmd_opts, &optindex)) > 0) {
         switch (opt) {
 
             /* -a, --arch */
@@ -120,6 +124,21 @@ static htool_return_t handle_command_macho (htool_client_t *client)
             case 'L':
                 client->opts |= HTOOL_CLIENT_MACHO_OPT_LIBS;
                 break;
+
+            /* -s, --symbols */
+            case 's':
+                client->opts |= HTOOL_CLIENT_MACHO_OPT_SYMBOLS;
+                break;
+
+                /* -sym-dbg */
+                case 'D':
+                    client->opts |= HTOOL_CLIENT_MACHO_OPT_SYMDBG;
+                    break;
+
+                /* -sym-sect */
+                case 'C':
+                    client->opts |= HTOOL_CLIENT_MACHO_OPT_SYMSECT;
+                    break;
 
             /* default, print usage */
             case 'H':
@@ -173,6 +192,13 @@ static htool_return_t handle_command_macho (htool_client_t *client)
      */
     if (client->opts & HTOOL_CLIENT_MACHO_OPT_LIBS)
         htool_print_shared_libraries (client);
+
+    /**
+     *  Option:             -S, --symbols
+     *  Description:        Print out the Static Symbols contained in a Mach-O file.
+     */
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_SYMBOLS)
+        htool_print_static_symbols (client);
 
 
     return HTOOL_RETURN_SUCCESS;

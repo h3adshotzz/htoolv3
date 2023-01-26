@@ -22,7 +22,8 @@
 typedef enum htool_return_t
 {
     HTOOL_RETURN_FAILURE,
-    HTOOL_RETURN_SUCCESS
+    HTOOL_RETURN_SUCCESS,
+    HTOOL_RETURN_VOID
 } htool_return_t;
 
 /**
