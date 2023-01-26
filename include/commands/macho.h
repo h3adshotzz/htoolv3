@@ -63,6 +63,8 @@ void
 htool_print_source_version_command (void *lc_raw);
 void
 htool_print_build_version_command (macho_t *macho, uint32_t offset, void *lc_raw);
+void
+htool_print_entry_point_command (void *lc_raw);
 
 
 

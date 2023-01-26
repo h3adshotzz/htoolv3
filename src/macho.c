@@ -320,6 +320,11 @@ htool_print_load_commands (htool_client_t *client)
                     htool_print_build_version_command (macho, info->offset, rawlc);
                     break;
 
+                /* Entry Point Command */
+                case LC_MAIN:
+                    htool_print_entry_point_command (rawlc);
+                    break;
+
                 default:
                     warningf ("Load Command (%s) not implemented.\n", mach_load_command_get_name (lc));
                     break;
@@ -752,4 +757,12 @@ htool_print_build_version_command (macho_t *macho, uint32_t offset, void *lc_raw
             }
         }
     }
+}
+
+void
+htool_print_entry_point_command (void *lc_raw)
+{
+    mach_entry_point_command_t *lc = (mach_entry_point_command_t *) lc_raw;
+    printf (YELLOW "  %-20s" RESET BOLD DARK_WHITE "%-20s" RESET DARK_GREY "0x%08llx (Stack: %llu bytes)\n" RESET,
+            "LC_MAIN:", "Entry Offset:", lc->entryoff, lc->stacksize);
 }
