@@ -57,6 +57,8 @@ void
 htool_print_dysymtab_command (void *lc_raw);
 void
 htool_print_uuid_command (void *lc_raw);
+void
+htool_print_rpath_command (macho_t *macho, mach_load_command_info_t *info, void *lc_raw);
 
 
 #endif /* __htool_command_macho_h__ */

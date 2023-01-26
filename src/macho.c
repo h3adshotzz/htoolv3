@@ -305,6 +305,11 @@ htool_print_load_commands (htool_client_t *client)
                     htool_print_uuid_command (rawlc);
                     break;
 
+                /* RPATH Command */
+                case LC_RPATH:
+                    htool_print_rpath_command (macho, info, rawlc);
+                    break;
+
                 default:
                     warningf ("Load Command (%s) not implemented.\n", mach_load_command_get_name (lc));
                     break;
@@ -688,4 +693,15 @@ htool_print_uuid_command (void *lc_raw)
 
     printf (YELLOW "  %-20s" RESET BOLD DARK_WHITE "%-20s" RESET DARK_GREY "%-10s\n" RESET,
             "LC_UUID:", "UUID:", mach_load_command_uuid_parse_string (lc));
+}
+
+void
+htool_print_rpath_command (macho_t *macho, mach_load_command_info_t *info, void *lc_raw)
+{
+    mach_rpath_command_t *lc = (mach_rpath_command_t *) info->lc;
+
+    printf (YELLOW "  %-20s" RESET BOLD DARK_WHITE "%-20s" RESET DARK_GREY "%s\n" RESET,
+            mach_load_command_get_name (lc),
+            "Path: ",
+            mach_load_command_load_string (macho, lc->cmdsize, sizeof (mach_rpath_command_t), info->offset, lc->path.offset));
 }
