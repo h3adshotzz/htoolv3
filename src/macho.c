@@ -325,6 +325,11 @@ htool_print_load_commands (htool_client_t *client)
                     htool_print_entry_point_command (rawlc);
                     break;
 
+                /* Fileset Entry Commnad */
+                case LC_FILESET_ENTRY:
+                    htool_print_fileset_entry_command (macho, info->offset, rawlc);
+                    break;
+
                 default:
                     warningf ("Load Command (%s) not implemented.\n", mach_load_command_get_name (lc));
                     break;
@@ -765,4 +770,19 @@ htool_print_entry_point_command (void *lc_raw)
     mach_entry_point_command_t *lc = (mach_entry_point_command_t *) lc_raw;
     printf (YELLOW "  %-20s" RESET BOLD DARK_WHITE "%-20s" RESET DARK_GREY "0x%08llx (Stack: %llu bytes)\n" RESET,
             "LC_MAIN:", "Entry Offset:", lc->entryoff, lc->stacksize);
+}
+
+void
+htool_print_fileset_entry_command (macho_t *macho, uint32_t offset, void *lc_raw)
+{
+    mach_fileset_entry_command_t *fs = (mach_fileset_entry_command_t *) lc_raw;
+    char *entry_name = mach_load_command_load_string (macho, fs->cmdsize, 
+            sizeof (mach_fileset_entry_command_t), offset, fs->entry_id.offset);
+
+    printf (YELLOW "  %s:\n" YELLOW, mach_load_command_get_name ((mach_load_command_t *) lc_raw));
+
+    printf (BOLD DARK_WHITE "\tEntry Name: " RESET DARK_GREY "%s\n", entry_name);
+    printf (BOLD DARK_WHITE "\t    vmaddr: " RESET DARK_GREY "0x%08x\n", fs->vmaddr);
+    printf (BOLD DARK_WHITE "\t   fileoff: " RESET DARK_GREY "0x%08x\n", fs->fileoff);
+    printf (BOLD DARK_WHITE "\t  reserved: " RESET DARK_GREY "0x%08x\n", fs->reserved);
 }
