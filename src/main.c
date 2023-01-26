@@ -132,6 +132,15 @@ static htool_return_t handle_command_macho (htool_client_t *client)
     printf ("**********\n\n");
 
     /**
+     *  Option:             None
+     *  Description:        No option has been passed, so print the help menu again.
+     */
+    if (!client->opts) {
+        macho_subcommand_usage (client->argc, client->argv, 0);
+        return HTOOL_RETURN_FAILURE;
+    }
+
+    /**
      *  Create and load a htool_binary_t
      */
     client->bin = htool_binary_load_and_parse (client->filename);
