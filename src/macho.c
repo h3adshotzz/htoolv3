@@ -310,6 +310,16 @@ htool_print_load_commands (htool_client_t *client)
                     htool_print_rpath_command (macho, info, rawlc);
                     break;
 
+                /* Source Version Command */
+                case LC_SOURCE_VERSION:
+                    htool_print_source_version_command (rawlc);
+                    break;
+
+                /* Build Version Command */
+                case LC_BUILD_VERSION:
+                    htool_print_build_version_command (macho, info->offset, rawlc);
+                    break;
+
                 default:
                     warningf ("Load Command (%s) not implemented.\n", mach_load_command_get_name (lc));
                     break;
@@ -704,4 +714,42 @@ htool_print_rpath_command (macho_t *macho, mach_load_command_info_t *info, void 
             mach_load_command_get_name (lc),
             "Path: ",
             mach_load_command_load_string (macho, lc->cmdsize, sizeof (mach_rpath_command_t), info->offset, lc->path.offset));
+}
+
+void
+htool_print_source_version_command (void *lc_raw)
+{
+    mach_source_version_command_t *lc = (mach_source_version_command_t *) lc_raw;
+
+    printf (YELLOW "  %-20s" RESET BOLD DARK_WHITE "%-20s" RESET DARK_GREY "%-26s\n" RESET,
+            "LC_SOURCE_VERSION:", "Source Version:", mach_load_command_get_source_version_string (lc));
+}
+
+void
+htool_print_build_version_command (macho_t *macho, uint32_t offset, void *lc_raw)
+{
+    mach_build_version_command_t *lc = (mach_build_version_command_t *) lc_raw;
+    mach_build_version_info_t *info = mach_load_command_build_version_info (lc, offset, macho);
+
+    printf (YELLOW "  %-20s" RESET BOLD DARK_WHITE "%-20s" RESET DARK_GREY "%s %s, %s %s, %s %s\n" RESET,
+            "LC_BUILD_VERSION:", "Build Version:",
+            "Platform:", info->platform,
+            "MinOS:", info->minos,
+            "SDK:", info->sdk);
+
+    /* tool list */
+    if (info->ntools) {
+        printf (BOLD DARK_YELLOW "  %-10s%-10s\n", "Tool", "Version" RESET);
+        for (int i = 0; i < (int) h_slist_length (info->tools); i++) {
+            build_tool_info_t *b = (build_tool_info_t *) h_slist_nth_data (info->tools, i);
+
+            if (!b) {
+                printf (BLUE "Invalid Tool\n" RESET);
+            } else {
+                printf (BOLD DARK_WHITE "  %-10s" RESET DARK_GREY "%d.%d.%d\n" RESET,
+                    b->tool,
+                    b->version >> 16, (b->version >> 8) & 0xf, b->version & 0xf);
+            }
+        }
+    }
 }

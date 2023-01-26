@@ -59,6 +59,11 @@ void
 htool_print_uuid_command (void *lc_raw);
 void
 htool_print_rpath_command (macho_t *macho, mach_load_command_info_t *info, void *lc_raw);
+void
+htool_print_source_version_command (void *lc_raw);
+void
+htool_print_build_version_command (macho_t *macho, uint32_t offset, void *lc_raw);
+
 
 
 #endif /* __htool_command_macho_h__ */
