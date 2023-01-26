@@ -28,6 +28,8 @@ htool_return_t
 htool_print_header (htool_client_t *client);
 void
 htool_print_load_commands (htool_client_t *client);
+void
+htool_print_shared_libraries (htool_client_t *client);
 
 
 macho_t *

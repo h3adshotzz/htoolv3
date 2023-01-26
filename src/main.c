@@ -97,7 +97,7 @@ static htool_return_t handle_command_macho (htool_client_t *client)
     /* parse the `file` options */
     int opt = 0;
     int optindex = 0;
-    while ((opt = getopt_long (client->argc, client->argv, "hlA", macho_cmd_opts, &optindex)) > 0) {
+    while ((opt = getopt_long (client->argc, client->argv, "hlLA", macho_cmd_opts, &optindex)) > 0) {
         switch (opt) {
 
             /* -a, --arch */
@@ -114,6 +114,11 @@ static htool_return_t handle_command_macho (htool_client_t *client)
             /* -l, --loadcmd */
             case 'l':
                 client->opts |= HTOOL_CLIENT_MACHO_OPT_LCMDS;
+                break;
+
+            /* -L, --libs */
+            case 'L':
+                client->opts |= HTOOL_CLIENT_MACHO_OPT_LIBS;
                 break;
 
             /* default, print usage */
@@ -161,6 +166,13 @@ static htool_return_t handle_command_macho (htool_client_t *client)
      */
     if (client->opts & HTOOL_CLIENT_MACHO_OPT_LCMDS)
         htool_print_load_commands (client);
+
+    /**
+     *  Option:             -L, --libs
+     *  Description:        Print out the Shared Libraries contained in a Mach-O file.
+     */
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_LIBS)
+        htool_print_shared_libraries (client);
 
 
     return HTOOL_RETURN_SUCCESS;

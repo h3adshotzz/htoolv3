@@ -342,6 +342,51 @@ htool_print_load_commands (htool_client_t *client)
     }
 }
 
+void
+htool_print_shared_libraries (htool_client_t *client)
+{
+    htool_binary_t *bin = client->bin;
+
+    /**
+     *  First, check if the file is a FAT and has --arch unset. If this is the
+     *  case, print out an error as we cannot print load commands of a FAT if
+     *  --arch is not set.
+     */
+    if (_check_fat (client)) {
+        
+        /* print an error as --arch is not set */
+        errorf ("htool_print_load_commands: Cannot print Shared libraries of a FAT archive. Please run with --arch=\n\n");
+        
+        /* if the --header option has been used, don't print the header again */
+        if (!(client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)) {
+            printf (BOLD RED "FAT Header:\n" RESET);
+            htool_print_fat_header_from_struct (bin->fat_info, 1);    
+        }
+        
+        /* there's nothing that can be done now, so exit */
+        exit (HTOOL_RETURN_FAILURE);
+
+    } else {
+
+        printf (RED BOLD "Dynamically-linked Libraries:\n" RESET);
+        printf (BOLD DARK_YELLOW "  %-35s%-20s%-10s\n", "Library", "Compat. Vers", "Curr. Vers" DARK_YELLOW BOLD RESET);
+
+        macho_t *macho = (macho_t *) h_slist_nth_data (bin->macho_list, 0);
+        HSList *dylibs = macho->dylibs;
+
+        for (int i = 0; i < h_slist_length (dylibs); i++) {
+            mach_dylib_command_info_t *info = (mach_dylib_command_info_t *) h_slist_nth_data (dylibs, i);
+            mach_dylib_command_t *dylib = info->dylib;
+
+            printf (BOLD DARK_WHITE "  %-35s" BOLD DARK_GREY "%-20s%-10s\n" RESET,
+                info->name,
+                mach_load_command_dylib_format_version (dylib->dylib.compatibility_version),
+                mach_load_command_dylib_format_version (dylib->dylib.current_version));
+        }
+    }
+}
+
+
 //===----------------------------------------------------------------------===//
 //                       Formatted Print Functions
 //===----------------------------------------------------------------------===//
