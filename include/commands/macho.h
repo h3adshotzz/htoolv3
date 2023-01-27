@@ -23,52 +23,249 @@
 #include "htool-client.h"
 #include "htool.h"
 
+/***********************************************************************
+*                   HTool Mach-O Print Functions
+************************************************************************/
 
+/**
+ *  \brief      Print the Mach-O header of the file loaded into the client
+ *              structure. If the file is a FAT archive, check the --arch
+ *              flag and, if that's not set, print the FAT header. For the
+ *              header print, no error is shown if no --arch is specified.
+ * 
+ *  \param client       HTool Client instance.
+ */
 htool_return_t
 htool_print_header (htool_client_t *client);
+
+/**
+ *  \brief      Print the Mach-O Load Commands of the file loaded into the
+ *              client structure. If the file is a FAT archive, but the
+ *              --arch flag isn't set, print the FAT header again and an
+ *              error.
+ * 
+ *  \param client       HTool Client instance.
+ */
 htool_return_t
 htool_print_load_commands (htool_client_t *client);
+
+/**
+ *  \brief      Print the Mach-O Shared Libraries of the file loaded into 
+ *              the client structure. If the file is a FAT archive, but the
+ *              --arch flag isn't set, print the FAT header again and an
+ *              error.
+ * 
+ *  \param client       HTool Client instance.
+ */
 htool_return_t
 htool_print_shared_libraries (htool_client_t *client);
+
+/**
+ *  \brief      Print the Mach-O Static Symbols of the file loaded into the
+ *              client structure. If the file is a FAT archive, but the
+ *              --arch flag isn't set, print the FAT header again and an
+ *              error.
+ * 
+ *  \param client       HTool Client instance.
+ */
 htool_return_t
 htool_print_static_symbols (htool_client_t *client);
 
-
-macho_t *
+/**
+ *  \brief      Select the specified architecture from the, presumably,
+ *              FAT archive loaded in the given HTool binary, and return
+ *              an appropriate return code.
+ * 
+ *  \param bin          HTool binary with loaded FAT archive.
+ *  \param arch_name    Name of architecture to search FAT archive for.
+ * 
+ *  \returns    Return code as an integer:
+ *              * SELECT_MACHO_ARCH_FAIL
+ *              * SELECT_MACHO_ARCH_FAIL_NO_ARCH
+ *              * SELECT_MACHO_ARCH_IS_FAT
+ *              * SELECT_MACHO_ARCH_IS_MACHO. 
+ */
+int
 htool_binary_select_arch (htool_binary_t *bin, char *arch_name);
 
+
+/***********************************************************************
+*                HTool Load Command Print Functions
+************************************************************************/
+
+/**
+ *  \brief      Print a Mach-O Header struct in a colour-coded format.
+ * 
+ *  \param hdr      mach_header_t to print.
+ */
 void
 htool_print_macho_header_from_struct (mach_header_t *hdr);
+
+/**
+ *  \brief      Print a FAT Header struct in a colour-coded format.
+ * 
+ *  \param info     FAT archive info struct.
+ *  \param expand   Whether or not to print details of each architecture
+ *                  contained in the FAT archive.
+ */
 void
 htool_print_fat_header_from_struct (fat_info_t *info, int expand);
+
+/**
+ *  \brief      Print a Mach-O DYLIB Load Command in a colour-coded
+ *              format.
+ * 
+ *  \param dylibs       List of Dynamic Library load commands to print.
+ *  \param dylib_count  Number of dylibs to print. 
+ */
 void
 htool_print_dylib_command (HSList *dylibs, int dylib_count);
+
+/**
+ *  \brief      Print a Mach-O Sub Framework Load Command in a colour
+ *              -coded format.
+ * 
+ *  \param macho    Mach-O struct containing the Load Command.
+ *  \param info     Load Command information struct/wrapper.
+ *  \param lc_raw   Pointer to the base of the load command within the
+ *                  Mach-O in memory.
+ */
 void
 htool_print_sub_framework_command (macho_t *macho, mach_load_command_info_t *info, void *lc_raw);
+
+/**
+ *  \brief      Print a Mach-O Prebound Dylib Load Command in a colour
+ *              -coded format.
+ * 
+ *  \param macho    Mach-O struct containing the Load Command.
+ *  \param info     Load Command information struct/wrapper.
+ */
 void
 htool_print_prebound_dylib_command (macho_t *macho, mach_load_command_info_t *info);
+
+/**
+ *  \brief      Print a Mach-O Dynamic Linker Load Command in a colour
+ *              -coded format.
+ * 
+ *  \param macho    Mach-O struct containing the Load Command.
+ *  \param info     Load Command information struct/wrapper.
+ */
 void
 htool_print_dylinker_command (macho_t *macho, mach_load_command_info_t *info);
+
+/**
+ *  \brief      Print a Mach-O Linkedit Data Load Command in a colour-
+ *              coded format.
+ * 
+ *  \param cmd      Pointer to the base of the load command within the
+ *                  Mach-O in memory.  
+ */
 void
 htool_print_linkedit_data_command (void *cmd);
+
+/**
+ *  \brief      Print a Mach-O DYLD Information Load Command in a colour-
+ *              coded format.
+ * 
+ *  \param cmd      Pointer to the base of the load command within the
+ *                  Mach-O in memory.  
+ */
 void
 htool_print_dylid_info_command (void *cmd);
+
+/**
+ *  \brief      Print a Mach-O Thread State Load Command in a colour-
+ *              coded format.
+ * 
+ *  \param cmd      Pointer to the base of the load command within the
+ *                  Mach-O in memory.  
+ */
 void
 htool_print_thread_state_command (void *lc_raw);
+
+/**
+ *  \brief      Print a Mach-O Synbol Table Load Command in a colour-
+ *              coded format.
+ * 
+ *  \param lc_raw   Pointer to the base of the load command within the
+ *                  Mach-O in memory.  
+ */
 void
 htool_print_symtab_command (void *lc_raw);
+
+/**
+ *  \brief      Print a Mach-O Dynamic Symbol Table Load Command in a 
+ *              colour-coded format.
+ * 
+ *  \param lc_raw   Pointer to the base of the load command within the
+ *                  Mach-O in memory.  
+ */
 void
 htool_print_dysymtab_command (void *lc_raw);
+
+/**
+ *  \brief      Print a Mach-O UUID Load Command in a colour-coded 
+ *              format.
+ * 
+ *  \param lc_raw   Pointer to the base of the load command within the
+ *                  Mach-O in memory.  
+ */
 void
 htool_print_uuid_command (void *lc_raw);
+
+/**
+ *  \brief      Print a Mach-O RPATH Load Command in a colour-coded
+ *              format.
+ *
+ *  \param macho    Mach-O struct containing the Load Command.
+ *  \param info     Load Command information struct/wrapper.
+ *  \param lc_raw   Pointer to the base of the load command within the
+ *                  Mach-O in memory.
+ */
 void
 htool_print_rpath_command (macho_t *macho, mach_load_command_info_t *info, void *lc_raw);
+
+/**
+ *  \brief      Print a Mach-O Source Version Load Command in a colour
+ *              -coded format.
+ * 
+ *  \param lc_raw   Pointer to the base of the load command within the
+ *                  Mach-O in memory.  
+ */
 void
 htool_print_source_version_command (void *lc_raw);
+
+/**
+ *  \brief      Print a Mach-O Build Version Load Command in a colour
+ *              -coded format.
+ * 
+ *  \param macho    Mach-O struct containing the Load Command.
+ *  \param offset   Offset of the load commnad in the Mach-O file.
+ *  \param lc_raw   Pointer to the base of the load command within the
+ *                  Mach-O in memory.   
+ */
 void
 htool_print_build_version_command (macho_t *macho, uint32_t offset, void *lc_raw);
+
+/**
+ *  \brief      Print a Mach-O Entry Point Load Command in a colour-coded 
+ *              format.
+ * 
+ *  \param lc_raw   Pointer to the base of the load command within the
+ *                  Mach-O in memory.  
+ */
 void
 htool_print_entry_point_command (void *lc_raw);
+
+/**
+ *  \brief      Print a Mach-O Fileset Entry Load Command in a colour
+ *              -coded format.
+ * 
+ *  \param macho    Mach-O struct containing the Load Command.
+ *  \param offset   Offset of the load commnad in the Mach-O file.
+ *  \param lc_raw   Pointer to the base of the load command within the
+ *                  Mach-O in memory.   
+ */
 void
 htool_print_fileset_entry_command (macho_t *macho, uint32_t offset, void *lc_raw);
 
