@@ -79,13 +79,9 @@ htool_print_static_symbols (htool_client_t *client);
  *  \param bin          HTool binary with loaded FAT archive.
  *  \param arch_name    Name of architecture to search FAT archive for.
  * 
- *  \returns    Return code as an integer:
- *              * SELECT_MACHO_ARCH_FAIL
- *              * SELECT_MACHO_ARCH_FAIL_NO_ARCH
- *              * SELECT_MACHO_ARCH_IS_FAT
- *              * SELECT_MACHO_ARCH_IS_MACHO. 
+ *  \returns    Returns the macho_t for the selected architecture, or NULL.
  */
-int
+macho_t *
 htool_binary_select_arch (htool_binary_t *bin, char *arch_name);
 
 
