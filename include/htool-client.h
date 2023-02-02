@@ -89,6 +89,8 @@ struct command {
 #define HTOOL_CLIENT_MACHO_OPT_SYMBOLS      (1 << 5)
 #define HTOOL_CLIENT_MACHO_OPT_SYMDBG       (1 << 6)
 #define HTOOL_CLIENT_MACHO_OPT_SYMSECT      (1 << 7)
+#define HTOOL_CLIENT_MACHO_OPT_CODE_SIGNING (1 << 8)
+#define HTOOL_CLIENT_MACHO_OPT_VERBOSE      (1 << 9)
 
 //#define
 

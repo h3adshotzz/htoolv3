@@ -260,6 +260,7 @@ htool_binary_select_arch (htool_binary_t *bin, char *arch_name)
         if (!strcmp (cpu_name, arch_name))
             return (macho_t *) h_slist_nth_data (bin->macho_list, i);
     }
+    errorf ("could not find arch\n");
     return NULL;
 }
 

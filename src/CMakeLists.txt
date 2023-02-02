@@ -34,4 +34,5 @@ target_sources(htool
         loader.c
         macho.c
         nm.c
+        codesigning.c
 )

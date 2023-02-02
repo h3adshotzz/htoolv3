@@ -26,18 +26,8 @@
 
 #include "commands/macho.h"
 
-/* return values for select_macho_arch */
-#define SELECT_MACHO_ARCH_FAIL             0
-#define SELECT_MACHO_ARCH_FAIL_NO_ARCH     1
-#define SELECT_MACHO_ARCH_IS_FAT           2
-#define SELECT_MACHO_ARCH_IS_MACHO         3
-
-// tmp
-static void
-_thread_test_print (void *lc_raw);
-
-static int
-_select_macho_arch (htool_client_t *client, macho_t **macho)
+int
+htool_macho_select_arch (htool_client_t *client, macho_t **macho)
 {
     htool_binary_t *bin = client->bin;
 
@@ -55,7 +45,7 @@ _select_macho_arch (htool_client_t *client, macho_t **macho)
     macho_t *tmp = calloc (1, sizeof (macho_t));
 
     /* check for --arch */
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_ARCH) {
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_ARCH && htool_macho_check_fat (client)) {
 
         /* load the macho for --arch */
         tmp = htool_binary_select_arch (bin, client->arch);
@@ -74,8 +64,8 @@ _select_macho_arch (htool_client_t *client, macho_t **macho)
     return SELECT_MACHO_ARCH_IS_MACHO;
 }
 
-static htool_return_t
-_check_fat (htool_client_t *client)
+htool_return_t
+htool_macho_check_fat (htool_client_t *client)
 {
     return (HTOOL_CLIENT_CHECK_FLAG (client->bin->flags, HTOOL_BINARY_FILETYPE_FAT) && 
         !(client->opts & HTOOL_CLIENT_MACHO_OPT_ARCH)) ? HTOOL_RETURN_SUCCESS : HTOOL_RETURN_FAILURE;
@@ -93,7 +83,7 @@ htool_print_header (htool_client_t *client)
      *  If the file is a FAT archive, but --arch hasn't been set, print the
      *  FAT header.
      */
-    if (_check_fat (client)) {
+    if (htool_macho_check_fat (client)) {
 
         // print fat header
         printf (BOLD RED "FAT Header:\n" RED BOLD RESET);
@@ -106,7 +96,7 @@ htool_print_header (htool_client_t *client)
          *  the one specified by --arch.
          */
         macho_t *macho = calloc (1, sizeof (macho_t));
-        int res = _select_macho_arch (client, &macho);
+        int res = htool_macho_select_arch (client, &macho);
 
         debugf ("res_: %d\n", res);
 
@@ -126,7 +116,7 @@ htool_print_load_commands (htool_client_t *client)
      *  case, print out an error as we cannot print load commands of a FAT if
      *  --arch is not set.
      */
-    if (_check_fat (client)) {
+    if (htool_macho_check_fat (client)) {
         
         /* print an error as --arch is not set */
         errorf ("htool_print_load_commands: Cannot print Load Commands of a FAT archive. Please run with --arch=\n\n");
@@ -147,7 +137,7 @@ htool_print_load_commands (htool_client_t *client)
          *  the one specified by --arch.
          */
         macho_t *macho = calloc (1, sizeof (macho_t));
-        if (_select_macho_arch (client, &macho) == SELECT_MACHO_ARCH_FAIL_NO_ARCH) {
+        if (htool_macho_select_arch (client, &macho) == SELECT_MACHO_ARCH_FAIL_NO_ARCH) {
             errorf ("htool_print_load_commands: Could not load architecture from FAT archive: %s\n", client->arch);
             htool_print_fat_header_from_struct (bin->fat_info, 1);
 
@@ -359,7 +349,7 @@ htool_print_shared_libraries (htool_client_t *client)
      *  case, print out an error as we cannot print load commands of a FAT if
      *  --arch is not set.
      */
-    if (_check_fat (client)) {
+    if (htool_macho_check_fat (client)) {
         
         /* print an error as --arch is not set */
         errorf ("htool_print_load_commands: Cannot print Shared libraries of a FAT archive. Please run with --arch=\n\n");
@@ -375,10 +365,21 @@ htool_print_shared_libraries (htool_client_t *client)
 
     } else {
 
+        /**
+         *  Load the correct Mach-O. Either the only one in the macho_list, or
+         *  the one specified by --arch.
+         */
+        macho_t *macho = calloc (1, sizeof (macho_t));
+        if (htool_macho_select_arch (client, &macho) == SELECT_MACHO_ARCH_FAIL_NO_ARCH) {
+            errorf ("htool_print_load_commands: Could not load architecture from FAT archive: %s\n", client->arch);
+            htool_print_fat_header_from_struct (bin->fat_info, 1);
+
+            exit (HTOOL_RETURN_FAILURE);
+        }
+
         printf (RED BOLD "Dynamically-linked Libraries:\n" RESET);
         printf (BOLD DARK_YELLOW "  %-35s%-20s%-10s\n", "Library", "Compat. Vers", "Curr. Vers" DARK_YELLOW BOLD RESET);
 
-        macho_t *macho = (macho_t *) h_slist_nth_data (bin->macho_list, 0);
         HSList *dylibs = macho->dylibs;
 
         for (int i = 0; i < h_slist_length (dylibs); i++) {

@@ -47,14 +47,15 @@ handle_command_macho (htool_client_t *client);
 /* standard cli options */
 static struct option standard_opts[] = {
     { "help",       no_argument,    NULL,   'h' },
-    { "version",    no_argument,    NULL,   'v' },
+    { "version",    no_argument,    NULL,   'V' },
 
     { NULL,         0,              NULL,   0 }
 };
 
 /* macho options */
-static struct option macho_cmd_opts[] = {
+static struct option macho_cmd_opts[] = { 
     { "arch",       required_argument,  NULL,   'a' },
+    { "verbose",    no_argument,        NULL,   'v' },
     { "help",       no_argument,        NULL,   'H' },
     { "header",     no_argument,        NULL,   'h' },
     { "loadcmd",    no_argument,        NULL,   'l' },
@@ -62,6 +63,7 @@ static struct option macho_cmd_opts[] = {
     { "symbols",    no_argument,        NULL,   's' },
     { "sym-dbg",    no_argument,        NULL,   'D' },
     { "sym-sect",   no_argument,        NULL,   'C' },
+    { "signing",    no_argument,        NULL,   'S' },
     
     { NULL,         0,                  NULL,    0  }
 };
@@ -101,13 +103,18 @@ static htool_return_t handle_command_macho (htool_client_t *client)
     /* parse the `file` options */
     int opt = 0;
     int optindex = 0;
-    while ((opt = getopt_long (client->argc, client->argv, "hlLsDCA", macho_cmd_opts, &optindex)) > 0) {
+    while ((opt = getopt_long (client->argc, client->argv, "vhlLsSDCA", macho_cmd_opts, &optindex)) > 0) {
         switch (opt) {
 
             /* -a, --arch */
             case 'a':
                 client->opts |= HTOOL_CLIENT_MACHO_OPT_ARCH;
                 client->arch = strdup ((const char *) optarg);
+                break;
+
+            /* -v, --verbose */
+            case 'v':
+                client->opts |= HTOOL_CLIENT_MACHO_OPT_VERBOSE;
                 break;
 
             /* -h, --header */
@@ -139,6 +146,11 @@ static htool_return_t handle_command_macho (htool_client_t *client)
                 case 'C':
                     client->opts |= HTOOL_CLIENT_MACHO_OPT_SYMSECT;
                     break;
+            
+            /* -S, --signing */
+            case 'S':
+                client->opts |= HTOOL_CLIENT_MACHO_OPT_CODE_SIGNING;
+                break;
 
             /* default, print usage */
             case 'H':
@@ -151,6 +163,7 @@ static htool_return_t handle_command_macho (htool_client_t *client)
     printf ("**********\n");
     printf ("MACHO-DEBUG: \tclient->opt: 0x%08x\n", client->opts);
     if (client->opts & HTOOL_CLIENT_MACHO_OPT_ARCH)     printf ("MACHO-DEBUG: \tclient->arch: %s\n", client->arch);
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_VERBOSE)  printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_VEERBOSE\n");
     if (client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)   printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_HEADER\n");
     if (client->opts & HTOOL_CLIENT_MACHO_OPT_LCMDS)    printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_LCMDS\n");
     printf ("**********\n\n");
@@ -194,11 +207,18 @@ static htool_return_t handle_command_macho (htool_client_t *client)
         htool_print_shared_libraries (client);
 
     /**
-     *  Option:             -S, --symbols
+     *  Option:             -s, --symbols
      *  Description:        Print out the Static Symbols contained in a Mach-O file.
      */
     if (client->opts & HTOOL_CLIENT_MACHO_OPT_SYMBOLS)
         htool_print_static_symbols (client);
+
+    /**
+     *  Option:             -S, --signing
+     *  Description:        Print code-signature information contained in a Mach-O file.
+     */
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_CODE_SIGNING)
+        htool_print_code_signature (client);
 
 
     return HTOOL_RETURN_SUCCESS;
@@ -252,7 +272,7 @@ int main(int argc, char **argv)
      */
     int opt = 0, optindex = 0;
     opterr = 0;
-    while ((opt = getopt_long (argc, argv, "hvA", standard_opts, &optindex)) > 0) {
+    while ((opt = getopt_long (argc, argv, "hVA", standard_opts, &optindex)) > 0) {
         switch (opt) {
 
             /* --help command */
@@ -261,7 +281,7 @@ int main(int argc, char **argv)
                 break;
 
             /* --version command */
-            case 'v':
+            case 'V':
                 print_version_detail (1);
                 return HTOOL_RETURN_SUCCESS;
 

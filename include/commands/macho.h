@@ -23,6 +23,27 @@
 #include "htool-client.h"
 #include "htool.h"
 
+
+/***********************************************************************
+*                  HTool Mach-O Handler Functions
+************************************************************************/
+
+/**
+ * \brief       Return values for select_macho_arch
+ */
+enum {
+    SELECT_MACHO_ARCH_FAIL = 0,
+    SELECT_MACHO_ARCH_FAIL_NO_ARCH,
+    SELECT_MACHO_ARCH_IS_FAT,
+    SELECT_MACHO_ARCH_IS_MACHO,
+};
+
+int
+htool_macho_select_arch (htool_client_t *client, macho_t **macho);
+
+htool_return_t
+htool_macho_check_fat (htool_client_t *client);
+
 /***********************************************************************
 *                   HTool Mach-O Print Functions
 ************************************************************************/
@@ -70,6 +91,17 @@ htool_print_shared_libraries (htool_client_t *client);
  */
 htool_return_t
 htool_print_static_symbols (htool_client_t *client);
+
+/**
+ *  \brief      Print the Mach-O Code Signature of the file loaded into the
+ *              client structure. If the file is a FAT archive, but the
+ *              --arch flag isn't set, print the FAT header again and an
+ *              error.
+ * 
+ *  \param client       HTool Client instance.
+ */
+htool_return_t
+htool_print_code_signature (htool_client_t *client);
 
 /**
  *  \brief      Select the specified architecture from the, presumably,
@@ -270,6 +302,8 @@ htool_print_fileset_entry_command (macho_t *macho, uint32_t offset, void *lc_raw
 
 /**
  * NOTE:    The following definitions are ripped from the cctools project from Apple.
+ * 
+ *  MOVE TO A NEW HEADER UNDER include/commands/macho/symbols.h
  */
 
 struct stabnames {

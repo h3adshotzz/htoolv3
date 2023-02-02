@@ -69,6 +69,7 @@ void macho_subcommand_usage (int argc, char *argv[], int err)
     "      --sym-sect       Print additional section info.\n" \
     "\n"\
     "Options:\n" \
+    "  --versbose       Print more in-depth verbose information\n" \
     "  --arch=ARCH      Specify architecture (e.g. arm64e, arm64, x86_64, ...)\n" \
     "  --help           HTool Usage info.\n" \
     "\n",
