@@ -32,4 +32,7 @@ target_sources(htool
         main.c
         usage.c
         loader.c
+        macho.c
+        nm.c
+        codesigning.c
 )

@@ -65,10 +65,11 @@ void macho_subcommand_usage (int argc, char *argv[], int err)
     "  -l, --loadcmd    Print the Load Commands in the Mach-O.\n" \
     "  -L, --libs       Print the Shared Libraries linked to the Mach-O.\n" \
     "  -s, --symbols    Print the Symbols contained in the Mach-O.\n" \
-    "       -sym-dbg        Print additional debug symbols.\n" \
-    "       -sym-sect       Pritn additional section info.\n" \
+    "      --sym-dbg        Print additional debug symbols.\n" \
+    "      --sym-sect       Print additional section info.\n" \
     "\n"\
     "Options:\n" \
+    "  --versbose       Print more in-depth verbose information\n" \
     "  --arch=ARCH      Specify architecture (e.g. arm64e, arm64, x86_64, ...)\n" \
     "  --help           HTool Usage info.\n" \
     "\n",
