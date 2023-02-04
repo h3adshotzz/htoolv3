@@ -143,7 +143,7 @@ htool_print_code_signature (htool_client_t *client)
         }
         
         /* there's nothing that can be done now, so exit */
-        exit (HTOOL_RETURN_FAILURE);
+        exit (EXIT_FAILURE);
     }
 
     /**
@@ -155,7 +155,7 @@ htool_print_code_signature (htool_client_t *client)
         errorf ("htool_print_load_commands: Could not load architecture from FAT archive: %s\n", client->arch);
         htool_print_fat_header_from_struct (bin->fat_info, 1);
 
-        exit (HTOOL_RETURN_FAILURE);
+        exit (EXIT_FAILURE);
     }
 
     /**

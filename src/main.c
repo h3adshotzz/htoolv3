@@ -283,7 +283,7 @@ int main(int argc, char **argv)
             /* --version command */
             case 'V':
                 print_version_detail (1);
-                return HTOOL_RETURN_SUCCESS;
+                return EXIT_SUCCESS;
 
             /* default */
             default:
@@ -334,14 +334,14 @@ int main(int argc, char **argv)
             debugf ("matched command: %s\n", cmdname);
             int res = c->handler (client);
             debugf ("res: %d\n", res);
-            return res;
+            return (res == HTOOL_RETURN_SUCCESS) ? EXIT_SUCCESS : EXIT_FAILURE;
         }
 #else
-            return c->handler (client);
+            return (c->handler (client) == HTOOL_RETURN_SUCCESS) ? EXIT_SUCCESS : EXIT_FAILURE;
 #endif
     }
 
     /* if we get here, print the usage again */
     general_usage (argc, argv, 0);
-    return HTOOL_RETURN_SUCCESS;
+    return EXIT_SUCCESS;
 }
