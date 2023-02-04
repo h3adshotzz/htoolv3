@@ -234,11 +234,11 @@ void print_version_detail (int opt)
         printf (BOLD "Copyright (C) Is This On? Holdings Ltd; HTool Version %s (%s)\n\n" RESET, HTOOL_VERSION_NUMBER, libhelper_get_version_string());
 
         printf (BOLD RED "  Debug Information:\n", RESET);
-        printf (BOLD DARK_WHITE "Build time: " RESET DARK_GREY "%s\n", __TIMESTAMP__);
-        printf (BOLD DARK_WHITE "Build type: " RESET DARK_GREY "%s\n", HTOOL_VERSION_TAG);
+        printf (BOLD DARK_WHITE "    Build time:       " RESET DARK_GREY "%s\n", __TIMESTAMP__);
+        printf (BOLD DARK_WHITE "    Build type:       " RESET DARK_GREY "%s\n", HTOOL_VERSION_TAG);
 
-        printf (BOLD DARK_WHITE "Default target: " RESET DARK_GREY "%s-%s\n", BUILD_TARGET, BUILD_ARCH);
-        printf (BOLD DARK_WHITE "Platform: " RESET DARK_GREY);
+        printf (BOLD DARK_WHITE "    Default target:   " RESET DARK_GREY "%s-%s\n", BUILD_TARGET, BUILD_ARCH);
+        printf (BOLD DARK_WHITE "    Platform:         " RESET DARK_GREY);
 #if HTOOL_MACOS_PLATFORM_TYPE == HTOOL_PLATFORM_TYPE_APPLE_SILICON
         printf ("apple-silicon (Apple Silicon)\n");
 #else
