@@ -26,53 +26,6 @@
  *          https://medium.com/csit-tech-blog/demystifying-ios-code-signature-309d52c2ff1d
 */
 
-void htool_hexdump_formatted_print_byte_stream (char *mem, uint32_t size)
-{
-    uint32_t offset = 0;
-    int lines = size / 16;
-    int pos = 0;  //pos
-
-    for (int i = 0; i < lines; i++) {
-
-        printf ("%08x  ", offset);
-
-        uint8_t ln[16];
-
-        for (int j = 0; j < 16; j++) {
-            uint8_t byte = (uint8_t) mem[pos];
-            printf ("%02x ", byte);
-
-            if (j == 7) printf (" ");
-
-            pos++;
-            ln[j] = byte;
-        }
-
-        printf ("  |");
-
-        for (int k = 0; k < 16; k++) {
-
-            if (ln[k] < 0x20 || ln[k] > 0x7e) {
-                printf (".");
-            } else {
-                printf ("%c", (char) ln[k]);
-            }
-
-        }
-
-        printf ("|\n");
-
-        offset += 0x10;
-    }
-
-    printf ("\n");
-}
-
-void htool_hexdump_single_line (char *mem, uint32_t size)
-{
-    for (int a = 0; a < size; a++) printf ("%02x ", (uint8_t) mem[a]);
-}
-
 #define SWAP_INT(a)  ( ((a) << 24) | \
 		      (((a) << 8) & 0x00ff0000) | \
 		      (((a) >> 8) & 0x0000ff00) | \
