@@ -20,6 +20,7 @@
 void general_usage (int argc, char *argv[], int err);
 void file_subcommand_usage (int argc, char *argv[], int err);
 void macho_subcommand_usage (int argc, char *argv[], int err);
+void analyse_subcommand_usage (int argc, char *argv[], int err);
 
 
 #endif /* __htool_usage_h__ */

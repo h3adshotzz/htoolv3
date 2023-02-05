@@ -30,6 +30,7 @@
 
 /* headers for commands */
 #include "commands/macho.h"
+#include "commands/analyse.h"
 
 
 /* Command handler functions */
@@ -38,6 +39,8 @@ static htool_return_t
 handle_command_file (htool_client_t *client);
 static htool_return_t
 handle_command_macho (htool_client_t *client); 
+static htool_return_t 
+handle_command_analyse (htool_client_t *client);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -68,6 +71,13 @@ static struct option macho_cmd_opts[] = {
     { NULL,         0,                  NULL,    0  }
 };
 
+/* analyse options */
+static struct option analyse_cmd_opts[] = {
+    { "analyse",    no_argument,        NULL,   'a' },
+    { "list-all",   no_argument,        NULL,   'l' },
+    { "extract",    required_argument,  NULL,   'e' },
+    { NULL,         0,                  NULL,   0   }
+};
 
 /**
  *  List of top-level commands that htool provides
@@ -75,6 +85,7 @@ static struct option macho_cmd_opts[] = {
 static struct command commands[] = {
     { "file",       handle_command_file     },
     { "macho",      handle_command_macho    },
+    { "analyse",    handle_command_analyse  },
     { NULL,         NULL                    }
 };
 
@@ -224,6 +235,68 @@ static htool_return_t handle_command_macho (htool_client_t *client)
     return HTOOL_RETURN_SUCCESS;
 }
 
+static htool_return_t handle_command_analyse (htool_client_t *client)
+{
+    int test = 0;
+
+    /* reset getopt */
+    optind = 1;
+    opterr = 1;
+
+    /* set the appropriate flag for the client struct */
+    client->cmd |= HTOOL_CLIENT_CMDFLAG_MACHO;
+
+    /* parse the `file` options */
+    int opt = 0;
+    int optindex = 0;
+    while ((opt = getopt_long (client->argc, client->argv, "aH", macho_cmd_opts, &optindex)) > 0) {
+        switch (opt) {
+
+            /* -a, --analyse */
+            case 'a':
+                test = 1;
+                break;
+
+            /* default, print usage */
+            case 'H':
+            default:
+                analyse_subcommand_usage (client->argc, client->argv, 0);
+                break;
+        }
+    }
+
+    debugf ("handle_command_analyse\n");
+
+    printf ("**********\n");
+    printf ("MACHO-DEBUG: \tclient->opt: 0x%08x\n", client->opts);
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_ARCH)     printf ("MACHO-DEBUG: \tclient->arch: %s\n", client->arch);
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_VERBOSE)  printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_VEERBOSE\n");
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)   printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_HEADER\n");
+    if (client->opts & HTOOL_CLIENT_MACHO_OPT_LCMDS)    printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_LCMDS\n");
+    printf ("**********\n\n");
+
+    /**
+     *  Create and load a htool_binary_t
+     */
+    client->bin = htool_binary_load_and_parse (client->filename);
+    htool_binary_t *bin = client->bin;
+
+    if (test) {
+        htool_generic_analyse (client);
+        return HTOOL_RETURN_SUCCESS;
+    }
+
+    /**
+     *  Option:             None
+     *  Description:        No option has been passed, so print the help menu again.
+     */
+    if (!client->opts) {
+        macho_subcommand_usage (client->argc, client->argv, 0);
+        return HTOOL_RETURN_FAILURE;
+    }
+
+    return HTOOL_RETURN_SUCCESS;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
