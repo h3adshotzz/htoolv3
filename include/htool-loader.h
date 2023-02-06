@@ -24,6 +24,7 @@
 
 #include <libhelper.h>
 #include <libhelper-macho.h>
+#include <libhelper-image4.h>
 #include <libhelper-logger.h>
 
 #include "elf/elf-loader.h"
@@ -68,6 +69,7 @@
  *              Mach-O.
  *
  */
+#define HTOOL_BINARY_FILETYPE_IMAGE4            0x90000000
 #define HTOOL_BINARY_FILETYPE_RAWBINARY         0xa0000000
 #define HTOOL_BINARY_FILETYPE_MACHO32           0xb0000000
 #define HTOOL_BINARY_FILETYPE_MACHO64           0xc0000000
@@ -101,6 +103,8 @@ struct __htool_binary
     fat_info_t      *fat_info;
     HSList          *macho_list;
     //elf_t           *elf;
+    image4_t        *image4;
+
 
     uint32_t debug;
 };
@@ -122,5 +126,8 @@ htool_binary_detect_macho (htool_binary_t *bin, uint32_t magic);
 
 htool_return_t
 htool_binary_detect_elf (htool_binary_t *bin, uint32_t magic);
+
+htool_return_t
+htool_binary_detect_image4 (htool_binary_t *bin, uint32_t magic);
 
 #endif /* __htool_loader_h__ */

@@ -33,6 +33,9 @@ target_sources(htool
         usage.c
         loader.c
         macho.c
+        analyse.c
         nm.c
         codesigning.c
+
+        darwin/darwin.c
 )

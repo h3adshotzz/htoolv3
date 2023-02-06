@@ -13,9 +13,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <libhelper.h>
+#include <libhelper-image4.h>
+
 #include "htool-loader.h"
 #include "htool-client.h"
 
+#include "darwin/darwin.h"
 
 htool_binary_t *
 htool_binary_create ()
@@ -66,16 +70,16 @@ htool_binary_parser (htool_binary_t *bin)
 
 
     /**
-     * Check if the binary is an ELF format.
+     *  Check if the binary is an ELF format.
     */
     if (htool_binary_detect_elf (bin, magic)) {
         warningf ("TODO: Implement ELF parsing\n");
         return HTOOL_RETURN_SUCCESS;
     }
 
-   /**
-     * Check if the binary is a Mach-O format.
-    */
+    /**
+     *  Check if the binary is a Mach-O format.
+     */
     if (htool_binary_detect_macho (bin, magic)) {
 
         /**
@@ -205,8 +209,25 @@ htool_binary_parser (htool_binary_t *bin)
             return HTOOL_RETURN_FAILURE;
         }
 
+        /**
+         *  Check if the Mach-O that has been loaded is a Kernel, if it is,
+         *  set the correct flag.
+         */
+        if (darwin_detect_firmware_component_kernel (bin))
+            bin->flags |= HTOOL_BINARY_FIRMWARETYPE_KERNEL;
+
+        return bin;
+    } 
+    
+    /**
+     *  Check if the binary is an Image4
+     */
+    if (htool_binary_detect_image4 (bin, magic)) {
+        printf ("image4 detected\n");
         return bin;
     }
+
+    /** TODO: Check if the binary is an iBoot, SecureROM or SEP. */
 
     errorf ("Could not determine file type: 0x%08x (err: 0x%08x)\n", magic, HTOOL_ERROR_FILETYPE);
     return NULL;
@@ -276,4 +297,26 @@ htool_binary_detect_elf (htool_binary_t *bin, uint32_t magic)
      *       for the moment we're just trying to detect whether a file is an ELF.
     */
    return (magic == ELF_MAGIC || magic == ELF_CIGAM) ? HTOOL_RETURN_SUCCESS : HTOOL_RETURN_FAILURE;
+}
+
+//===----------------------------------------------------------------------===//
+//                          Image4 Loader Functions
+//===----------------------------------------------------------------------===//
+
+htool_return_t
+htool_binary_detect_image4 (htool_binary_t *bin, uint32_t magic)
+{
+    image4_t *tmp = malloc (sizeof (image4_t));
+    tmp->path = bin->filepath;
+    tmp->size = bin->size;
+    tmp->data = bin->data;
+
+    img4type_t type = image4_get_file_type (tmp);
+
+    if (type) {
+        bin->flags |= HTOOL_BINARY_FILETYPE_IMAGE4;
+        return HTOOL_RETURN_SUCCESS;
+    }
+
+    return HTOOL_RETURN_FAILURE;
 }

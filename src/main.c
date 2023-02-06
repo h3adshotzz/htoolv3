@@ -38,8 +38,8 @@
 static htool_return_t
 handle_command_file (htool_client_t *client);
 static htool_return_t
-handle_command_macho (htool_client_t *client); 
-static htool_return_t 
+handle_command_macho (htool_client_t *client);
+static htool_return_t
 handle_command_analyse (htool_client_t *client);
 
 
@@ -56,7 +56,7 @@ static struct option standard_opts[] = {
 };
 
 /* macho options */
-static struct option macho_cmd_opts[] = { 
+static struct option macho_cmd_opts[] = {
     { "arch",       required_argument,  NULL,   'a' },
     { "verbose",    no_argument,        NULL,   'v' },
     { "help",       no_argument,        NULL,   'H' },
@@ -67,7 +67,7 @@ static struct option macho_cmd_opts[] = {
     { "sym-dbg",    no_argument,        NULL,   'D' },
     { "sym-sect",   no_argument,        NULL,   'C' },
     { "signing",    no_argument,        NULL,   'S' },
-    
+
     { NULL,         0,                  NULL,    0  }
 };
 
@@ -157,7 +157,7 @@ static htool_return_t handle_command_macho (htool_client_t *client)
                 case 'C':
                     client->opts |= HTOOL_CLIENT_MACHO_OPT_SYMSECT;
                     break;
-            
+
             /* -S, --signing */
             case 'S':
                 client->opts |= HTOOL_CLIENT_MACHO_OPT_CODE_SIGNING;
@@ -189,10 +189,13 @@ static htool_return_t handle_command_macho (htool_client_t *client)
     }
 
     /**
-     *  Create and load a htool_binary_t
+     *  Load the file into client->bin, if the file is not valid exit with an error
+     *  message.
      */
-    client->bin = htool_binary_load_and_parse (client->filename);
-    htool_binary_t *bin = client->bin;
+    if ((client->bin = htool_binary_load_and_parse (client->filename)) == HTOOL_RETURN_FAILURE) {
+        errorf ("Cannot continue, invalid file: %s\n", client->filename);
+        exit (EXIT_FAILURE);
+    }
 
     /**
      *  Option:             -h, --header
@@ -201,7 +204,7 @@ static htool_return_t handle_command_macho (htool_client_t *client)
      */
     if (client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)
         htool_print_header (client);
-    
+
     /**
      *  Option:             -l. --loadcmd
      *  Description:        Print out the Load and Segment Commands contained in a
@@ -237,25 +240,33 @@ static htool_return_t handle_command_macho (htool_client_t *client)
 
 static htool_return_t handle_command_analyse (htool_client_t *client)
 {
-    int test = 0;
-
     /* reset getopt */
     optind = 1;
     opterr = 1;
 
     /* set the appropriate flag for the client struct */
-    client->cmd |= HTOOL_CLIENT_CMDFLAG_MACHO;
+    client->cmd |= HTOOL_CLIENT_CMDFLAG_ANALYSE;
 
     /* parse the `file` options */
     int opt = 0;
     int optindex = 0;
-    while ((opt = getopt_long (client->argc, client->argv, "aH", macho_cmd_opts, &optindex)) > 0) {
+    while ((opt = getopt_long (client->argc, client->argv, "aleHA", analyse_cmd_opts, &optindex)) > 0) {
         switch (opt) {
 
             /* -a, --analyse */
             case 'a':
-                test = 1;
+                client->opts |= HTOOL_CLIENT_ANALYSE_OPT_ANALYSE;
                 break;
+
+            /* -l, --list-all */
+            case 'l':
+                client->opts |= HTOOL_CLIENT_ANALYSE_OPT_LIST_ALL;
+                break;
+
+            /* -e, --extract */
+            case 'e':
+                client->opts |= HTOOL_CLIENT_ANALYSE_OPT_EXTRACT;
+                client->extract = strdup ((const char *) optarg);
 
             /* default, print usage */
             case 'H':
@@ -269,31 +280,36 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
 
     printf ("**********\n");
     printf ("MACHO-DEBUG: \tclient->opt: 0x%08x\n", client->opts);
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_ARCH)     printf ("MACHO-DEBUG: \tclient->arch: %s\n", client->arch);
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_VERBOSE)  printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_VEERBOSE\n");
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)   printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_HEADER\n");
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_LCMDS)    printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_LCMDS\n");
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_ANALYSE)   printf ("MACHO-DEBUG: \tHTOOL_CLIENT_ANALYSE_OPT_ANALYSE\n");
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_LIST_ALL)  printf ("MACHO-DEBUG: \tHTOOL_CLIENT_ANALYSE_OPT_LIST_ALL\n");
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_EXTRACT)   printf ("MACHO-DEBUG: \tHTOOL_CLIENT_ANALYSE_OPT_EXTRACT\n");
     printf ("**********\n\n");
-
-    /**
-     *  Create and load a htool_binary_t
-     */
-    client->bin = htool_binary_load_and_parse (client->filename);
-    htool_binary_t *bin = client->bin;
-
-    if (test) {
-        htool_generic_analyse (client);
-        return HTOOL_RETURN_SUCCESS;
-    }
 
     /**
      *  Option:             None
      *  Description:        No option has been passed, so print the help menu again.
      */
     if (!client->opts) {
-        macho_subcommand_usage (client->argc, client->argv, 0);
+        analyse_subcommand_usage (client->argc, client->argv, 0);
         return HTOOL_RETURN_FAILURE;
     }
+
+    /**
+     *  Load the file into client->bin, if the file is not valid exit with an error
+     *  message.
+     */
+    if ((client->bin = htool_binary_load_and_parse (client->filename)) == HTOOL_RETURN_FAILURE) {
+        errorf ("Cannot continue, invalid file: %s\n", client->filename);
+        exit (EXIT_FAILURE);
+    }
+
+    /**
+     *  Option:             -a, --analyse
+     *  Description:        Run a complete analysis of the given firmware file.
+     */
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_ANALYSE)
+        htool_generic_analyse (client);
+
 
     return HTOOL_RETURN_SUCCESS;
 }

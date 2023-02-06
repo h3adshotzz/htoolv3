@@ -46,6 +46,7 @@ struct __htool_client
     uint32_t             cmd;       // command
     uint32_t             opts;      // command options
     char                *arch;      // --arch value.
+    char                *extract;   // --extract value (analyse only)
 
     /* Parsed binary */
     htool_binary_t      *bin;       // parsed `filename`
@@ -91,6 +92,11 @@ struct command {
 #define HTOOL_CLIENT_MACHO_OPT_SYMSECT      (1 << 7)
 #define HTOOL_CLIENT_MACHO_OPT_CODE_SIGNING (1 << 8)
 #define HTOOL_CLIENT_MACHO_OPT_VERBOSE      (1 << 9)
+
+#define HTOOL_CLIENT_CMDFLAG_ANALYSE        0x30000000
+#define HTOOL_CLIENT_ANALYSE_OPT_ANALYSE    (1 << 1)
+#define HTOOL_CLIENT_ANALYSE_OPT_LIST_ALL   (1 << 2)
+#define HTOOL_CLIENT_ANALYSE_OPT_EXTRACT    (1 << 3)
 
 //#define
 
