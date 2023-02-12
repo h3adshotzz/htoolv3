@@ -18,7 +18,49 @@
 
 #include "commands/macho.h"
 #include "darwin/darwin.h"
+#include "darwin/kernel.h"
 #include "htool-loader.h"
+
+
+char *darwin_get_device_from_string (char *string)
+{
+    darwin_device_t *device = malloc (sizeof(darwin_device_t));
+    uint32_t size;
+    char *ret;
+
+    StringList *socs = strsplit (string, "/");
+
+    for (int i = 0; i < DARWIN_DEVICE_LIST_LEN; i++) {
+        device = &device_list[i];
+
+        /**
+         *  NOTE: We cannot determine the board type as some devices share the
+         *      same SoC or Platform identifier. 
+         */
+        for (int i = 0; i < socs->count; i++) {
+            char *a = socs->ptrs[i];
+            //printf ("checking: %s, %s.%s.%s\n", a, device->soc, device->board, device->platform);
+            if ( !strncasecmp (device->soc, string, strlen (string)) ||
+                 !strncasecmp (device->board, string, strlen (string)) ||
+                 !strncasecmp (device->platform, string, strlen (string))) {
+
+                size = strlen (string) + strlen (device->soc) + 5;
+                ret = malloc (size);
+
+                // E.g. "M1/A14 Bionic (T8101)"
+                snprintf (ret, size, "%s (%s)", string, device->soc);
+                return ret;
+            }
+        }
+    }
+    
+    // E.g. "<string> (Unknown)"
+    size = strlen (string) + 11;
+    ret = malloc (size);
+
+    snprintf (ret, size, "%s (Unknown)", string);
+    return ret;
+}
 
 htool_return_t
 darwin_detect_firmware_component_kernel (htool_binary_t *bin)

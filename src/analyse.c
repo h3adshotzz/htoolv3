@@ -17,6 +17,7 @@
 
 #include "commands/analyse.h"
 #include "darwin/darwin.h"
+#include "darwin/kernel.h"
 
 void htool_hexdump_formatted_print_byte_stream (char *mem, uint32_t size)
 {
@@ -75,6 +76,8 @@ htool_generic_analyse (htool_client_t *client)
 
     if (bin->flags & HTOOL_BINARY_FIRMWARETYPE_KERNEL)
         printf ("file_type_kernel\n");
+
+    xnu_kernel_load_kernel_cache (bin);
 
     return HTOOL_RETURN_SUCCESS;
 }

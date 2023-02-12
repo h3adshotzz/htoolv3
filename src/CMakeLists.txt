@@ -38,4 +38,5 @@ target_sources(htool
         codesigning.c
 
         darwin/darwin.c
+        darwin/kernel.c
 )

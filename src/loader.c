@@ -81,7 +81,7 @@ htool_binary_parser (htool_binary_t *bin)
      *  Check if the binary is a Mach-O format.
      */
     if (htool_binary_detect_macho (bin, magic)) {
-
+        
         /**
          *  The idea here is that we parse the files as normal. If the file type is
          *  a regular Mach-O, as set by the flag, then the `macho_list` property is
@@ -105,6 +105,7 @@ htool_binary_parser (htool_binary_t *bin)
                 errorf ("Failed to load macho\n");
                 return HTOOL_RETURN_FAILURE;
             }
+            warningf ("m64->size: %d\n", m64->size);
 
             /* clear the list to ensure this is the only element */
             bin->macho_list = NULL;

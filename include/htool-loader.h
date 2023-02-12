@@ -120,6 +120,9 @@ htool_binary_parser (htool_binary_t *bin);
 htool_binary_t *
 htool_binary_load_and_parse (const char *path);
 
+macho_t *
+htool_binary_select_arch (htool_binary_t *bin, char *arch_name);
+
 
 htool_return_t
 htool_binary_detect_macho (htool_binary_t *bin, uint32_t magic);

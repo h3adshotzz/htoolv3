@@ -45,7 +45,7 @@ typedef enum htool_return_t
 #define BOLD            "\x1b[1m"
 
 
-#define HTOOL_VERSION_NUMBER "2.0.0"
+#define HTOOL_VERSION_NUMBER "3.0.0"
 #define HTOOL_VERSION_TAG "DEVELOPMENT"
 
 /**
