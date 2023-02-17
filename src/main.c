@@ -21,12 +21,14 @@
 #include <libhelper-macho.h>
 #include <libhelper-file.h>
 
+#include "htool-version.h"
 #include "htool-loader.h"
 #include "htool-client.h"
 #include "htool.h"
 
 #include "colours.h"
 #include "usage.h"
+
 
 /* headers for commands */
 #include "commands/macho.h"
@@ -320,13 +322,15 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
 void print_version_detail (int opt)
 {
     if (opt == 1) {
-        printf (BOLD "Copyright (C) Is This On? Holdings Ltd; HTool Version %s (%s)\n\n" RESET, HTOOL_VERSION_NUMBER, libhelper_get_version_string());
+        printf (BOLD "Copyright (C) Is This On? Holdings Ltd.\n\n" RESET);
 
         printf (BOLD RED "  Debug Information:\n", RESET);
+        printf (BOLD DARK_WHITE "    Build Version:    " RESET DARK_GREY "%s (%s)\n", HTOOL_BUILD_VERSION, HTOOL_SOURCE_VERSION);
+        printf (BOLD DARK_WHITE "    Build type:       " RESET DARK_GREY "%s/%s-%s\n", HTOOL_BUILD_TYPE, BUILD_TARGET, BUILD_ARCH);
         printf (BOLD DARK_WHITE "    Build time:       " RESET DARK_GREY "%s\n", __TIMESTAMP__);
-        printf (BOLD DARK_WHITE "    Build type:       " RESET DARK_GREY "%s\n", HTOOL_VERSION_TAG);
+        printf (BOLD DARK_WHITE "    Libhelper:        " RESET DARK_GREY "%s\n", libhelper_get_version_string());
 
-        printf (BOLD DARK_WHITE "    Default target:   " RESET DARK_GREY "%s-%s\n", BUILD_TARGET, BUILD_ARCH);
+        //printf (BOLD DARK_WHITE "    Default target:   " RESET DARK_GREY "%s-%s\n", BUILD_TARGET, BUILD_ARCH);
         printf (BOLD DARK_WHITE "    Platform:         " RESET DARK_GREY);
 #if HTOOL_MACOS_PLATFORM_TYPE == HTOOL_PLATFORM_TYPE_APPLE_SILICON
         printf ("apple-silicon (Apple Silicon)\n");
@@ -335,7 +339,7 @@ void print_version_detail (int opt)
 #endif
     } else {
         printf ("-----------------------------------------------------\n");
-        printf ("  HTool %s - Built " __TIMESTAMP__ "\n", HTOOL_VERSION_NUMBER);
+        printf ("  HTool %s - Built " __TIMESTAMP__ "\n", HTOOL_BUILD_VERSION);
         printf ("-----------------------------------------------------\n");
     }
 }
