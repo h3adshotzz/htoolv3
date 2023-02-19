@@ -105,7 +105,8 @@ struct __htool_binary
     //elf_t           *elf;
     image4_t        *image4;
 
-
+    /* other */
+    void *firmware;
     uint32_t debug;
 };
 

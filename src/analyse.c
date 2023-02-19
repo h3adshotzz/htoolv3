@@ -18,6 +18,7 @@
 #include "commands/analyse.h"
 #include "darwin/darwin.h"
 #include "darwin/kernel.h"
+#include "darwin/kext.h"
 
 void htool_hexdump_formatted_print_byte_stream (char *mem, uint32_t size)
 {
@@ -68,16 +69,38 @@ void htool_hexdump_single_line (char *mem, uint32_t size)
 
 
 htool_return_t
+htool_analyse_kernel (htool_binary_t *bin)
+{
+    printf ("file_type_kernel\n");
+    xnu_t *xnu = xnu_kernel_load_kernel_cache (bin);
+    bin->firmware = (void *) xnu;
+
+    if (xnu->type == XNU_KERNEL_TYPE_IOS_FILESET_EXTRACTED) {
+        printf ("Cannot parse KEXTs of an extracted Fileset Kernel\n");
+        return HTOOL_RETURN_FAILURE;
+    }
+
+    xnu_parse_kernel_extensions (xnu);
+
+    return HTOOL_RETURN_SUCCESS;
+}
+
+htool_return_t
+htool_analyse_iboot (htool_binary_t *bin)
+{
+    printf ("file_type_iboot\n");
+    return HTOOL_RETURN_SUCCESS;
+}
+
+htool_return_t
 htool_generic_analyse (htool_client_t *client)
 {
     htool_binary_t *bin = client->bin;
 
     printf (BOLD RED "[*] Analysing file:" RESET DARK_GREY " %s\n" RESET, client->filename);
 
-    if (bin->flags & HTOOL_BINARY_FIRMWARETYPE_KERNEL)
-        printf ("file_type_kernel\n");
-
-    xnu_kernel_load_kernel_cache (bin);
+    if (bin->flags & HTOOL_BINARY_FIRMWARETYPE_KERNEL) htool_analyse_kernel (client->bin);
+    else if (bin->flags & HTOOL_BINARY_FIRMWARETYPE_IBOOT) htool_analyse_iboot (client->bin);
 
     return HTOOL_RETURN_SUCCESS;
 }
