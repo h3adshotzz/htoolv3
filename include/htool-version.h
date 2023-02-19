@@ -19,17 +19,17 @@
 /* htool Build Version, i.e. 3.1.2 */
 #define HTOOL_BUILD_VERSION_MAJOR       "3"
 #define HTOOL_BUILD_VERSION_MINOR       "0"
-#define HTOOL_BUILD_VERSION_REVISION    "0"
-#define HTOOL_BUILD_VERSION             "3.0.0"
+#define HTOOL_BUILD_VERSION_REVISION    "1"
+#define HTOOL_BUILD_VERSION             "3.0.1"
 
 /* htool Build Type, i.e. INTERNAL, BETA, RELEASE */
 #define HTOOL_BUILD_TYPE                "DEBUG"
 
 /* htool Source Version, i.e. 312.56.12 */
-#define HTOOL_SOURCE_VERSION_MAJOR      "56"
-#define HTOOL_SOURCE_VERSION_MINOR      "23"
+#define HTOOL_SOURCE_VERSION_MAJOR      "12"
+#define HTOOL_SOURCE_VERSION_MINOR      "48"
 
-#define HTOOL_SOURCE_VERSION            "htool-300.56.23"
+#define HTOOL_SOURCE_VERSION            "htool-301.12.48"
 
 /**
  *  Define a Target type for HTool to both display within the help
