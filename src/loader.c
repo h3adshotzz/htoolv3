@@ -20,6 +20,7 @@
 #include "htool-client.h"
 
 #include "darwin/darwin.h"
+#include "commands/macho.h"
 
 htool_binary_t *
 htool_binary_create ()
@@ -106,6 +107,7 @@ htool_binary_parser (htool_binary_t *bin)
                 return HTOOL_RETURN_FAILURE;
             }
             warningf ("m64->size: %d\n", m64->size);
+            if (m64->size < bin->size) m64->size = bin->size;
 
             /* clear the list to ensure this is the only element */
             bin->macho_list = NULL;
@@ -219,6 +221,15 @@ htool_binary_parser (htool_binary_t *bin)
 
         return bin;
     } 
+    
+    /**
+     *  Check if the binary is an iBoot
+     */
+    if (darwin_detect_firmware_component_iboot (bin)) {
+        printf ("iBoot detected\n");
+        bin->flags |= HTOOL_BINARY_FIRMWARETYPE_IBOOT;
+        return bin;
+    }
     
     /**
      *  Check if the binary is an Image4

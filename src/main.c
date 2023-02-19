@@ -340,6 +340,9 @@ void print_version_detail (int opt)
     } else {
         printf ("-----------------------------------------------------\n");
         printf ("  HTool %s - Built " __TIMESTAMP__ "\n", HTOOL_BUILD_VERSION);
+#if HTOOL_DEBUG
+        printf ("  Source version: %s\n", HTOOL_SOURCE_VERSION);
+#endif
         printf ("-----------------------------------------------------\n");
     }
 }

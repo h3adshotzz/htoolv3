@@ -92,3 +92,29 @@ darwin_detect_firmware_component_kernel (htool_binary_t *bin)
 
     return (uname) ? HTOOL_RETURN_SUCCESS : HTOOL_RETURN_FAILURE;
 }
+
+htool_return_t
+darwin_detect_firmware_component_iboot (htool_binary_t *bin)
+{
+    char *needle, *result;
+
+    needle = "iBoot for";
+    result = (char *) bh_memmem ((unsigned char *) bin->data, bin->size, (unsigned char *) needle, strlen (needle));
+    if (!result)
+        goto darwin_abort;
+
+    needle = "Apple Mobile Device";
+    result = (char *) bh_memmem ((unsigned char *) bin->data, bin->size, (unsigned char *) needle, strlen (needle));
+    if (!result)
+        goto darwin_abort;
+
+    needle = "Apple Secure Boot";
+    result = (char *) bh_memmem ((unsigned char *) bin->data, bin->size, (unsigned char *) needle, strlen (needle));
+    if (!result)
+        goto darwin_abort;
+
+    return HTOOL_RETURN_SUCCESS;
+
+darwin_abort:
+    return HTOOL_RETURN_FAILURE;
+}

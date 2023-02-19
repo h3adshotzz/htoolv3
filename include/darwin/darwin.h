@@ -393,5 +393,7 @@ typedef enum darwin_component_type_t
  */
 htool_return_t
 darwin_detect_firmware_component_kernel (htool_binary_t *bin);
+htool_return_t
+darwin_detect_firmware_component_iboot (htool_binary_t *bin);
 
 #endif /* __htool_darwin_h__ */
