@@ -326,22 +326,26 @@ void print_version_detail (int opt)
 
         printf (BOLD RED "  Debug Information:\n", RESET);
         printf (BOLD DARK_WHITE "    Build Version:    " RESET DARK_GREY "%s (%s)\n", HTOOL_BUILD_VERSION, HTOOL_SOURCE_VERSION);
-        printf (BOLD DARK_WHITE "    Build type:       " RESET DARK_GREY "%s/%s-%s\n", HTOOL_BUILD_TYPE, BUILD_TARGET, BUILD_ARCH);
+        printf (BOLD DARK_WHITE "    Build Target:     " RESET DARK_GREY "%s-%s\n", BUILD_TARGET, BUILD_ARCH);        
         printf (BOLD DARK_WHITE "    Build time:       " RESET DARK_GREY "%s\n", __TIMESTAMP__);
         printf (BOLD DARK_WHITE "    Libhelper:        " RESET DARK_GREY "%s\n", libhelper_get_version_string());
+        printf (BOLD DARK_WHITE "    Compiler:         " RESET DARK_GREY "%s\n", __VERSION__);
 
-        //printf (BOLD DARK_WHITE "    Default target:   " RESET DARK_GREY "%s-%s\n", BUILD_TARGET, BUILD_ARCH);
         printf (BOLD DARK_WHITE "    Platform:         " RESET DARK_GREY);
 #if HTOOL_MACOS_PLATFORM_TYPE == HTOOL_PLATFORM_TYPE_APPLE_SILICON
         printf ("apple-silicon (Apple Silicon)\n");
 #else
         printf ("intel-genuine (Intel Genuine)\n");
 #endif
+#if HTOOL_DEBUG
+        printf (BLUE "\n    HTool Version %s: %s; root:%s/%s_%s %s\n\n" RESET,
+            HTOOL_BUILD_VERSION, __TIMESTAMP__, HTOOL_SOURCE_VERSION, HTOOL_BUILD_TYPE, BUILD_ARCH_CAP, BUILD_ARCH);
+#endif
     } else {
         printf ("-----------------------------------------------------\n");
         printf ("  HTool %s - Built " __TIMESTAMP__ "\n", HTOOL_BUILD_VERSION);
 #if HTOOL_DEBUG
-        printf ("  Source version: %s\n", HTOOL_SOURCE_VERSION);
+        printf (BLUE "  Source version: %s\n" RESET, HTOOL_SOURCE_VERSION);
 #endif
         printf ("-----------------------------------------------------\n");
     }
