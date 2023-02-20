@@ -17,6 +17,8 @@
 #include "darwin/kext.h"
 #include "commands/macho.h"
 
+#define KEXT_DEBUG 0
+
 #ifndef __APPLE__
 /* Temporary, should move to libhelper */
 char *
@@ -133,7 +135,7 @@ xnu_parse_split_style_kext (macho_t *macho, char *load_addr_str, char *bundleid)
     memset (kext, '\0', sizeof (kext_t));
 
     kext->macho = mem_macho;
-    kext->bundleid = bundleid;
+    kext->name = bundleid;
     kext->offset = (base + offset);
     kext->vmaddr = addr;
 
@@ -143,13 +145,7 @@ xnu_parse_split_style_kext (macho_t *macho, char *load_addr_str, char *bundleid)
     else kext->version = "0.0.0";
 
     /* Find and set the UUID */
-    mach_load_command_info_t *uuid_info = mach_load_command_find_command_by_type (kext->macho, LC_UUID);
-    if (uuid_info) {
-        mach_uuid_command_t *uuid = (mach_uuid_command_t *) uuid_info->lc;
-        kext->uuid = mach_load_command_uuid_parse_string (uuid);
-    } else {
-        kext->uuid = "(null)";
-    }
+    kext->uuid = mach_load_command_uuid_string_from_macho (kext->macho);
 
     /**
      *  NOTE:   There is a massive issue with the KEXTs. The segments aren't inline with the KEXTs
@@ -162,22 +158,62 @@ xnu_parse_split_style_kext (macho_t *macho, char *load_addr_str, char *bundleid)
     printf ("       KEXT Version: %s\n", kext->version);
     printf ("          KEXT UUID: %s\n", kext->uuid);
 
-    mach_header_t *hdr = (mach_header_t *) kext_data;
-    char *magic_text;
-    if (hdr->magic == MACH_CIGAM_64 || hdr->magic == MACH_MAGIC_64) magic_text = "Mach-O 64-bit";
-    else magic_text = "Mach-O 32-bit";
-
-    /* output header details */
-    printf (BOLD DARK_WHITE "    Magic: " RESET DARK_GREY "0x%08x (%s)\n" RESET, hdr->magic, magic_text);
-    printf (BOLD DARK_WHITE "     Type: " RESET DARK_GREY "%s\n" RESET, mach_header_get_file_type_string (hdr->filetype));
-    printf (BOLD DARK_WHITE "      CPU: " RESET DARK_GREY "%s (%s)\n" RESET,
-            mach_header_get_cpu_string (hdr->cputype, hdr->cpusubtype),
-            mach_header_get_cpu_descriptor (hdr->cputype, hdr->cpusubtype));
-    printf (BOLD DARK_WHITE "   ↳ Type: " RESET DARK_GREY "0x%08x, Subtype: 0x%08x\n" RESET, hdr->cputype, hdr->cpusubtype);
-    printf (BOLD DARK_WHITE "  LoadCmd: " RESET DARK_GREY "%d\n" RESET, hdr->ncmds);
-    printf (BOLD DARK_WHITE "  LC Size: " RESET DARK_GREY "%d Bytes\n" RESET, hdr->sizeofcmds);
+    htool_print_macho_header_from_struct (kext->macho->header);
 #endif
 
+    return kext;
+}
+
+kext_t *
+xnu_parse_merged_style_kext (macho_t *macho, mach_segment_command_64_t *__TEXT, uint64_t *kext_table, uint64_t *info_table, int i, int flag)
+{
+    mach_segment_command_64_t *kext_text_exec;
+    partial_kmod_info_64_t *kmod;
+    unsigned char *kext_data;
+    kext_t *kext;
+
+    /* Creating the KEXT struct */
+    kext = calloc (1, sizeof (kext_t));
+    memset (kext, '\0', sizeof (kext_t));
+
+    /* Set the initial properties */
+    kext->type = KERNEL_EXTENSION_FLAG_MERGED_KEXT;
+    kext->kext_table = kext_table[i];
+    kext->info_table = info_table[i];
+    kext->__text_vmaddr = __TEXT->vmaddr;
+
+    /* Set tagged pointer and calculate the kext offset */
+    kext->kernel_ptr = (UNTAG_PTR (kext->kext_table - kext->__text_vmaddr) | 0xFFFFFFFFF0000000);
+    kext->offset = ((kext->kernel_ptr - 0xf0000000) & 0xffffffff);
+    
+    /* Create the Mach-O */
+    kext_data = (unsigned char *) (macho->data + kext->offset);
+    kext->macho = macho_64_create_from_buffer (kext_data);
+
+    /* Create the kmod struct */
+    kmod = calloc (1, sizeof (partial_kmod_info_64_t));
+    uint64_t kmod_offset = UNTAG_PTR(info_table[i]) - __TEXT->vmaddr;
+    kmod = (partial_kmod_info_64_t *) (macho->data + kmod_offset);
+
+    kext->name = kmod->name;
+    kext->version = kmod->version;
+
+#if KEXT_DEBUG
+    printf ("  kext_table[%d]: 0x%llx\n",      i, kext_table[i]);
+    printf ("  info_table[%d]: 0x%llx\n",      i, info_table[i]);
+    printf ("   __TEXT->vmaddr: 0x%llx\n",      __TEXT->vmaddr);
+    printf ("      kmod_offset: 0x%llx\n",      kmod_offset);
+    printf (" kext->kernel_ptr: 0x%llx\n",      kext->kernel_ptr);
+    printf ("     kext->offset: 0x%llx\n",    kext->offset);
+    printf ("   kext->bundleid: %s\n",          kext->name);
+    printf ("    kext->version: %s\n",          kext->version);
+    printf ("             UUID: %s\n\n",          mach_load_command_uuid_string_from_macho (kext->macho));
+
+    htool_print_macho_header_from_struct (kext->macho->header);
+    printf ("\n---\n");
+#endif
+
+    kext_data = NULL;
     return kext;
 }
 
@@ -189,19 +225,77 @@ xnu_parse_split_style_kext (macho_t *macho, char *load_addr_str, char *bundleid)
  *  created.
  */
 
-htool_return_t
-xnu_load_kext_list_ios9_style (xnu_t *xnu)
-{
-    return HTOOL_RETURN_SUCCESS;
-}
-
-htool_return_t
+HSList *
 xnu_load_kext_list_merged_style (xnu_t *xnu)
 {
-    return HTOOL_RETURN_SUCCESS;
+    mach_segment_info_t *seg_info;
+    mach_segment_command_64_t *__TEXT;
+    mach_section_64_t *__kmod_info;
+    mach_section_64_t *__kmod_start;
+
+    macho_t *macho = _xnu_select_macho (xnu);
+
+    /* Find the __TEXT segment */
+    seg_info = mach_segment_info_search (macho->scmds, "__TEXT");
+    __TEXT = (mach_section_64_t *) seg_info->segcmd;
+
+    /* Find __kmod_start and __kmod_info */
+    __kmod_info = mach_section_64_search (macho->scmds, "__PRELINK_INFO", "__kmod_info");
+    __kmod_start = mach_section_64_search (macho->scmds, "__PRELINK_INFO", "__kmod_start");
+
+    /* Check __kmod_start is valid */
+    if ( !__kmod_start ) {
+        printf (ANSI_COLOR_RED "[*] Invalid section: __kmod_start\n" ANSI_COLOR_RESET);
+    #if KEXT_DEBUG
+    } else {
+        //hexdump ((unsigned char *) kmod_start->data, 100);
+        debugf ("kmod_start->segment: \t%s\n", __kmod_start->segname);
+        debugf ("kmod_start->section: \t%s\n", __kmod_start->sectname);
+        debugf ("kmod_start->size: \t%d\n", __kmod_start->size);
+        debugf ("kmod_start->addr: \t0x%x\n\n", __kmod_start->addr);
+    #endif
+    }
+
+    // Check __kmod_info is valid
+    if ( !__kmod_info ) {
+        printf (ANSI_COLOR_RED "[*] Invalid section: __kmod_info\n" ANSI_COLOR_RESET);
+    #if KEXT_DEBUG
+    } else {
+        //hexdump ((unsigned char *) kmod_info->data, 100);
+        debugf ("kmod_info->segment: \t%s\n", __kmod_info->segname);
+        debugf ("kmod_info->section: \t%s\n", __kmod_info->sectname);
+        debugf ("kmod_info->size: \t%d\n", __kmod_info->size);
+        debugf ("kmod_info->addr: \t0x%x\n\n", __kmod_info->addr);
+    #endif
+    }
+
+    uint64_t *kext_table, *info_table;
+    mach_header_t *data = (mach_header_t *) macho->data;
+    HSList *kext_list = NULL;
+    int i, n_kmod;
+
+    /* Load pointers to kext and info tables */
+    kext_table = (uint64_t *) ((uintptr_t) data + __kmod_start->offset);
+    info_table = (uint64_t *) ((uintptr_t) data + __kmod_info->offset);
+
+    n_kmod = MIN (__kmod_start->size, __kmod_info->size) / sizeof (uint64_t);
+
+    /* Go through all the kmod kexts */
+    for (int i = 0; i < n_kmod; i++) {
+        
+        kext_t *kext = xnu_parse_merged_style_kext (macho, __TEXT, kext_table, info_table, i, 0);
+        if (!kext) {
+            warningf ("There was an error parsing the KEXT at index: %d\n", i);
+            continue;
+        }
+        kext_list = h_slist_append (kext_list, kext);
+    }
+
+    printf (ANSI_COLOR_GREEN "[*] Successfully parsed Kernel Extensions (%d)\n" RESET, h_slist_length (kext_list));
+    return kext_list;
 }
 
-htool_return_t
+HSList *
 xnu_load_kext_list_split_style (xnu_t *xnu)
 {
     macho_t *macho = _xnu_select_macho (xnu);
@@ -316,29 +410,32 @@ xnu_load_kext_list_split_style (xnu_t *xnu)
             printf (ANSI_COLOR_GREEN "[*] Successfully parsed Kernel Extensions (%d)\n" RESET, h_slist_length (kext_list));
         }
     }
-    return HTOOL_RETURN_SUCCESS;
+    return kext_list;
 }
 
-htool_return_t
+HSList *
 xnu_load_kext_list_fileset_style (xnu_t *xnu)
 {
+    HSList *kext_list = NULL;
+
     debugf ("fileset size: %d\n", h_slist_length(xnu->macho->fileset));
     for (int i = 0; i < h_slist_length (xnu->macho->fileset); i++) {
         mach_fileset_entry_info_t *entry = (mach_fileset_entry_info_t *) h_slist_nth_data (xnu->macho->fileset, i);
         
         kext_t *kext = calloc (1, sizeof (kext_t));
         kext->macho = entry->macho;
-        kext->bundleid = entry->entry_id;
+        kext->offset = entry->offset;
+        kext->name = entry->entry_id;
 
-        printf ("\n--------\nKEXT Bundle ID: %s (%d bytes)\n", kext->bundleid, kext->macho->size);
+#if KEXT_DEBUG
+        printf ("\n--------\nKEXT Bundle ID: %s (%d bytes)\n", kext->name, kext->macho->size);
         htool_print_macho_header_from_struct (kext->macho->header);
+#endif
 
-        FILE *fp = fopen (kext->bundleid, "w+");
-        fwrite (kext->macho->data, kext->macho->size, 1, fp);
-        fclose (fp);
+        kext_list = h_slist_append (kext_list, kext);
     }
-
-    return HTOOL_RETURN_SUCCESS;
+    printf (ANSI_COLOR_GREEN "[*] Successfully parsed Kernel Extensions (%d)\n" RESET, h_slist_length (kext_list));
+    return kext_list;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -346,20 +443,14 @@ xnu_load_kext_list_fileset_style (xnu_t *xnu)
 htool_return_t
 xnu_parse_kernel_extensions (xnu_t *xnu)
 {
-    debugf ("parsing kernel extensions\n");
     macho_t *kern = xnu->macho;
 
-    if (xnu->type == XNU_KERNEL_TYPE_IOS_IOS9) {
-        printf ("XNU_KERNEL_TYPE_IOS_IOS9\n");
-        xnu_load_kext_list_split_style (xnu);
-    } else if (xnu->type == XNU_KERNEL_TYPE_IOS_SPLIT) {
-        printf ("XNU_KERNEL_TYPE_IOS_SPLIT\n");
-        xnu_load_kext_list_split_style (xnu);
+    if (xnu->type == XNU_KERNEL_TYPE_IOS_IOS9 || xnu->type == XNU_KERNEL_TYPE_IOS_SPLIT) {
+        xnu->kexts = xnu_load_kext_list_split_style (xnu);
     } else if (xnu->type == XNU_KERNEL_TYPE_IOS_MERGED) {
-        printf ("XNU_KERNEL_TYPE_IOS_MERGED\n");
+        xnu->kexts = xnu_load_kext_list_merged_style (xnu);
     } else if (xnu->type == XNU_KERNEL_TYPE_IOS_FILESET) {
-        printf ("XNU_KERNEL_TYPE_IOS_FILESET\n");
-        xnu_load_kext_list_fileset_style (xnu);
+        xnu->kexts = xnu_load_kext_list_fileset_style (xnu);
     } else {
         errorf ("ded\n");
         return HTOOL_RETURN_FAILURE;

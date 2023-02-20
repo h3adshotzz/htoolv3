@@ -44,7 +44,6 @@ xnu_kernel_fetch_type (xnu_t *xnu)
                 sizeof (mach_fileset_entry_command_t), info->offset, info->cmd->entry_id.offset);
 
             if (!strcmp (entry_name, "com.apple.kernel")) {
-                printf ("found com.apple.kernel\n");
                 xnu->kern = info->macho;
                 xnu->flags |= HTOOL_XNU_FLAG_FILESET_ENTRY;
                 tmp_macho = xnu->kern;
@@ -335,7 +334,7 @@ xnu_kernel_load_kernel_cache (htool_binary_t *bin)
     version->cache_style = xnu_kernel_type_get_string (xnu->type);
 
     xnu->version = version;
-    printf (ANSI_COLOR_GREEN BOLD "[*] " RESET ANSI_COLOR_GREEN " Detected Kernelcache\n" RESET);
+    printf (ANSI_COLOR_GREEN "[*]" RESET ANSI_COLOR_GREEN " Detected Kernelcache\n" RESET);
     xnu_version_info_print (xnu, "   ");
 
     return xnu;

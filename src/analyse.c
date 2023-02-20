@@ -71,7 +71,7 @@ void htool_hexdump_single_line (char *mem, uint32_t size)
 htool_return_t
 htool_analyse_kernel (htool_binary_t *bin)
 {
-    printf ("file_type_kernel\n");
+    debugf ("file_type_kernel\n");
     xnu_t *xnu = xnu_kernel_load_kernel_cache (bin);
     bin->firmware = (void *) xnu;
 
