@@ -22,7 +22,11 @@
 #include <time.h>
 
 /* libhelper doesn't implement support for arm thread state */
-#include <mach/arm/thread_status.h>
+#if defined(__APPLE__) && defined(__MACH__)
+#   include <mach/arm/thread_status.h>
+#else
+#   include <libhelper-macho.h>
+#endif
 
 #include "commands/macho.h"
 
