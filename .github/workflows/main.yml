@@ -2,7 +2,7 @@ name: testing
 
 on:
   push:
-    branches: [ "topics/ci-test-2" ]
+    branches: [ "topics/ci-test-3" ]
 
 jobs:
   build:
