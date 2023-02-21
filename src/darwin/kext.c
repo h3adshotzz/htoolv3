@@ -449,10 +449,9 @@ xnu_parse_kernel_extensions (xnu_t *xnu)
         xnu->kexts = xnu_load_kext_list_split_style (xnu);
     } else if (xnu->type == XNU_KERNEL_TYPE_IOS_MERGED) {
         xnu->kexts = xnu_load_kext_list_merged_style (xnu);
-    } else if (xnu->type == XNU_KERNEL_TYPE_IOS_FILESET) {
+    } else if (xnu->type == XNU_KERNEL_TYPE_IOS_FILESET || xnu->type == XNU_KERNEL_TYPE_MACOS_ARM64) {
         xnu->kexts = xnu_load_kext_list_fileset_style (xnu);
     } else {
-        errorf ("ded\n");
         return HTOOL_RETURN_FAILURE;
     }
 

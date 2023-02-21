@@ -112,6 +112,12 @@ htool_binary_parser (htool_binary_t *bin)
             /* clear the list to ensure this is the only element */
             bin->macho_list = NULL;
             bin->macho_list = h_slist_append (bin->macho_list, m64);
+
+            /**
+             *  Check if the Mach-O is an XNU Kernel Extension
+             */
+            if (m64->header->filetype == MACH_TYPE_KEXT_BUNDLE)
+                bin->flags |= HTOOL_BINARY_FIRMWARETYPE_KEXT;
         
         } else if (bin->flags == HTOOL_BINARY_FILETYPE_FAT) {
 

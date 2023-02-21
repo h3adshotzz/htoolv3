@@ -249,10 +249,13 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
     /* set the appropriate flag for the client struct */
     client->cmd |= HTOOL_CLIENT_CMDFLAG_ANALYSE;
 
+    for (int i = 0; i < client->argc; i++)
+        debugf ("[%d]: %s\n", i, client->argv[i]);
+
     /* parse the `file` options */
     int opt = 0;
-    int optindex = 0;
-    while ((opt = getopt_long (client->argc, client->argv, "aleHA", analyse_cmd_opts, &optindex)) > 0) {
+    int optindex = 2;
+    while ((opt = getopt_long (client->argc, client->argv, "e:alHA", analyse_cmd_opts, &optindex)) > 0) {
         switch (opt) {
 
             /* -a, --analyse */
@@ -268,7 +271,7 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
             /* -e, --extract */
             case 'e':
                 client->opts |= HTOOL_CLIENT_ANALYSE_OPT_EXTRACT;
-                client->extract = strdup ((const char *) optarg);
+                client->extract = strdup ((const char *) client->argv[client->argc-1]);
 
             /* default, print usage */
             case 'H':
@@ -311,6 +314,21 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
      */
     if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_ANALYSE)
         htool_generic_analyse (client);
+
+    /**
+     *  Option:             -l, --list-all
+     *  Description:        List all embedded binaries / Mach-O's.
+     */
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_LIST_ALL)
+        htool_analyse_list_all (client);
+
+    /**
+     *  Option:             -e, --extract
+     *  Description:        Extract an embedded firmware that matches the given
+     *                      name.
+     */
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_EXTRACT)
+        htool_analyse_extract (client);
 
 
     return HTOOL_RETURN_SUCCESS;
@@ -392,11 +410,9 @@ int main(int argc, char **argv)
     }
 
     /* set client->argv and ->argc */
-    client->argv = argv;
-    client->argc = argc;
-
-    for (int i = 0; i < argc; i++)
-        debugf ("[%d]: %s\n", i, argv[i]);
+    client->argc = argc - 1;
+    client->argv = (char **) malloc (client->argc * sizeof (char *));
+    for (int i = 0; i < client->argc; i++) client->argv[i] = argv[i];
 
     /* try to get the filename */
     char *filename = argv[argc - 1];

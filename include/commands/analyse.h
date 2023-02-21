@@ -23,5 +23,9 @@
 
 htool_return_t
 htool_generic_analyse (htool_client_t *client);
+htool_return_t
+htool_analyse_list_all (htool_client_t *client);
+htool_return_t
+htool_analyse_extract (htool_client_t *client);
 
 #endif /* __htool_analyse_h__ */
