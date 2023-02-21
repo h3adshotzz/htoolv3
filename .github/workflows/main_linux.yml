@@ -1,0 +1,27 @@
+htool-linux:
+    runs-on: "ubuntu-latest"
+
+    steps:
+    - uses: actions/checkout@v3
+
+    # Checkout and pull libhelper
+    - name: libhelper-configure
+      run: git submodule init && git submodule update
+
+    # Configure the project.
+    - name: htool-configure
+      run: cmake -B build/ -D CMAKE_C_COMPILER=clang -DHTOOL_DISABLE_VERSION=1
+
+    # Build
+    - name: build
+      run: |
+        cd build/;
+        make;
+        ls -la;
+        echo "HTOOL_SOURCE_VERSION=$(python3 ../config/version_fetch.py -f ../src/MasterVersion)" >> $GITHUB_ENV
+
+    # Upload Artefact
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.HTOOL_SOURCE_VERSION }}-linux-internal
+        path: build/
