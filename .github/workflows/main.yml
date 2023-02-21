@@ -23,15 +23,13 @@ jobs:
         cd build/;
         make;
         ls -la;
+        echo "HTOOL_SOURCE_VERSION=$(python3 ../config/version_fetch.py -f ../src/MasterVersion)" >> $GITHUB_ENV
 
-    - name: htool-version
-      run:
-        pwd; 
-        ./build/htool --version;
-    
-    - name: htool-test-macho
-      run:
-        ./build/htool macho -h -l --arch=arm64e $(which ps)
+    # Upload Artefact
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.HTOOL_SOURCE_VERSION }}-internal
+        path: build/
 
   htool-linux:
     runs-on: "ubuntu-latest"
