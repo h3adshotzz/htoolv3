@@ -1,8 +1,6 @@
-name: testing
+name: htool-testing
 
-on:
-  push:
-    branches: [ "topics/ci-test-3" ]
+on: push
 
 jobs:
   htool-macos:
@@ -34,3 +32,29 @@ jobs:
     - name: htool-test-macho
       run:
         ./build/htool macho -h -l --arch=arm64e $(which ps)
+
+  htool-linux:
+    runs-on: "ubuntu-latest"
+
+    steps:
+    - uses: actions/checkout@v3
+
+    # Checkout and pull libhelper
+    - name: libhelper-configure
+      run: git submodule init && git submodule update
+
+    # Configure the project.
+    - name: htool-configure
+      run: cmake -B build/ -D CMAKE_C_COMPILER=clang -DHTOOL_DISABLE_VERSION=1
+
+    # Build
+    - name: build
+      run: |
+        cd build/;
+        make;
+        ls -la;
+
+    - name: htool-version
+      run:
+        pwd; 
+        ./build/htool --version;
