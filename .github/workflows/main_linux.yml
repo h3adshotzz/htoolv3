@@ -1,5 +1,10 @@
-htool-linux:
-    runs-on: "ubuntu-latest"
+name: htool-macos
+
+on: push
+
+jobs:
+  Build:
+    runs-on: "self-hosted"
 
     steps:
     - uses: actions/checkout@v3
@@ -14,6 +19,7 @@ htool-linux:
 
     # Build
     - name: build
+      id: htool-linux-build
       run: |
         cd build/;
         make;
@@ -25,3 +31,13 @@ htool-linux:
       with:
         name: ${{ env.HTOOL_SOURCE_VERSION }}-linux-internal
         path: build/
+
+  Test:
+    runs-on: "self-hosted"
+    needs: "Build"
+
+    steps:
+    - name: test
+      run: |
+        ls -la;
+        ls -la build/;

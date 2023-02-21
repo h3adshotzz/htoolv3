@@ -37,7 +37,10 @@ jobs:
     needs: "Build"
 
     steps:
-    - name: test
+    - name: test-version
       run: |
-        ls -la;
-        ls -la build/;
+        ./build/htool --version
+
+    - name: test-macho-1
+      run: |
+        ./build/htool macho -h -l $(which ps)
