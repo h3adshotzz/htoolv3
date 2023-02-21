@@ -17,7 +17,7 @@ jobs:
 
     # Configure the project.
     - name: configure
-      run: cmake -B build/ -D CMAKE_C_COMPILER=clang
+      run: cmake -B build/ -D CMAKE_C_COMPILER=clang -DHTOOL_DISABLE_VERSION=1
 
     # Build
     - name: build

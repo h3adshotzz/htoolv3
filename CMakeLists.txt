@@ -37,8 +37,10 @@ target_include_directories(htool
 target_link_libraries(htool libhelper)
 
 # Setup versioning script
-include (config/version.cmake)
-add_dependencies(htool generate_version)
+if (NOT HTOOL_DISABLE_VERSION)
+    include (config/version.cmake)
+    add_dependencies(htool generate_version)
+endif()
 
 # All the source files are located in htool/
 add_subdirectory(src/)
