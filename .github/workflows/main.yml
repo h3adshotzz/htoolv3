@@ -1,0 +1,33 @@
+name: testing
+
+on:
+  push:
+    branches: [ "topics/ci-test-2" ]
+
+jobs:
+  build:
+    runs-on: "macos-10.15"
+
+    steps:
+    - uses: actions/checkout@v3
+
+    # Checkout and pull libhelper
+    - name: libhelper-configure
+      run: git submodule init && git submodule update
+
+    # Configure the project.
+    - name: configure
+      run: cmake -B build/ -D CMAKE_C_COMPILER=clang
+
+    # Build
+    - name: build
+      run: |
+        cd build/;
+        make;
+        ls -la;
+
+    - name: test
+      run:
+        pwd; 
+        ./build/htool --version;
+        ./build/htool macho -h -l --arch=arm64e $(which ps)
