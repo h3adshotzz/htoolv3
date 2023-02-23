@@ -204,6 +204,7 @@ static htool_return_t handle_command_macho (htool_client_t *client)
         htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "%s", client->filename);
         exit (EXIT_FAILURE);
     }
+    ci_logf ("File successfully loaded\n");
 
     /**
      *  Option:             -h, --header
@@ -313,6 +314,7 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
         htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "%s", client->filename);
         exit (EXIT_FAILURE);
     }
+    ci_logf ("File successfully loaded\n");
 
     /**
      *  Option:             -a, --analyse

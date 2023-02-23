@@ -23,29 +23,24 @@ TestSuite:
     # A valid Mach-O
     name: macho-test_valid-macho-file
     flags: "macho -h -l"
-    file: "/Users/h3/Work/sources/htoolv3-testing/ps.arm64"
+    file: "./htoolv3-testing/ps.arm64"
   -
     # A valid FAT file with no --arch flag
     name: macho-test_valid-fat-no-arch
     flags: "macho -h -l"
-    file: "/Users/h3/Work/sources/htoolv3-testing/ps.universal"
+    file: "./htoolv3-testing/ps.universal"
   -
     # A valid FAT file with --arch flag
     name: macho-test_valid-fat-with-arch
     flags: "macho -h -l --arch=arm64e"
-    file: "/Users/h3/Work/sources/htoolv3-testing/ps.universal"
+    file: "./htoolv3-testing/ps.universal"
   -
     # An invalid/corrupted Mach-O
     name: macho-test_invalid-macho
     flags: "macho -h -l"
-    file: "macho-basic-1.bin"
+    file: "./htoolv3-testing/invalid.arm64"
   -
     # Nonexistent file
     name: macho-test_no-file
     flags: "macho -h -l"
     file: "macho-basic-1.bin"
-  -
-    # Debug
-    name: debug
-    flags: "debug"
-    file: ""

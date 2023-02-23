@@ -1,9 +1,6 @@
 name: htool-macos
 
-on:
-  push:
-    branches-ignore:
-      - "topics/ci-artifact"
+on: push
 
 jobs:
   Build:
@@ -40,10 +37,17 @@ jobs:
     needs: "Build"
 
     steps:
-    - name: test-version
+    - name: test-setup
       run: |
-        ./build/htool --version
+        git clone git@github.com:h3adshotzz/htoolv3-testing.git
 
-    - name: test-macho-1
+    - name: test-run
       run: |
-        ./build/htool macho -h -l $(which ps)
+        python3 .github/scripts/test_runner.py -c .github/configs/htool-macho-tests.yaml -b build/htool
+        ls -la
+
+    - name: Publish Test Results
+      uses: mikepenz/action-junit-report@v3
+      if: always()
+      with:
+        report_paths: test.xml

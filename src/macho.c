@@ -95,6 +95,7 @@ htool_print_header (htool_client_t *client)
         printf (BOLD RED "FAT Header:\n" RED BOLD RESET);
         htool_print_fat_header_from_struct (bin->fat_info, 1);
 
+        ci_logf("Printed FAT Header\n");
     } else {
 
         /**
@@ -108,7 +109,8 @@ htool_print_header (htool_client_t *client)
 
         printf (BOLD RED "Mach Header:\n" RED BOLD RESET);
         htool_print_macho_header_from_struct (macho->header);
-
+        
+        ci_logf("Printed Mach-O Header\n");
     }
 }
 
@@ -134,7 +136,7 @@ htool_print_load_commands (htool_client_t *client)
         }
         
         /* there's nothing that can be done now, so exit */
-        exit (EXIT_FAILURE);
+        return HTOOL_RETURN_FAILURE;
 
     } else {
 
@@ -207,6 +209,7 @@ htool_print_load_commands (htool_client_t *client)
                 warningf ("32-bit segment commands not implemented\n");
             }
         }
+        ci_logf("Printed Mach-O Segment Commands\n");
 
         /* print the other load commands */
         for (int i = 0; i < (int) h_slist_length (lc_list); i++) {
@@ -343,6 +346,7 @@ htool_print_load_commands (htool_client_t *client)
         }
 
     }
+    ci_logf("Printed Mach-O Load Commands\n");
     return HTOOL_RETURN_SUCCESS;
 }
 
