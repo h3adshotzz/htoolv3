@@ -38,24 +38,76 @@ class ParsedLogs:
 @dataclass
 class HToolTestRun:
     #name: str
-    output: list[str]
     res: int
-    #messages: ParsedLogs
+    logs: list[str]
+    errors: list[str]
+    warnings: list[str]
+    liberrors: list[str]
 
 def run_test_case(test_case, bin):
     f = os.popen("{} {} {}".format(bin, test_case.flags, test_case.file))
     data = f.read().split("\n")
     status = f.close()
 
-    return HToolTestRun(res=status, output=data)
+    logs = []
+    errors = []
+    warnings = []
+    liberrors = []
+    for l in data:
+        if "[TEST_CI]" in l: logs.append(l)
+        elif "[*Error*]" in l: errors.append(l)
+        elif "[Error]" in l: liberrors.append(l)
+        elif "[Warning]" in l: warnings.append(l)
 
-def parse_message_logs(name, output):
-    tc = TestCase(name)
+    return HToolTestRun(res=status, logs=logs, errors=errors, warnings=warnings, liberrors=liberrors)
 
-    for a in output:
-        if "[*Error*]" in a:
-            print(a)
-            tc.add_failure_info(a.split("[*Error*]")[1][1:])
+def find_log(data, log):
+    for l in data:
+        if log in l:
+            return True
+    return False
 
-    print(vars(tc))
-    return tc
+def parse_test_case(suite_name, case_name, log_string, failure_msg, log_data):
+    case = TestCase("{}.{}".format(suite_name, case_name))
+    if not find_log(log_data, log_string):
+        case.add_failure_info(failure_msg)
+    return case
+
+def parse_htool_errors(suite_name, case_name, error_data):
+    case = TestCase("{}.{}".format(suite_name, case_name))
+    if len(error_data):
+        res = "{} HTool errors encountered: ".format(len(error_data))
+
+        count = 0
+        for e in error_data:
+            e = e.split("[*Error*]")[1][1:]
+            res += "\nErr{}: {}".format(count, e)
+
+        case.add_failure_info(res)
+    return case
+
+def parse_libhelper_errors(suite_name, case_name, error_data):
+    case = TestCase("{}.{}".format(suite_name, case_name))
+    if len(error_data):
+        res = "{} Libhelper errors encountered: ".format(len(error_data))
+
+        count = 0
+        for e in error_data:
+            e = e.split("[Error]")[1][1:]
+            res += "\nErr{}: {}".format(count, e)
+
+        case.add_failure_info(res)
+    return case
+
+def parse_warnings(suite_name, case_name, warnings_data):
+    case = TestCase("{}.{}".format(suite_name, case_name))
+    if len(warnings_data):
+        res = "{} warnings encountered: ".format(len(warnings_data))
+
+        count = 0
+        for e in warnings_data:
+            e = e.split("[Warning]")[1][1:]
+            res += "\nwarning:{}: {}".format(count, e)
+
+        case.add_skipped_info(res)
+    return case
