@@ -16,6 +16,7 @@
 #include <libhelper.h>
 #include <libhelper-image4.h>
 
+#include "htool-error.h"
 #include "htool-loader.h"
 #include "htool-client.h"
 
@@ -37,7 +38,7 @@ htool_binary_load_file (const char *path)
 
     /* verify the file path */
     if (!path) {
-        errorf ("htool_binary_load_file: file path is invalid\n");
+        htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "Could not load file as htool_binary_t");
         return HTOOL_RETURN_FAILURE;
     }
     bin->filepath = (char *) strdup (path);
@@ -56,7 +57,7 @@ htool_binary_load_file (const char *path)
 
     /* verify the map was sucessful */
     if (bin->data == MAP_FAILED) {
-        errorf ("htool_binary_load_file: failed to map file: %s\n", bin->filepath);
+        htool_error_throw (HTOOL_ERROR_FILE_LOADING, "Failed to map file: %s", bin->filepath);
         return HTOOL_RETURN_FAILURE;
     }
 
@@ -103,7 +104,7 @@ htool_binary_parser (htool_binary_t *bin)
              */
             macho_t *m64 = macho_64_create_from_buffer (bin->data);
             if (!m64) {
-                errorf ("Failed to load macho\n");
+                htool_error_throw (HTOOL_ERROR_FILE_LOADING, "Failed to load Mach-O");
                 return HTOOL_RETURN_FAILURE;
             }
             warningf ("m64->size: %d\n", m64->size);
@@ -133,13 +134,13 @@ htool_binary_parser (htool_binary_t *bin)
 
             /* check if the fat header is valid */
             if (!fat) {
-                errorf ("htool_binary_load: could not load FAT/Universal Binary: %s\n", bin->filepath);
+                htool_error_throw (HTOOL_ERROR_FILE_LOADING, "Could not load FAT/Universal Binary: %s", bin->filepath);
                 return HTOOL_RETURN_FAILURE;
             }
 
             /* check the fat archive has at least 1 mach-o */
             if (!fat->nfat_arch) {
-                errorf ("htool_binary_load: could not load empty FAT/Universal Binary: %s\n", bin->filepath);
+                htool_error_throw (HTOOL_ERROR_FILE_LOADING, "Could not load empty FAT/Universal Binary: %s", bin->filepath);
                 return HTOOL_RETURN_FAILURE;
             }
 
@@ -196,7 +197,7 @@ htool_binary_parser (htool_binary_t *bin)
 
                     /* try to load 64-bit image */
                     macho_t *macho = macho_64_create_from_buffer ((unsigned char *) raw);
-                    if (!macho) errorf ("htool_binary_load: Could not load Mach-O from FAT file: %s\n", mach_header_get_cpu_string (arch->cputype, arch->cpusubtype));
+                    if (!macho) htool_error_throw (HTOOL_ERROR_FILE_LOADING, "Could not load Mach-O from FAT file: %s", mach_header_get_cpu_string (arch->cputype, arch->cpusubtype));
 
                     /* if the macho was loaded successfully, add it to the list */
                     bin->macho_list = h_slist_append (bin->macho_list, macho);
@@ -214,7 +215,7 @@ htool_binary_parser (htool_binary_t *bin)
             } 
         } else {
             /* implement */
-            errorf ("cannot load file with mask: 0x%08x\n", bin->flags);
+            htool_error_throw (HTOOL_ERROR_FILETYPE, "Cannot load file with mask: 0x%08x", bin->flags);
             return HTOOL_RETURN_FAILURE;
         }
 
@@ -247,7 +248,7 @@ htool_binary_parser (htool_binary_t *bin)
 
     /** TODO: Check if the binary is an iBoot, SecureROM or SEP. */
 
-    errorf ("Could not determine file type: 0x%08x (err: 0x%08x)\n", magic, HTOOL_ERROR_FILETYPE);
+    htool_error_throw (HTOOL_ERROR_FILETYPE, "Cannot determine filetype: 0x%08x", magic);
     return NULL;
 }
 
@@ -299,7 +300,7 @@ htool_binary_select_arch (htool_binary_t *bin, char *arch_name)
         if (!strcmp (cpu_name, arch_name))
             return (macho_t *) h_slist_nth_data (bin->macho_list, i);
     }
-    errorf ("could not find arch\n");
+    htool_error_throw (HTOOL_ERROR_FILETYPE, "Cannot find architecture: %sx", arch_name);
     return NULL;
 }
 

@@ -15,6 +15,8 @@
 
 #include <time.h>
 
+#include "htool-error.h"
+
 #include "htool.h"
 #include "commands/macho.h"
 #include "commands/codesigning.h"
@@ -87,7 +89,7 @@ htool_print_code_signature (htool_client_t *client)
     if (htool_macho_check_fat (client)) {
         
         /* print an error as --arch is not set */
-        errorf ("htool_print_load_commands: Cannot print Shared libraries of a FAT archive. Please run with --arch=\n\n");
+        htool_error_throw (HTOOL_ERROR_FILETYPE, "Cannot print Code signature of a FAT archive");
         
         /* if the --header option has been used, don't print the header again */
         if (!(client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)) {
@@ -105,7 +107,7 @@ htool_print_code_signature (htool_client_t *client)
      */
     macho_t *macho = calloc (1, sizeof (macho_t));
     if (htool_macho_select_arch (client, &macho) == SELECT_MACHO_ARCH_FAIL_NO_ARCH) {
-        errorf ("htool_print_load_commands: Could not load architecture from FAT archive: %s\n", client->arch);
+        htool_error_throw (HTOOL_ERROR_FILETYPE, "Could not load architecture from FAT archive: %s\n", client->arch);
         htool_print_fat_header_from_struct (bin->fat_info, 1);
 
         exit (EXIT_FAILURE);

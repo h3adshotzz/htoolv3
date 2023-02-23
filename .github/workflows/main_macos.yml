@@ -1,6 +1,9 @@
 name: htool-macos
 
-on: push
+on:
+  push:
+    branches-ignore:
+      - "topics/ci-artifact"
 
 jobs:
   Build:

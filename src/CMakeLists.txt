@@ -30,6 +30,7 @@ target_include_directories(htool
 target_sources(htool
     PUBLIC
         main.c
+        error.c
         usage.c
         loader.c
         macho.c

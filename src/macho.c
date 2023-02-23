@@ -21,6 +21,8 @@
 
 #include <time.h>
 
+#include "htool-error.h"
+
 /* libhelper doesn't implement support for arm thread state */
 #if defined(__APPLE__) && defined(__MACH__)
 #   include <mach/arm/thread_status.h>
@@ -123,7 +125,7 @@ htool_print_load_commands (htool_client_t *client)
     if (htool_macho_check_fat (client)) {
         
         /* print an error as --arch is not set */
-        errorf ("htool_print_load_commands: Cannot print Load Commands of a FAT archive. Please run with --arch=\n\n");
+        htool_error_throw (HTOOL_ERROR_ARCH, "Cannot print Load Commands of a FAT archive");
         
         /* if the --header option has been used, don't print the header again */
         if (!(client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)) {
@@ -142,7 +144,7 @@ htool_print_load_commands (htool_client_t *client)
          */
         macho_t *macho = calloc (1, sizeof (macho_t));
         if (htool_macho_select_arch (client, &macho) == SELECT_MACHO_ARCH_FAIL_NO_ARCH) {
-            errorf ("htool_print_load_commands: Could not load architecture from FAT archive: %s\n", client->arch);
+            htool_error_throw (HTOOL_ERROR_FILETYPE, "Could not load architecture from FAT archive: %s\n", client->arch);
             htool_print_fat_header_from_struct (bin->fat_info, 1);
 
             exit (EXIT_FAILURE);
@@ -357,7 +359,7 @@ htool_print_shared_libraries (htool_client_t *client)
     if (htool_macho_check_fat (client)) {
         
         /* print an error as --arch is not set */
-        errorf ("htool_print_load_commands: Cannot print Shared libraries of a FAT archive. Please run with --arch=\n\n");
+        htool_error_throw (HTOOL_ERROR_FILETYPE, "Cannot print Shared libraries of a FAT archive");
         
         /* if the --header option has been used, don't print the header again */
         if (!(client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)) {
@@ -376,7 +378,7 @@ htool_print_shared_libraries (htool_client_t *client)
          */
         macho_t *macho = calloc (1, sizeof (macho_t));
         if (htool_macho_select_arch (client, &macho) == SELECT_MACHO_ARCH_FAIL_NO_ARCH) {
-            errorf ("htool_print_load_commands: Could not load architecture from FAT archive: %s\n", client->arch);
+            htool_error_throw (HTOOL_ERROR_FILETYPE, "Could not load architecture from FAT archive: %s\n", client->arch);
             htool_print_fat_header_from_struct (bin->fat_info, 1);
 
             exit (EXIT_FAILURE);
@@ -690,7 +692,7 @@ htool_print_thread_state_command (void *lc_raw)
 
     /* Unknown thread state command */
     } else {
-        errorf ("Unknown thread state flavour: 0x%08x\n", thread_command->flavour);
+        htool_error_throw (HTOOL_ERROR_GENERAL, "Unknown thread state flavour: 0x%08x", thread_command->flavour);
     }
 }
 

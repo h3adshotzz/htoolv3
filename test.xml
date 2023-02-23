@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<testsuites disabled="0" errors="0" failures="1" tests="1" time="0.0">
+	<testsuite disabled="0" errors="0" failures="1" name="suite" skipped="0" tests="1" time="0">
+		<testcase name="macho-tests">
+			<failure type="failure" message="No architecture specified: HTOOL_ERROR_ARCH test[0m"/>
+		</testcase>
+	</testsuite>
+</testsuites>

@@ -24,6 +24,7 @@
 #include "htool-version.h"
 #include "htool-loader.h"
 #include "htool-client.h"
+#include "htool-error.h"
 #include "htool.h"
 
 #include "colours.h"
@@ -43,6 +44,10 @@ static htool_return_t
 handle_command_macho (htool_client_t *client);
 static htool_return_t
 handle_command_analyse (htool_client_t *client);
+
+/* debug */
+static htool_return_t
+handle_command_debug (htool_client_t *client);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -88,6 +93,7 @@ static struct command commands[] = {
     { "file",       handle_command_file     },
     { "macho",      handle_command_macho    },
     { "analyse",    handle_command_analyse  },
+    { "debug",      handle_command_debug    },
     { NULL,         NULL                    }
 };
 
@@ -100,7 +106,7 @@ static struct command commands[] = {
 
 static htool_return_t handle_command_file (htool_client_t *client)
 {
-    errorf ("Error: `file` not implemented.\n");
+    htool_error_throw (HTOOL_ERROR_NOT_IMPLEMENTED, "'file' not implemented.");
     return HTOOL_RETURN_FAILURE;
 }
 
@@ -195,7 +201,7 @@ static htool_return_t handle_command_macho (htool_client_t *client)
      *  message.
      */
     if ((client->bin = htool_binary_load_and_parse (client->filename)) == HTOOL_RETURN_FAILURE) {
-        errorf ("Cannot continue, invalid file: %s\n", client->filename);
+        htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "%s", client->filename);
         exit (EXIT_FAILURE);
     }
 
@@ -304,7 +310,7 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
      *  message.
      */
     if ((client->bin = htool_binary_load_and_parse (client->filename)) == HTOOL_RETURN_FAILURE) {
-        errorf ("Cannot continue, invalid file: %s\n", client->filename);
+        htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "%s", client->filename);
         exit (EXIT_FAILURE);
     }
 
@@ -332,6 +338,18 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
 
 
     return HTOOL_RETURN_SUCCESS;
+}
+
+static htool_return_t handle_command_debug (htool_client_t *client)
+{
+    error_test ();
+    htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "HTOOL_ERROR_INVALID_FILENAME test");
+    htool_error_throw (HTOOL_ERROR_INVALID_ARCH, "HTOOL_ERROR_INVALID_ARCH test");
+    htool_error_throw (HTOOL_ERROR_NOT_IMPLEMENTED, "HTOOL_ERROR_NOT_IMPLEMENTED test");
+    htool_error_throw (HTOOL_ERROR_FILE_LOADING, "HTOOL_ERROR_FILE_LOADING test");
+    htool_error_throw (HTOOL_ERROR_FILETYPE, "HTOOL_ERROR_FILETYPE test");
+    htool_error_throw (HTOOL_ERROR_GENERAL, "HTOOL_ERROR_GENERAL test");
+    htool_error_throw (HTOOL_ERROR_ARCH, "HTOOL_ERROR_ARCH test");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -417,7 +435,7 @@ int main(int argc, char **argv)
     /* try to get the filename */
     char *filename = argv[argc - 1];
     if (!filename) {
-        errorf ("Error: invalid filename.\n");
+        htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "No filename provided");
         general_usage (argc, argv, 0);
         return EXIT_FAILURE;
     }
