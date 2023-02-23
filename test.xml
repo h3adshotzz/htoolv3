@@ -1,18 +1,24 @@
 <?xml version="1.0" ?>
-<testsuites disabled="0" errors="0" failures="1" tests="7" time="0.0">
-	<testsuite disabled="0" errors="0" failures="1" name="Mach-O Tests" skipped="1" tests="7" time="0">
-		<testcase name="Mach-O Tests.file_loaded_correctly"/>
-		<testcase name="Mach-O Tests.mach_header_printed"/>
-		<testcase name="Mach-O Tests.mach_segment_commands_printed"/>
-		<testcase name="Mach-O Tests.mach_load_commands_printed"/>
-		<testcase name="Mach-O Tests.HTool Errors"/>
-		<testcase name="Mach-O Tests.Libhelper Errors">
-			<failure type="failure" message="1 Libhelper errors encountered: 
-Err0: mach_segment_info_search: could not find segment with name: __PRELINK_INFO"/>
+<testsuites disabled="0" errors="0" failures="5" tests="7" time="0.0">
+	<testsuite disabled="0" errors="0" failures="5" name="Mach-O Tests" skipped="0" tests="7" time="0">
+		<testcase name="Mach-O Tests.file_loaded_correctly">
+			<failure type="failure" message="Failed to load file"/>
 		</testcase>
-		<testcase name="Mach-O Tests.Warnings">
-			<skipped type="skipped" message="1 warnings encountered: 
-warning:0: m64-&gt;size: 75840"/>
+		<testcase name="Mach-O Tests.mach_header_printed">
+			<failure type="failure" message="Failed to print Mach-O Header"/>
 		</testcase>
+		<testcase name="Mach-O Tests.mach_segment_commands_printed">
+			<failure type="failure" message="Failed to print Mach-O Segment Commands"/>
+		</testcase>
+		<testcase name="Mach-O Tests.mach_load_commands_printed">
+			<failure type="failure" message="Failed to print Mach-O Load Commands"/>
+		</testcase>
+		<testcase name="Mach-O Tests.HTool Errors">
+			<failure type="failure" message="2 HTool errors encountered: 
+Err0: Failed to load file: Failed to map file: /Users/h3/Work/sources/htoolv3-testing/ps.arm6[0m
+Err0: Invalid filename: /Users/h3/Work/sources/htoolv3-testing/ps.arm6[0m"/>
+		</testcase>
+		<testcase name="Mach-O Tests.Libhelper Errors"/>
+		<testcase name="Mach-O Tests.Warnings"/>
 	</testsuite>
 </testsuites>
