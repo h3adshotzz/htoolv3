@@ -16,7 +16,7 @@
 		<testcase name="Mach-O Tests.HTool Errors">
 			<failure type="failure" message="2 HTool errors encountered: 
 Err0: Failed to load file: Failed to map file: /Users/h3/Work/sources/htoolv3-testing/ps.arm6[0m
-Err0: Invalid filename: /Users/h3/Work/sources/htoolv3-testing/ps.arm6[0m"/>
+Err1: Invalid filename: /Users/h3/Work/sources/htoolv3-testing/ps.arm6[0m">blah blah blah</failure>
 		</testcase>
 		<testcase name="Mach-O Tests.Libhelper Errors"/>
 		<testcase name="Mach-O Tests.Warnings"/>
