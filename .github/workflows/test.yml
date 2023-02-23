@@ -10,10 +10,8 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Publish Test Results 
-      uses: dorny/test-reporter@v1
+      uses: mikepenz/action-junit-report@v3
       if: always()
       with:
-        path: test.xml
-        name: "junit results test"
-        reporter: java-junit
+        report_paths: test.xml
 
