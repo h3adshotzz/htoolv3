@@ -1,15 +1,16 @@
 name: htool-linux
 
-on:
-  push:
-    branches-ignore:
-      - "topics/ci-artifact"
+on: push
 
 jobs:
   Build:
     runs-on: "ubuntu-latest"
 
     steps:
+
+    - name: clean
+      run: rm -rf *
+
     - uses: actions/checkout@v3
 
     # Checkout and pull libhelper
@@ -40,7 +41,23 @@ jobs:
     needs: "Build"
 
     steps:
-    - name: test
+    - name: test-version
       run: |
-        ls -la;
-        ls -la build/;
+        ./build/htool --version
+
+    - name: test-setup
+      run: |
+        git clone git@github.com:h3adshotzz/htoolv3-testing.git
+
+    - name: test-run
+      run: |
+        python3 .github/scripts/test_runner.py -c .github/configs/htool-macho-tests.yaml -b ./build/htool
+        ls -la
+
+    - name: Publish Test Results
+      uses: mikepenz/action-junit-report@v3
+      if: always()
+      with:
+        report_paths: test.xml
+        fail_on_failure: true
+        detailed_summary: true
