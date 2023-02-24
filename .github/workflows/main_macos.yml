@@ -7,6 +7,10 @@ jobs:
     runs-on: "self-hosted"
 
     steps:
+
+    - name: clean
+      run: rm -rf *
+
     - uses: actions/checkout@v3
 
     # Checkout and pull libhelper
