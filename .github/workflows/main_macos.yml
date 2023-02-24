@@ -55,3 +55,5 @@ jobs:
       if: always()
       with:
         report_paths: test.xml
+        fail_on_failure: true
+        detailed_summary: true
