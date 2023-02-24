@@ -1,6 +1,8 @@
 name: htool-linux
 
-on: push
+on:
+  push:
+    branches: ["topics/ci-test"]
 
 jobs:
   Build:
