@@ -1,0 +1,65 @@
+name: htool-linux
+
+on:
+  push:
+    branches: ["topics/ci-test"]
+
+jobs:
+  Build:
+    runs-on: [self-hosted, linux]
+
+    steps:
+
+    - name: clean
+      run: rm -rf *
+
+    - uses: actions/checkout@v3
+
+    # Checkout and pull libhelper
+    - name: libhelper-configure
+      run: git submodule init && git submodule update
+
+    # Configure the project.
+    - name: htool-configure
+      run: cmake -B build/ -D CMAKE_C_COMPILER=clang -DHTOOL_DISABLE_VERSION=1
+
+    # Build
+    - name: build
+      id: htool-linux-build
+      run: |
+        cd build/;
+        make;
+        ls -la;
+        echo "HTOOL_SOURCE_VERSION=$(python3 ../config/version_fetch.py -f ../src/MasterVersion)" >> $GITHUB_ENV
+
+    # Upload Artefact
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.HTOOL_SOURCE_VERSION }}-linux-internal
+        path: build/
+
+  Test:
+    runs-on: [self-hosted, linux]
+    needs: "Build"
+
+    steps:
+    - name: test-version
+      run: |
+        ./build/htool --version
+
+    - name: test-setup
+      run: |
+        git clone git@github.com:h3adshotzz/htoolv3-testing.git
+
+    - name: test-run
+      run: |
+        python3 .github/scripts/test_runner.py -c .github/configs/htool-macho-tests.yaml -b ./build/htool
+        ls -la
+
+    - name: Publish Test Results
+      uses: mikepenz/action-junit-report@v3
+      if: always()
+      with:
+        report_paths: test.xml
+        fail_on_failure: true
+        detailed_summary: true

@@ -27,11 +27,6 @@ typedef enum htool_return_t
 } htool_return_t;
 
 /**
- * Error code
- */
-#define HTOOL_ERROR_FILETYPE    0x000000001
-
-/**
  * Colour codes
  */
 #define WHITE           "\x1b[38;5;254m"
