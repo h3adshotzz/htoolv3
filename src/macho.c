@@ -21,8 +21,14 @@
 
 #include <time.h>
 
+#include "htool-error.h"
+
 /* libhelper doesn't implement support for arm thread state */
-#include <mach/arm/thread_status.h>
+#if defined(__APPLE__) && defined(__MACH__)
+#   include <mach/arm/thread_status.h>
+#else
+#   include <libhelper-macho.h>
+#endif
 
 #include "commands/macho.h"
 
@@ -89,6 +95,7 @@ htool_print_header (htool_client_t *client)
         printf (BOLD RED "FAT Header:\n" RED BOLD RESET);
         htool_print_fat_header_from_struct (bin->fat_info, 1);
 
+        ci_logf("Printed FAT Header\n");
     } else {
 
         /**
@@ -102,7 +109,8 @@ htool_print_header (htool_client_t *client)
 
         printf (BOLD RED "Mach Header:\n" RED BOLD RESET);
         htool_print_macho_header_from_struct (macho->header);
-
+        
+        ci_logf("Printed Mach-O Header\n");
     }
 }
 
@@ -119,7 +127,7 @@ htool_print_load_commands (htool_client_t *client)
     if (htool_macho_check_fat (client)) {
         
         /* print an error as --arch is not set */
-        errorf ("htool_print_load_commands: Cannot print Load Commands of a FAT archive. Please run with --arch=\n\n");
+        htool_error_throw (HTOOL_ERROR_ARCH, "Cannot print Load Commands of a FAT archive");
         
         /* if the --header option has been used, don't print the header again */
         if (!(client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)) {
@@ -128,7 +136,7 @@ htool_print_load_commands (htool_client_t *client)
         }
         
         /* there's nothing that can be done now, so exit */
-        exit (EXIT_FAILURE);
+        return HTOOL_RETURN_FAILURE;
 
     } else {
 
@@ -138,7 +146,7 @@ htool_print_load_commands (htool_client_t *client)
          */
         macho_t *macho = calloc (1, sizeof (macho_t));
         if (htool_macho_select_arch (client, &macho) == SELECT_MACHO_ARCH_FAIL_NO_ARCH) {
-            errorf ("htool_print_load_commands: Could not load architecture from FAT archive: %s\n", client->arch);
+            htool_error_throw (HTOOL_ERROR_FILETYPE, "Could not load architecture from FAT archive: %s\n", client->arch);
             htool_print_fat_header_from_struct (bin->fat_info, 1);
 
             exit (EXIT_FAILURE);
@@ -183,12 +191,13 @@ htool_print_load_commands (htool_client_t *client)
                 if (nsect) {
 
                     /* section table header, print each section */
-                    printf (BOLD DARK_YELLOW "  %-24s%-10s%-10s\n", "Name", "Size", "Offset" DARK_YELLOW BOLD RESET);
+                    printf (BOLD DARK_YELLOW "  %-24s%-10s%-10s\n", "Name", "Size", "Range" DARK_YELLOW BOLD RESET);
 
                     for (int i = 0; i < nsect; i++) {
                         mach_section_64_t *sect = (mach_section_64_t *) h_slist_nth_data (info->sections, i);
                         printf (BOLD DARK_WHITE "  %s%-23s" RESET DARK_GREY "%-10llu0x%08llx → 0x%08llx\n" RESET,
                                 ".", sect->sectname, sect->size, sect->addr, sect->addr + sect->size);
+                        debugf ("offset: 0x%08x\n", sect->offset);
                     }
                 } else {
                     printf (BLUE "  No Data\n" BLUE RESET);
@@ -200,6 +209,7 @@ htool_print_load_commands (htool_client_t *client)
                 warningf ("32-bit segment commands not implemented\n");
             }
         }
+        ci_logf("Printed Mach-O Segment Commands\n");
 
         /* print the other load commands */
         for (int i = 0; i < (int) h_slist_length (lc_list); i++) {
@@ -336,6 +346,7 @@ htool_print_load_commands (htool_client_t *client)
         }
 
     }
+    ci_logf("Printed Mach-O Load Commands\n");
     return HTOOL_RETURN_SUCCESS;
 }
 
@@ -352,7 +363,7 @@ htool_print_shared_libraries (htool_client_t *client)
     if (htool_macho_check_fat (client)) {
         
         /* print an error as --arch is not set */
-        errorf ("htool_print_load_commands: Cannot print Shared libraries of a FAT archive. Please run with --arch=\n\n");
+        htool_error_throw (HTOOL_ERROR_FILETYPE, "Cannot print Shared libraries of a FAT archive");
         
         /* if the --header option has been used, don't print the header again */
         if (!(client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)) {
@@ -371,7 +382,7 @@ htool_print_shared_libraries (htool_client_t *client)
          */
         macho_t *macho = calloc (1, sizeof (macho_t));
         if (htool_macho_select_arch (client, &macho) == SELECT_MACHO_ARCH_FAIL_NO_ARCH) {
-            errorf ("htool_print_load_commands: Could not load architecture from FAT archive: %s\n", client->arch);
+            htool_error_throw (HTOOL_ERROR_FILETYPE, "Could not load architecture from FAT archive: %s\n", client->arch);
             htool_print_fat_header_from_struct (bin->fat_info, 1);
 
             exit (EXIT_FAILURE);
@@ -685,7 +696,7 @@ htool_print_thread_state_command (void *lc_raw)
 
     /* Unknown thread state command */
     } else {
-        errorf ("Unknown thread state flavour: 0x%08x\n", thread_command->flavour);
+        htool_error_throw (HTOOL_ERROR_GENERAL, "Unknown thread state flavour: 0x%08x", thread_command->flavour);
     }
 }
 

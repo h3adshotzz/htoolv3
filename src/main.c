@@ -21,15 +21,19 @@
 #include <libhelper-macho.h>
 #include <libhelper-file.h>
 
+#include "htool-version.h"
 #include "htool-loader.h"
 #include "htool-client.h"
+#include "htool-error.h"
 #include "htool.h"
 
 #include "colours.h"
 #include "usage.h"
 
+
 /* headers for commands */
 #include "commands/macho.h"
+#include "commands/analyse.h"
 
 
 /* Command handler functions */
@@ -37,7 +41,13 @@
 static htool_return_t
 handle_command_file (htool_client_t *client);
 static htool_return_t
-handle_command_macho (htool_client_t *client); 
+handle_command_macho (htool_client_t *client);
+static htool_return_t
+handle_command_analyse (htool_client_t *client);
+
+/* debug */
+static htool_return_t
+handle_command_debug (htool_client_t *client);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -53,7 +63,7 @@ static struct option standard_opts[] = {
 };
 
 /* macho options */
-static struct option macho_cmd_opts[] = { 
+static struct option macho_cmd_opts[] = {
     { "arch",       required_argument,  NULL,   'a' },
     { "verbose",    no_argument,        NULL,   'v' },
     { "help",       no_argument,        NULL,   'H' },
@@ -64,10 +74,17 @@ static struct option macho_cmd_opts[] = {
     { "sym-dbg",    no_argument,        NULL,   'D' },
     { "sym-sect",   no_argument,        NULL,   'C' },
     { "signing",    no_argument,        NULL,   'S' },
-    
+
     { NULL,         0,                  NULL,    0  }
 };
 
+/* analyse options */
+static struct option analyse_cmd_opts[] = {
+    { "analyse",    no_argument,        NULL,   'a' },
+    { "list-all",   no_argument,        NULL,   'l' },
+    { "extract",    required_argument,  NULL,   'e' },
+    { NULL,         0,                  NULL,   0   }
+};
 
 /**
  *  List of top-level commands that htool provides
@@ -75,6 +92,8 @@ static struct option macho_cmd_opts[] = {
 static struct command commands[] = {
     { "file",       handle_command_file     },
     { "macho",      handle_command_macho    },
+    { "analyse",    handle_command_analyse  },
+    { "debug",      handle_command_debug    },
     { NULL,         NULL                    }
 };
 
@@ -87,7 +106,7 @@ static struct command commands[] = {
 
 static htool_return_t handle_command_file (htool_client_t *client)
 {
-    errorf ("Error: `file` not implemented.\n");
+    htool_error_throw (HTOOL_ERROR_NOT_IMPLEMENTED, "'file' not implemented.");
     return HTOOL_RETURN_FAILURE;
 }
 
@@ -146,7 +165,7 @@ static htool_return_t handle_command_macho (htool_client_t *client)
                 case 'C':
                     client->opts |= HTOOL_CLIENT_MACHO_OPT_SYMSECT;
                     break;
-            
+
             /* -S, --signing */
             case 'S':
                 client->opts |= HTOOL_CLIENT_MACHO_OPT_CODE_SIGNING;
@@ -178,10 +197,14 @@ static htool_return_t handle_command_macho (htool_client_t *client)
     }
 
     /**
-     *  Create and load a htool_binary_t
+     *  Load the file into client->bin, if the file is not valid exit with an error
+     *  message.
      */
-    client->bin = htool_binary_load_and_parse (client->filename);
-    htool_binary_t *bin = client->bin;
+    if ((client->bin = htool_binary_load_and_parse (client->filename)) == HTOOL_RETURN_FAILURE) {
+        htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "%s", client->filename);
+        exit (EXIT_FAILURE);
+    }
+    ci_logf ("File successfully loaded\n");
 
     /**
      *  Option:             -h, --header
@@ -190,7 +213,7 @@ static htool_return_t handle_command_macho (htool_client_t *client)
      */
     if (client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)
         htool_print_header (client);
-    
+
     /**
      *  Option:             -l. --loadcmd
      *  Description:        Print out the Load and Segment Commands contained in a
@@ -224,6 +247,112 @@ static htool_return_t handle_command_macho (htool_client_t *client)
     return HTOOL_RETURN_SUCCESS;
 }
 
+static htool_return_t handle_command_analyse (htool_client_t *client)
+{
+    /* reset getopt */
+    optind = 1;
+    opterr = 1;
+
+    /* set the appropriate flag for the client struct */
+    client->cmd |= HTOOL_CLIENT_CMDFLAG_ANALYSE;
+
+    for (int i = 0; i < client->argc; i++)
+        debugf ("[%d]: %s\n", i, client->argv[i]);
+
+    /* parse the `file` options */
+    int opt = 0;
+    int optindex = 2;
+    while ((opt = getopt_long (client->argc, client->argv, "e:alHA", analyse_cmd_opts, &optindex)) > 0) {
+        switch (opt) {
+
+            /* -a, --analyse */
+            case 'a':
+                client->opts |= HTOOL_CLIENT_ANALYSE_OPT_ANALYSE;
+                break;
+
+            /* -l, --list-all */
+            case 'l':
+                client->opts |= HTOOL_CLIENT_ANALYSE_OPT_LIST_ALL;
+                break;
+
+            /* -e, --extract */
+            case 'e':
+                client->opts |= HTOOL_CLIENT_ANALYSE_OPT_EXTRACT;
+                client->extract = strdup ((const char *) client->argv[client->argc-1]);
+
+            /* default, print usage */
+            case 'H':
+            default:
+                analyse_subcommand_usage (client->argc, client->argv, 0);
+                break;
+        }
+    }
+
+    debugf ("handle_command_analyse\n");
+
+    printf ("**********\n");
+    printf ("MACHO-DEBUG: \tclient->opt: 0x%08x\n", client->opts);
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_ANALYSE)   printf ("MACHO-DEBUG: \tHTOOL_CLIENT_ANALYSE_OPT_ANALYSE\n");
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_LIST_ALL)  printf ("MACHO-DEBUG: \tHTOOL_CLIENT_ANALYSE_OPT_LIST_ALL\n");
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_EXTRACT)   printf ("MACHO-DEBUG: \tHTOOL_CLIENT_ANALYSE_OPT_EXTRACT\n");
+    printf ("**********\n\n");
+
+    /**
+     *  Option:             None
+     *  Description:        No option has been passed, so print the help menu again.
+     */
+    if (!client->opts) {
+        analyse_subcommand_usage (client->argc, client->argv, 0);
+        return HTOOL_RETURN_FAILURE;
+    }
+
+    /**
+     *  Load the file into client->bin, if the file is not valid exit with an error
+     *  message.
+     */
+    if ((client->bin = htool_binary_load_and_parse (client->filename)) == HTOOL_RETURN_FAILURE) {
+        htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "%s", client->filename);
+        exit (EXIT_FAILURE);
+    }
+    ci_logf ("File successfully loaded\n");
+
+    /**
+     *  Option:             -a, --analyse
+     *  Description:        Run a complete analysis of the given firmware file.
+     */
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_ANALYSE)
+        htool_generic_analyse (client);
+
+    /**
+     *  Option:             -l, --list-all
+     *  Description:        List all embedded binaries / Mach-O's.
+     */
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_LIST_ALL)
+        htool_analyse_list_all (client);
+
+    /**
+     *  Option:             -e, --extract
+     *  Description:        Extract an embedded firmware that matches the given
+     *                      name.
+     */
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_EXTRACT)
+        htool_analyse_extract (client);
+
+
+    return HTOOL_RETURN_SUCCESS;
+}
+
+static htool_return_t handle_command_debug (htool_client_t *client)
+{
+    error_test ();
+    htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "HTOOL_ERROR_INVALID_FILENAME test");
+    htool_error_throw (HTOOL_ERROR_INVALID_ARCH, "HTOOL_ERROR_INVALID_ARCH test");
+    htool_error_throw (HTOOL_ERROR_NOT_IMPLEMENTED, "HTOOL_ERROR_NOT_IMPLEMENTED test");
+    htool_error_throw (HTOOL_ERROR_FILE_LOADING, "HTOOL_ERROR_FILE_LOADING test");
+    htool_error_throw (HTOOL_ERROR_FILETYPE, "HTOOL_ERROR_FILETYPE test");
+    htool_error_throw (HTOOL_ERROR_GENERAL, "HTOOL_ERROR_GENERAL test");
+    htool_error_throw (HTOOL_ERROR_ARCH, "HTOOL_ERROR_ARCH test");
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -231,22 +360,31 @@ static htool_return_t handle_command_macho (htool_client_t *client)
 void print_version_detail (int opt)
 {
     if (opt == 1) {
-        printf (BOLD "Copyright (C) Is This On? Holdings Ltd; HTool Version %s (%s)\n\n" RESET, HTOOL_VERSION_NUMBER, libhelper_get_version_string());
+        printf (BOLD "Copyright (C) Is This On? Holdings Ltd.\n\n" RESET);
 
         printf (BOLD RED "  Debug Information:\n", RESET);
+        printf (BOLD DARK_WHITE "    Build Version:    " RESET DARK_GREY "%s (%s)\n", HTOOL_BUILD_VERSION, HTOOL_SOURCE_VERSION);
+        printf (BOLD DARK_WHITE "    Build Target:     " RESET DARK_GREY "%s-%s\n", BUILD_TARGET, BUILD_ARCH);        
         printf (BOLD DARK_WHITE "    Build time:       " RESET DARK_GREY "%s\n", __TIMESTAMP__);
-        printf (BOLD DARK_WHITE "    Build type:       " RESET DARK_GREY "%s\n", HTOOL_VERSION_TAG);
+        printf (BOLD DARK_WHITE "    Libhelper:        " RESET DARK_GREY "%s\n", libhelper_get_version_string());
+        printf (BOLD DARK_WHITE "    Compiler:         " RESET DARK_GREY "%s\n", __VERSION__);
 
-        printf (BOLD DARK_WHITE "    Default target:   " RESET DARK_GREY "%s-%s\n", BUILD_TARGET, BUILD_ARCH);
         printf (BOLD DARK_WHITE "    Platform:         " RESET DARK_GREY);
 #if HTOOL_MACOS_PLATFORM_TYPE == HTOOL_PLATFORM_TYPE_APPLE_SILICON
         printf ("apple-silicon (Apple Silicon)\n");
 #else
         printf ("intel-genuine (Intel Genuine)\n");
 #endif
+#if HTOOL_DEBUG
+        printf (BLUE "\n    HTool Version %s: %s; root:%s/%s_%s %s\n\n" RESET,
+            HTOOL_BUILD_VERSION, __TIMESTAMP__, HTOOL_SOURCE_VERSION, HTOOL_BUILD_TYPE, BUILD_ARCH_CAP, BUILD_ARCH);
+#endif
     } else {
         printf ("-----------------------------------------------------\n");
-        printf ("  HTool %s - Built " __TIMESTAMP__ "\n", HTOOL_VERSION_NUMBER);
+        printf ("  HTool %s - Built " __TIMESTAMP__ "\n", HTOOL_BUILD_VERSION);
+#if HTOOL_DEBUG
+        printf (BLUE "  Source version: %s\n" RESET, HTOOL_SOURCE_VERSION);
+#endif
         printf ("-----------------------------------------------------\n");
     }
 }
@@ -292,16 +430,14 @@ int main(int argc, char **argv)
     }
 
     /* set client->argv and ->argc */
-    client->argv = argv;
-    client->argc = argc;
-
-    for (int i = 0; i < argc; i++)
-        debugf ("[%d]: %s\n", i, argv[i]);
+    client->argc = argc - 1;
+    client->argv = (char **) malloc (client->argc * sizeof (char *));
+    for (int i = 0; i < client->argc; i++) client->argv[i] = argv[i];
 
     /* try to get the filename */
     char *filename = argv[argc - 1];
     if (!filename) {
-        errorf ("Error: invalid filename.\n");
+        htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "No filename provided");
         general_usage (argc, argv, 0);
         return EXIT_FAILURE;
     }

@@ -13,9 +13,15 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include <libhelper.h>
+#include <libhelper-image4.h>
+
+#include "htool-error.h"
 #include "htool-loader.h"
 #include "htool-client.h"
 
+#include "darwin/darwin.h"
+#include "commands/macho.h"
 
 htool_binary_t *
 htool_binary_create ()
@@ -32,7 +38,7 @@ htool_binary_load_file (const char *path)
 
     /* verify the file path */
     if (!path) {
-        errorf ("htool_binary_load_file: file path is invalid\n");
+        htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "Could not load file as htool_binary_t");
         return HTOOL_RETURN_FAILURE;
     }
     bin->filepath = (char *) strdup (path);
@@ -51,7 +57,7 @@ htool_binary_load_file (const char *path)
 
     /* verify the map was sucessful */
     if (bin->data == MAP_FAILED) {
-        errorf ("htool_binary_load_file: failed to map file: %s\n", bin->filepath);
+        htool_error_throw (HTOOL_ERROR_FILE_LOADING, "Failed to map file: %s", bin->filepath);
         return HTOOL_RETURN_FAILURE;
     }
 
@@ -66,18 +72,18 @@ htool_binary_parser (htool_binary_t *bin)
 
 
     /**
-     * Check if the binary is an ELF format.
+     *  Check if the binary is an ELF format.
     */
     if (htool_binary_detect_elf (bin, magic)) {
         warningf ("TODO: Implement ELF parsing\n");
         return HTOOL_RETURN_SUCCESS;
     }
 
-   /**
-     * Check if the binary is a Mach-O format.
-    */
+    /**
+     *  Check if the binary is a Mach-O format.
+     */
     if (htool_binary_detect_macho (bin, magic)) {
-
+        
         /**
          *  The idea here is that we parse the files as normal. If the file type is
          *  a regular Mach-O, as set by the flag, then the `macho_list` property is
@@ -98,13 +104,21 @@ htool_binary_parser (htool_binary_t *bin)
              */
             macho_t *m64 = macho_64_create_from_buffer (bin->data);
             if (!m64) {
-                errorf ("Failed to load macho\n");
+                htool_error_throw (HTOOL_ERROR_FILE_LOADING, "Failed to load Mach-O");
                 return HTOOL_RETURN_FAILURE;
             }
+            warningf ("m64->size: %d\n", m64->size);
+            if (m64->size < bin->size) m64->size = bin->size;
 
             /* clear the list to ensure this is the only element */
             bin->macho_list = NULL;
             bin->macho_list = h_slist_append (bin->macho_list, m64);
+
+            /**
+             *  Check if the Mach-O is an XNU Kernel Extension
+             */
+            if (m64->header->filetype == MACH_TYPE_KEXT_BUNDLE)
+                bin->flags |= HTOOL_BINARY_FIRMWARETYPE_KEXT;
         
         } else if (bin->flags == HTOOL_BINARY_FILETYPE_FAT) {
 
@@ -120,13 +134,13 @@ htool_binary_parser (htool_binary_t *bin)
 
             /* check if the fat header is valid */
             if (!fat) {
-                errorf ("htool_binary_load: could not load FAT/Universal Binary: %s\n", bin->filepath);
+                htool_error_throw (HTOOL_ERROR_FILE_LOADING, "Could not load FAT/Universal Binary: %s", bin->filepath);
                 return HTOOL_RETURN_FAILURE;
             }
 
             /* check the fat archive has at least 1 mach-o */
             if (!fat->nfat_arch) {
-                errorf ("htool_binary_load: could not load empty FAT/Universal Binary: %s\n", bin->filepath);
+                htool_error_throw (HTOOL_ERROR_FILE_LOADING, "Could not load empty FAT/Universal Binary: %s", bin->filepath);
                 return HTOOL_RETURN_FAILURE;
             }
 
@@ -183,7 +197,7 @@ htool_binary_parser (htool_binary_t *bin)
 
                     /* try to load 64-bit image */
                     macho_t *macho = macho_64_create_from_buffer ((unsigned char *) raw);
-                    if (!macho) errorf ("htool_binary_load: Could not load Mach-O from FAT file: %s\n", mach_header_get_cpu_string (arch->cputype, arch->cpusubtype));
+                    if (!macho) htool_error_throw (HTOOL_ERROR_FILE_LOADING, "Could not load Mach-O from FAT file: %s", mach_header_get_cpu_string (arch->cputype, arch->cpusubtype));
 
                     /* if the macho was loaded successfully, add it to the list */
                     bin->macho_list = h_slist_append (bin->macho_list, macho);
@@ -201,14 +215,40 @@ htool_binary_parser (htool_binary_t *bin)
             } 
         } else {
             /* implement */
-            errorf ("cannot load file with mask: 0x%08x\n", bin->flags);
+            htool_error_throw (HTOOL_ERROR_FILETYPE, "Cannot load file with mask: 0x%08x", bin->flags);
             return HTOOL_RETURN_FAILURE;
         }
 
+        /**
+         *  Check if the Mach-O that has been loaded is a Kernel, if it is,
+         *  set the correct flag.
+         */
+        if (darwin_detect_firmware_component_kernel (bin))
+            bin->flags |= HTOOL_BINARY_FIRMWARETYPE_KERNEL;
+
+        return bin;
+    } 
+    
+    /**
+     *  Check if the binary is an iBoot
+     */
+    if (darwin_detect_firmware_component_iboot (bin)) {
+        printf ("iBoot detected\n");
+        bin->flags |= HTOOL_BINARY_FIRMWARETYPE_IBOOT;
+        return bin;
+    }
+    
+    /**
+     *  Check if the binary is an Image4
+     */
+    if (htool_binary_detect_image4 (bin, magic)) {
+        printf ("image4 detected\n");
         return bin;
     }
 
-    errorf ("Could not determine file type: 0x%08x (err: 0x%08x)\n", magic, HTOOL_ERROR_FILETYPE);
+    /** TODO: Check if the binary is an iBoot, SecureROM or SEP. */
+
+    htool_error_throw (HTOOL_ERROR_FILETYPE, "Cannot determine filetype: 0x%08x", magic);
     return NULL;
 }
 
@@ -260,7 +300,7 @@ htool_binary_select_arch (htool_binary_t *bin, char *arch_name)
         if (!strcmp (cpu_name, arch_name))
             return (macho_t *) h_slist_nth_data (bin->macho_list, i);
     }
-    errorf ("could not find arch\n");
+    htool_error_throw (HTOOL_ERROR_FILETYPE, "Cannot find architecture: %sx", arch_name);
     return NULL;
 }
 
@@ -276,4 +316,26 @@ htool_binary_detect_elf (htool_binary_t *bin, uint32_t magic)
      *       for the moment we're just trying to detect whether a file is an ELF.
     */
    return (magic == ELF_MAGIC || magic == ELF_CIGAM) ? HTOOL_RETURN_SUCCESS : HTOOL_RETURN_FAILURE;
+}
+
+//===----------------------------------------------------------------------===//
+//                          Image4 Loader Functions
+//===----------------------------------------------------------------------===//
+
+htool_return_t
+htool_binary_detect_image4 (htool_binary_t *bin, uint32_t magic)
+{
+    image4_t *tmp = malloc (sizeof (image4_t));
+    tmp->path = bin->filepath;
+    tmp->size = bin->size;
+    tmp->data = bin->data;
+
+    img4type_t type = image4_get_file_type (tmp);
+
+    if (type) {
+        bin->flags |= HTOOL_BINARY_FILETYPE_IMAGE4;
+        return HTOOL_RETURN_SUCCESS;
+    }
+
+    return HTOOL_RETURN_FAILURE;
 }

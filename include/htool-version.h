@@ -1,0 +1,76 @@
+//===----------------------------------------------------------------------===//
+//
+//                         === The HTool Project ===
+//
+//  This  document  is the property of "Is This On?" It is considered to be
+//  confidential and proprietary and may not be, in any form, reproduced or
+//  transmitted, in whole or in part, without express permission of Is This
+//  On?.
+//
+//  Copyright (C) 2022, Harry Moulton - Is This On? Holdings Ltd
+//
+//  Harry Moulton <me@h3adsh0tzz.com>
+//
+//===----------------------------------------------------------------------===//
+
+#ifndef HTOOL_VERSION_H
+#define HTOOL_VERSION_H
+
+/* htool Build Version, i.e. 3.1.2 */
+#define HTOOL_BUILD_VERSION_MAJOR       "3"
+#define HTOOL_BUILD_VERSION_MINOR       "0"
+#define HTOOL_BUILD_VERSION_REVISION    "1"
+#define HTOOL_BUILD_VERSION             "3.0.1"
+
+/* htool Build Type, i.e. INTERNAL, BETA, RELEASE */
+#define HTOOL_BUILD_TYPE                "DEBUG"
+
+/* htool Source Version, i.e. 312.56.12 */
+#define HTOOL_SOURCE_VERSION_MAJOR      "14"
+#define HTOOL_SOURCE_VERSION_MINOR      "29"
+
+#define HTOOL_SOURCE_VERSION            "htool-301.14.29"
+
+/**
+ *  Define a Target type for HTool to both display within the help
+ *  and other version information texts, and to determine platform
+ *  when it comes to specific libraries that are only defined on
+ *  one platform.
+ *
+ */
+#ifdef __APPLE__
+#   define BUILD_TARGET         "darwin"
+#   define BUILD_TARGET_CAP     "Darwin"
+#else
+#   define BUILD_TARGET         "linux"
+#   define BUILD_TARGET_CAP     "Linux"
+#endif
+
+
+/**
+ *  Define an Architecture type for HTool to both display within
+ *  the help and other version information texts, and to determine
+ *  architecture when it comes to platform-specific operations.
+ *
+ */
+#ifdef __x86_64__
+#   define BUILD_ARCH           "x86_64"
+#   define BUILD_ARCH_CAP       "X86_64"
+#elif __arm__
+#   define BUILD_ARCH           "arm"
+#   define BUILD_ARCH_CAP       "ARM"
+#elif __arm64__
+#	define BUILD_ARCH			"arm64"
+#   define BUILD_ARCH_CAP       "ARM64"
+#endif
+
+#define HTOOL_PLATFORM_TYPE_APPLE_SILICON       1
+#define HTOOL_PLATFORM_TYPE_INTEL_GENUINE       2
+
+#if defined(__arm64__) && defined(__APPLE__)
+#   define HTOOL_MACOS_PLATFORM_TYPE            HTOOL_PLATFORM_TYPE_APPLE_SILICON
+#else
+#   define HTOOL_MACOS_PLATFORM_TYPE            HTOOL_PLATFORM_TYPE_INTEL_GENUINE
+#endif
+
+#endif /* __htool_version_h__ */

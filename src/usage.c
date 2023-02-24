@@ -69,7 +69,26 @@ void macho_subcommand_usage (int argc, char *argv[], int err)
     "      --sym-sect       Print additional section info.\n" \
     "\n"\
     "Options:\n" \
-    "  --versbose       Print more in-depth verbose information\n" \
+    "  --verbose       Print more in-depth verbose information\n" \
+    "  --arch=ARCH      Specify architecture (e.g. arm64e, arm64, x86_64, ...)\n" \
+    "  --help           HTool Usage info.\n" \
+    "\n",
+
+    (name ? name + 1 : argv[0]));
+}
+
+void analyse_subcommand_usage (int argc, char *argv[], int err)
+{
+    char *name = strchr (argv[0], '/');
+    fprintf ((err) ? stderr : stdout,
+    "Usage: %s macho [OPTIONS] PATH\n" \
+    "\n" \
+    "Commands:\n" \
+    "  -a, --analyse    Analyse the given Firmware File..\n" \
+    "  -l, --list-all   Print all embedded payloads (SEP, iBoot, KEXTs).\n" \
+    "\n"\
+    "Options:\n" \
+    "  --verbose       Print more in-depth verbose information\n" \
     "  --arch=ARCH      Specify architecture (e.g. arm64e, arm64, x86_64, ...)\n" \
     "  --help           HTool Usage info.\n" \
     "\n",

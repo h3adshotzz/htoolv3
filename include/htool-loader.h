@@ -24,6 +24,7 @@
 
 #include <libhelper.h>
 #include <libhelper-macho.h>
+#include <libhelper-image4.h>
 #include <libhelper-logger.h>
 
 #include "elf/elf-loader.h"
@@ -68,6 +69,7 @@
  *              Mach-O.
  *
  */
+#define HTOOL_BINARY_FILETYPE_IMAGE4            0x90000000
 #define HTOOL_BINARY_FILETYPE_RAWBINARY         0xa0000000
 #define HTOOL_BINARY_FILETYPE_MACHO32           0xb0000000
 #define HTOOL_BINARY_FILETYPE_MACHO64           0xc0000000
@@ -76,8 +78,9 @@
 #define HTOOL_BINARY_FILETYPE_ELF               0xf0000000
 
 #define HTOOL_BINARY_FIRMWARETYPE_KERNEL        0x00000001
-#define HTOOL_BINARY_FIRMWARETYPE_IBOOT         0x00000002
-#define HTOOL_BINARY_FIRMWARETYPE_SEP           0x00000003
+#define HTOOL_BINARY_FIRMWARETYPE_KEXT          0x00000002
+#define HTOOL_BINARY_FIRMWARETYPE_IBOOT         0x00000003
+#define HTOOL_BINARY_FIRMWARETYPE_SEP           0x00000004
 
 
 /**
@@ -101,7 +104,10 @@ struct __htool_binary
     fat_info_t      *fat_info;
     HSList          *macho_list;
     //elf_t           *elf;
+    image4_t        *image4;
 
+    /* other */
+    void *firmware;
     uint32_t debug;
 };
 
@@ -116,11 +122,17 @@ htool_binary_parser (htool_binary_t *bin);
 htool_binary_t *
 htool_binary_load_and_parse (const char *path);
 
+macho_t *
+htool_binary_select_arch (htool_binary_t *bin, char *arch_name);
+
 
 htool_return_t
 htool_binary_detect_macho (htool_binary_t *bin, uint32_t magic);
 
 htool_return_t
 htool_binary_detect_elf (htool_binary_t *bin, uint32_t magic);
+
+htool_return_t
+htool_binary_detect_image4 (htool_binary_t *bin, uint32_t magic);
 
 #endif /* __htool_loader_h__ */

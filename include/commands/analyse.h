@@ -13,14 +13,19 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef __HTOOL_USAGE_H__
-#define __HTOOL_USAGE_H__
+#ifndef __HTOOL_ANALYSE_H__
+#define __HTOOL_ANALYSE_H__
 
+#include <stdlib.h>
 
-void general_usage (int argc, char *argv[], int err);
-void file_subcommand_usage (int argc, char *argv[], int err);
-void macho_subcommand_usage (int argc, char *argv[], int err);
-void analyse_subcommand_usage (int argc, char *argv[], int err);
+#include "htool.h"
+#include "htool-client.h"
 
+htool_return_t
+htool_generic_analyse (htool_client_t *client);
+htool_return_t
+htool_analyse_list_all (htool_client_t *client);
+htool_return_t
+htool_analyse_extract (htool_client_t *client);
 
-#endif /* __htool_usage_h__ */
+#endif /* __htool_analyse_h__ */

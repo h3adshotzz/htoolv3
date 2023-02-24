@@ -15,6 +15,8 @@
 
 #include <time.h>
 
+#include "htool-error.h"
+
 #include "htool.h"
 #include "commands/macho.h"
 #include "commands/codesigning.h"
@@ -25,53 +27,6 @@
  *          https://papers.put.as/papers/macosx/2017/Day4Session2.pdf
  *          https://medium.com/csit-tech-blog/demystifying-ios-code-signature-309d52c2ff1d
 */
-
-void htool_hexdump_formatted_print_byte_stream (char *mem, uint32_t size)
-{
-    uint32_t offset = 0;
-    int lines = size / 16;
-    int pos = 0;  //pos
-
-    for (int i = 0; i < lines; i++) {
-
-        printf ("%08x  ", offset);
-
-        uint8_t ln[16];
-
-        for (int j = 0; j < 16; j++) {
-            uint8_t byte = (uint8_t) mem[pos];
-            printf ("%02x ", byte);
-
-            if (j == 7) printf (" ");
-
-            pos++;
-            ln[j] = byte;
-        }
-
-        printf ("  |");
-
-        for (int k = 0; k < 16; k++) {
-
-            if (ln[k] < 0x20 || ln[k] > 0x7e) {
-                printf (".");
-            } else {
-                printf ("%c", (char) ln[k]);
-            }
-
-        }
-
-        printf ("|\n");
-
-        offset += 0x10;
-    }
-
-    printf ("\n");
-}
-
-void htool_hexdump_single_line (char *mem, uint32_t size)
-{
-    for (int a = 0; a < size; a++) printf ("%02x ", (uint8_t) mem[a]);
-}
 
 #define SWAP_INT(a)  ( ((a) << 24) | \
 		      (((a) << 8) & 0x00ff0000) | \
@@ -134,7 +89,7 @@ htool_print_code_signature (htool_client_t *client)
     if (htool_macho_check_fat (client)) {
         
         /* print an error as --arch is not set */
-        errorf ("htool_print_load_commands: Cannot print Shared libraries of a FAT archive. Please run with --arch=\n\n");
+        htool_error_throw (HTOOL_ERROR_FILETYPE, "Cannot print Code signature of a FAT archive");
         
         /* if the --header option has been used, don't print the header again */
         if (!(client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)) {
@@ -152,7 +107,7 @@ htool_print_code_signature (htool_client_t *client)
      */
     macho_t *macho = calloc (1, sizeof (macho_t));
     if (htool_macho_select_arch (client, &macho) == SELECT_MACHO_ARCH_FAIL_NO_ARCH) {
-        errorf ("htool_print_load_commands: Could not load architecture from FAT archive: %s\n", client->arch);
+        htool_error_throw (HTOOL_ERROR_FILETYPE, "Could not load architecture from FAT archive: %s\n", client->arch);
         htool_print_fat_header_from_struct (bin->fat_info, 1);
 
         exit (EXIT_FAILURE);
