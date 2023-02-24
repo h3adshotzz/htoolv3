@@ -185,8 +185,6 @@ xnu_kernel_type_get_string (xnu_kernel_type_t type)
     }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
 char *
 xnu_kernel_soc_string (char *buffer)
 {
@@ -211,68 +209,61 @@ xnu_kernel_soc_string (char *buffer)
     return ret->platform;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
 char *
 xnu_search_needle_haystack (unsigned char *needle, uint32_t needle_len, unsigned char *haystack, uint32_t size, char *split, uint32_t adjust)
 {
-    char *result;
-    char *ret;
+    char *result, *ret;
     
     result = (char *) bh_memmem (haystack, size, needle, needle_len) + adjust;
-    if (!result) 
-        return NULL;
+    if (!result) return NULL;
 
     if (split) {
         if ((ret = (char *) strsplit (result, split)->ptrs[0]))
             return ret;
     }
-    
     return result;
 }
 
-char *
-xnu_find_uname_string (unsigned char *data, uint32_t size)
+htool_return_t
+xnu_find_build_info (unsigned char *data, uint32_t size, char **darwin_version, char **xnu_version, char **build_time, char **device_type)
 {
+    /* Find the uname -a string */
     char *needle = "Darwin Kernel Version ";
-    return xnu_search_needle_haystack (needle, strlen (needle), data, size, NULL, 0);   
-}
+    char *uname = xnu_search_needle_haystack (needle, strlen (needle), data, size, NULL, 0);
+    uint32_t uname_len = strlen (uname);
 
-char *
-xnu_find_darwin_version (unsigned char *data, uint32_t size)
-{
-    char *needle = "Version ";
-    return xnu_search_needle_haystack (needle, 6, data, size, ":", 8);
-}
+    debugf ("needle: %s\n", needle);
+    debugf ("uname: %s\n", uname);
+    debugf ("len: %d\n", uname_len);
 
-char *
-xnu_find_xnu_version (unsigned char *data, uint32_t size)
-{
-    char *needle = "; root: ";
-    return xnu_search_needle_haystack (needle, 6, data, size, "/", 7);
-}
+    /* Find Darwin Version string */
+    needle = "Version ";
+    *darwin_version = xnu_search_needle_haystack (needle, 6, uname, uname_len, ":", 8);
+    debugf ("darwin_version: %s\n", *darwin_version);
 
-char *
-xnu_find_build_time (unsigned char *data, uint32_t size)
-{
-    char *needle = xnu_find_darwin_version (data, size);
-    return xnu_search_needle_haystack (needle, 6, data, size, ";", 8);
-}
+    /* Find XNU version string */
+    needle = "; root: ";
+    *xnu_version = xnu_search_needle_haystack (needle, 6, uname, uname_len, "/", 7);
+    debugf ("test: %s\n", *xnu_version);
 
-char *
-xnu_find_device_type (unsigned char *data, uint32_t size)
-{
-    char *device, *brand, *ret;
+    /* Find Build Time string */
+    *build_time = xnu_search_needle_haystack (*darwin_version, strlen (*darwin_version), uname, uname_len, ";", 8);
+    debugf ("buildtime: %s\n", *build_time);
+
+    /**
+     * 
+     */
+    char *device, *brand, *tmp;
 
     /* Grab the part of the string after "ARM64_" */
-    device = (char *) strstr ((char *) data, "ARM64_");
+    device = (char *) strstr ((char *) uname, "ARM64_");
 
     /**
      *  If the device does not have a value, it's possible this is an x86
      *  kernel, and therefore would use the x86_64 tag.
      */
     if (!device) {
-        if ((char *) strstr ((char *) data, "X86_64"))
+        if ((char *) strstr ((char *) uname, "X86_64"))
             return "x86_64";
     }
 
@@ -281,15 +272,14 @@ xnu_find_device_type (unsigned char *data, uint32_t size)
 
     /* Make sure the brand has a value, return NULL otherwise */
     if (!brand) return NULL;
+    tmp = darwin_get_device_from_string (brand);
+    *device_type = (tmp != NULL) ? strdup (tmp) : NULL;
 
-    //debug
-    ret = darwin_get_device_from_string (brand);
-    return (ret) ? ret : NULL;
-}  
+    return HTOOL_RETURN_SUCCESS;
+}
 
-///////////////////////////////////////////////////////////////////////////////
-
-void xnu_version_info_print (xnu_t *xnu, char *padding)
+void 
+xnu_version_info_print (xnu_t *xnu, char *padding)
 {
     xnu_version_t *version = xnu->version;
     printf ( BOLD DARK_WHITE "%sDarwin Version:  " RESET DARK_GREY "%s\n" RESET, padding, version->darwin_vers);
@@ -300,6 +290,13 @@ void xnu_version_info_print (xnu_t *xnu, char *padding)
 
     if (xnu->flags & HTOOL_XNU_FLAG_FILESET_ENTRY)
         printf ( BOLD DARK_WHITE "%sFileset:         " RESET DARK_GREY "Yes\n" RESET, padding);
+}
+
+char *
+xnu_find_uname_string (unsigned char *data, uint32_t size)
+{
+    char *needle = "Darwin Kernel Version ";
+    return xnu_search_needle_haystack (needle, strlen (needle), data, size, NULL, 0);   
 }
 
 xnu_t *
@@ -316,21 +313,14 @@ xnu_kernel_load_kernel_cache (htool_binary_t *bin)
     xnu->type = xnu_kernel_fetch_type (xnu);
 
     /**
-     *  Fetch the `uname` string from the provided kernel binary as this gives us
-     *  most of the information needed to determine a range of properties of the
-     *  kernel.
-     */    
-    unsigned char *uname = (unsigned char *) xnu_find_uname_string (bin->data, bin->size);
-    uint32_t u_len = strlen ((char *) uname);
-
-    /**
      *  Find the version of the given kernel mach-o.
      */
     xnu_version_t *version = calloc (1, sizeof (xnu_version_t));
-    version->darwin_vers = xnu_find_darwin_version (uname, u_len);
-    version->xnu_vers = xnu_find_xnu_version (uname, u_len);
-    version->build_time = xnu_find_build_time (uname, u_len);
-    version->device_type = xnu_find_device_type (uname, u_len);
+    xnu_find_build_info (bin->data, bin->size,
+        &version->darwin_vers,
+        &version->xnu_vers,
+        &version->build_time,
+        &version->device_type);
     version->cache_style = xnu_kernel_type_get_string (xnu->type);
 
     xnu->version = version;
