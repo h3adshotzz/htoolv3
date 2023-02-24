@@ -4,7 +4,7 @@ on: push
 
 jobs:
   Build:
-    runs-on: "self-hosted"
+    runs-on: [self-hosted, macOS]
 
     steps:
 
@@ -37,7 +37,7 @@ jobs:
         path: build/
 
   Test:
-    runs-on: "self-hosted"
+    runs-on: [self-hosted, macOS]
     needs: "Build"
 
     steps:
