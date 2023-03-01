@@ -16,6 +16,9 @@
 #include "htool.h"
 
 #include "commands/analyse.h"
+
+#include "iboot/iboot.h"
+
 #include "darwin/darwin.h"
 #include "darwin/kernel.h"
 #include "darwin/kext.h"
@@ -58,7 +61,12 @@ htool_analyse_kext (htool_binary_t *bin)
 htool_return_t
 htool_analyse_iboot (htool_binary_t *bin)
 {
-    printf ("file_type_iboot\n");
+    debugf ("file_type_iboot\n");
+    iboot_t *iboot = iboot_load (bin);
+    bin->firmware = (void *) iboot;
+
+
+
     return HTOOL_RETURN_SUCCESS;
 }
 
@@ -69,9 +77,9 @@ htool_generic_analyse (htool_client_t *client)
 
     printf (BOLD RED "[*] Analysing file:" RESET DARK_GREY " %s\n" RESET, client->filename);
 
-    if (bin->flags & HTOOL_BINARY_FIRMWARETYPE_KERNEL) htool_analyse_kernel (client->bin);
-    else if (bin->flags & HTOOL_BINARY_FIRMWARETYPE_KEXT) htool_analyse_kext (client->bin);
-    else if (bin->flags & HTOOL_BINARY_FIRMWARETYPE_IBOOT) htool_analyse_iboot (client->bin);
+    if (HTOOL_CLIENT_CHECK_FLAG (bin->flags, HTOOL_BINARY_FIRMWARETYPE_IBOOT)) htool_analyse_iboot (client->bin);
+    else if (HTOOL_CLIENT_CHECK_FLAG (bin->flags, HTOOL_BINARY_FIRMWARETYPE_KERNEL)) htool_analyse_kernel (client->bin);
+    else if (HTOOL_CLIENT_CHECK_FLAG (bin->flags, HTOOL_BINARY_FIRMWARETYPE_KEXT)) htool_analyse_kext (client->bin);
 
     return HTOOL_RETURN_SUCCESS;
 }
@@ -79,6 +87,11 @@ htool_generic_analyse (htool_client_t *client)
 htool_return_t
 htool_analyse_list_all (htool_client_t *client)
 {
+    /**
+     *  Calling -l or --list-all on a kernel will list out each embedded Kernel Extension/KEXT
+     *  contained within the file. These have already been parsed when the file was loaded, so
+     *  it's as simple as printing out each kext_t from a HSList.
+     */
     if (client->bin->flags & HTOOL_BINARY_FIRMWARETYPE_KERNEL) {
         xnu_t *xnu = (xnu_t *) client->bin->firmware;
         uint32_t k_size = h_slist_length (xnu->kexts);
@@ -93,6 +106,13 @@ htool_analyse_list_all (htool_client_t *client)
                 kext->offset, kext->name);
         }
         return HTOOL_RETURN_SUCCESS;
+    
+    } else if (client->bin->flags & HTOOL_BINARY_FIRMWARETYPE_IBOOT) {
+
+        /**
+         * 
+         */
+
     }
 
 no_embedded_bin:

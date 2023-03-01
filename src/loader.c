@@ -226,6 +226,7 @@ htool_binary_parser (htool_binary_t *bin)
         if (darwin_detect_firmware_component_kernel (bin))
             bin->flags |= HTOOL_BINARY_FIRMWARETYPE_KERNEL;
 
+        debugf ("flags: %llx\n", bin->flags);
         return bin;
     } 
     
@@ -233,7 +234,7 @@ htool_binary_parser (htool_binary_t *bin)
      *  Check if the binary is an iBoot
      */
     if (darwin_detect_firmware_component_iboot (bin)) {
-        printf ("iBoot detected\n");
+        bin->flags |= HTOOL_BINARY_FILETYPE_RAWBINARY;
         bin->flags |= HTOOL_BINARY_FIRMWARETYPE_IBOOT;
         return bin;
     }
