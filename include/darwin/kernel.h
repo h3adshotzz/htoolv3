@@ -75,6 +75,9 @@ typedef struct xnu_t
     macho_t                 *kern;      /* only if HTOOL_XNU_FLAG_FILESET_ENTRY is set */
     HSList                  *kexts;
 
+    /* Parsed kernel properties */
+    HSList                  *mach_traps;
+
     /* Non-string types */
     xnu_kernel_type_t       type;
     xnu_version_t          *version;
@@ -87,7 +90,8 @@ typedef struct xnu_t
 xnu_t *
 xnu_kernel_load_kernel_cache (htool_binary_t *bin);
 
-
+macho_t *
+xnu_select_macho (xnu_t *xnu);
 
 xnu_kernel_type_t xnu_kernel_fetch_type (xnu_t *xnu);
 char *

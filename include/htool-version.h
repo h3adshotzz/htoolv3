@@ -26,10 +26,10 @@
 #define HTOOL_BUILD_TYPE                "DEBUG"
 
 /* htool Source Version, i.e. 312.56.12 */
-#define HTOOL_SOURCE_VERSION_MAJOR      "14"
-#define HTOOL_SOURCE_VERSION_MINOR      "64"
+#define HTOOL_SOURCE_VERSION_MAJOR      "15"
+#define HTOOL_SOURCE_VERSION_MINOR      "32"
 
-#define HTOOL_SOURCE_VERSION            "htool-301.14.64"
+#define HTOOL_SOURCE_VERSION            "htool-301.15.32"
 
 /**
  *  Define a Target type for HTool to both display within the help

@@ -38,6 +38,7 @@ target_sources(htool
         nm.c
         codesigning.c
 
+        darwin/mach_traps.c
         darwin/darwin.c
         darwin/kernel.c
         darwin/kext.c

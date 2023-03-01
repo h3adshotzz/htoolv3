@@ -44,6 +44,9 @@ htool_macho_select_arch (htool_client_t *client, macho_t **macho);
 htool_return_t
 htool_macho_check_fat (htool_client_t *client);
 
+htool_return_t
+macho_search_section (macho_t *macho, mach_section_64_t **ptr, char *segment, char *section);
+
 /***********************************************************************
 *                   HTool Mach-O Print Functions
 ************************************************************************/

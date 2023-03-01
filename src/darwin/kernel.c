@@ -19,6 +19,15 @@
 * XNU Cache version, build style, and other properties.
 ***********************************************************************/
 
+macho_t *
+xnu_select_macho (xnu_t *xnu)
+{
+    macho_t *macho;
+    if (xnu->flags & HTOOL_XNU_FLAG_FILESET_ENTRY) macho = xnu->kern;
+    else macho = xnu->macho;
+    return macho;
+}
+
 xnu_kernel_type_t 
 xnu_kernel_fetch_type (xnu_t *xnu)
 {

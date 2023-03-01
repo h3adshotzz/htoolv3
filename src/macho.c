@@ -77,8 +77,44 @@ htool_macho_check_fat (htool_client_t *client)
         !(client->opts & HTOOL_CLIENT_MACHO_OPT_ARCH)) ? HTOOL_RETURN_SUCCESS : HTOOL_RETURN_FAILURE;
 }
 
+htool_return_t
+macho_search_section (macho_t *macho, mach_section_64_t **ptr, char *segment, char *section)
+{
+    /**
+     *  As libhelper prints error messages when it cannot find a section this could fail the
+     *  CI when we don't want it to. If we're trying to find a kernel type, then we expect
+     *  some of these `find_section` calls to fail, and don't want errors because of it.
+     * 
+     *  This function is sort of an overwrite for libhelper. It still uses the libhelper
+     *  segment info types, just not it's functions for finding the segment and section.
+     */
+    for (int i = 0; i < h_slist_length (macho->scmds); i++) {
+        mach_segment_info_t *seginf = h_slist_nth_data (macho->scmds, i);
+
+        /* Segment name is 8 bytes from the base of the segment info command */
+        char *check = (char *) seginf->segcmd + 8;
+        if (!strcmp (check, segment)) {
+            /* Cycle through each section until a match is found */
+            for (int j = 0; j < h_slist_length (seginf->sections); j++) {
+                mach_section_64_t *sect64 = (mach_section_64_t *) h_slist_nth_data (seginf->sections, j);
+
+                /* Set the pointer of the section passed to the function */
+                if (!strcmp(sect64->sectname, section)) {
+                    debugf ("%s.%s\n", sect64->segname, sect64->sectname);
+                    *ptr = sect64;
+                    return HTOOL_RETURN_SUCCESS;
+                }
+            }
+        }
+    }
+    return HTOOL_RETURN_FAILURE;
+}
 
 ///////////////////////////////////////////////////////////////////////
+
+//===----------------------------------------------------------------------===//
+//                       `macho` command handlers
+//===----------------------------------------------------------------------===//
 
 htool_return_t
 htool_print_header (htool_client_t *client)

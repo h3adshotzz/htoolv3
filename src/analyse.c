@@ -16,6 +16,9 @@
 #include "htool.h"
 
 #include "commands/analyse.h"
+#include "commands/macho.h"
+
+#include "darwin/mach_traps.h"
 #include "darwin/darwin.h"
 #include "darwin/kernel.h"
 #include "darwin/kext.h"
@@ -34,6 +37,7 @@ htool_analyse_kernel (htool_binary_t *bin)
     }
 
     xnu_parse_kernel_extensions (xnu);
+    mach_parse_trap_table (xnu);
 
     return HTOOL_RETURN_SUCCESS;
 }

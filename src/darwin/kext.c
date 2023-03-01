@@ -43,15 +43,6 @@ strnstr(const char *s, const char *find, size_t slen)
 }
 #endif
 
-static macho_t *
-_xnu_select_macho (xnu_t *xnu)
-{
-    macho_t *macho;
-    if (xnu->flags & HTOOL_XNU_FLAG_FILESET_ENTRY) macho = xnu->kern;
-    else macho = xnu->macho;
-    return macho;
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 /**
  *  These functions deal with parsing each individual KEXT from whatever
@@ -233,7 +224,7 @@ xnu_load_kext_list_merged_style (xnu_t *xnu)
     mach_section_64_t *__kmod_info;
     mach_section_64_t *__kmod_start;
 
-    macho_t *macho = _xnu_select_macho (xnu);
+    macho_t *macho = xnu_select_macho (xnu);
 
     /* Find the __TEXT segment */
     seg_info = mach_segment_info_search (macho->scmds, "__TEXT");
@@ -298,7 +289,7 @@ xnu_load_kext_list_merged_style (xnu_t *xnu)
 HSList *
 xnu_load_kext_list_split_style (xnu_t *xnu)
 {
-    macho_t *macho = _xnu_select_macho (xnu);
+    macho_t *macho = xnu_select_macho (xnu);
 
     mach_segment_command_64_t *prelink_info_segment;
     unsigned char *xml, *xml_PrelinkExecutableLoa_str;
