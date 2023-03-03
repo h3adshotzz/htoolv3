@@ -16,6 +16,9 @@
 #include "htool.h"
 
 #include "commands/analyse.h"
+
+#include "iboot/iboot.h"
+
 #include "darwin/darwin.h"
 #include "darwin/kernel.h"
 #include "darwin/kext.h"
@@ -58,7 +61,12 @@ htool_analyse_kext (htool_binary_t *bin)
 htool_return_t
 htool_analyse_iboot (htool_binary_t *bin)
 {
-    printf ("file_type_iboot\n");
+    debugf ("file_type_iboot\n");
+    iboot_t *iboot = iboot_load (bin);
+    bin->firmware = (void *) iboot;
+
+
+
     return HTOOL_RETURN_SUCCESS;
 }
 
@@ -69,9 +77,9 @@ htool_generic_analyse (htool_client_t *client)
 
     printf (BOLD RED "[*] Analysing file:" RESET DARK_GREY " %s\n" RESET, client->filename);
 
-    if (bin->flags & HTOOL_BINARY_FIRMWARETYPE_KERNEL) htool_analyse_kernel (client->bin);
-    else if (bin->flags & HTOOL_BINARY_FIRMWARETYPE_KEXT) htool_analyse_kext (client->bin);
-    else if (bin->flags & HTOOL_BINARY_FIRMWARETYPE_IBOOT) htool_analyse_iboot (client->bin);
+    if (HTOOL_CLIENT_CHECK_FLAG (bin->flags, HTOOL_BINARY_FIRMWARETYPE_IBOOT)) htool_analyse_iboot (client->bin);
+    else if (HTOOL_CLIENT_CHECK_FLAG (bin->flags, HTOOL_BINARY_FIRMWARETYPE_KERNEL)) htool_analyse_kernel (client->bin);
+    else if (HTOOL_CLIENT_CHECK_FLAG (bin->flags, HTOOL_BINARY_FIRMWARETYPE_KEXT)) htool_analyse_kext (client->bin);
 
     return HTOOL_RETURN_SUCCESS;
 }
@@ -79,13 +87,34 @@ htool_generic_analyse (htool_client_t *client)
 htool_return_t
 htool_analyse_list_all (htool_client_t *client)
 {
-    if (client->bin->flags & HTOOL_BINARY_FIRMWARETYPE_KERNEL) {
+    if (HTOOL_CLIENT_CHECK_FLAG (client->bin->flags, HTOOL_BINARY_FIRMWARETYPE_IBOOT)) {
+
+        iboot_t *iboot = (iboot_t *) client->bin->firmware;
+        uint32_t len = h_slist_length (iboot->payloads);
+        if (!len) goto no_embedded_bin;
+
+        printf (ANSI_COLOR_GREEN "[*]" RESET ANSI_COLOR_GREEN " Embedded firmware list:\n" RESET);
+        printf (BOLD DARK_YELLOW "  %-12s%-10s%-10s\n", "Offset", "Type", "Name" RESET);
+        for (int i = 0; i < len; i++) {
+            iboot_payload_t *payload = (iboot_payload_t *) h_slist_nth_data (iboot->payloads, i);
+            printf (BOLD DARK_WHITE "  0x%-10llx" RESET DARK_GREY "%-10s%s\n" RESET,
+                payload->start, iboot_payload_get_type_string (payload->type), payload->name);
+        }
+        return HTOOL_RETURN_SUCCESS;
+
+    } else if (HTOOL_CLIENT_CHECK_FLAG (client->bin->flags, HTOOL_BINARY_FIRMWARETYPE_KERNEL)) {
+
+        /**
+         *  Calling -l or --list-all on a kernel will list out each embedded Kernel Extension/KEXT
+         *  contained within the file. These have already been parsed when the file was loaded, so
+         *  it's as simple as printing out each kext_t from a HSList.
+         */
         xnu_t *xnu = (xnu_t *) client->bin->firmware;
         uint32_t k_size = h_slist_length (xnu->kexts);
         
         if (!k_size) goto no_embedded_bin;
 
-        printf ("[*] KEXT List:\n");
+        printf (ANSI_COLOR_GREEN "[*]" RESET ANSI_COLOR_GREEN " KEXT List:\n" RESET);
         printf (BOLD DARK_YELLOW "  %-12s%-10s\n", "Offset", "Bundle ID" RESET);
         for (int i = 0; i < k_size; i++) {
             kext_t *kext = (kext_t *) h_slist_nth_data (xnu->kexts, i);
@@ -93,6 +122,9 @@ htool_analyse_list_all (htool_client_t *client)
                 kext->offset, kext->name);
         }
         return HTOOL_RETURN_SUCCESS;
+    
+    } else {
+        printf ("unknwon\n");
     }
 
 no_embedded_bin:

@@ -16,6 +16,8 @@
 #ifndef __HTOOL_H__
 #define __HTOOL_H__
 
+#include <libhelper-logger.h>
+
 /**
  *  Exit codes
  */
@@ -38,5 +40,7 @@ typedef enum htool_return_t
 #define BLUE            "\x1b[38;5;32m"
 #define RESET           "\x1b[0m"
 #define BOLD            "\x1b[1m"
+
+#define DEBUG_FLAG      debugf ("flag");
 
 #endif /* __htool_h__ */

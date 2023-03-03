@@ -41,4 +41,6 @@ target_sources(htool
         darwin/darwin.c
         darwin/kernel.c
         darwin/kext.c
+
+        iboot/iboot.c
 )
