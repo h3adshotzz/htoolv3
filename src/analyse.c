@@ -136,7 +136,43 @@ htool_return_t
 htool_analyse_extract (htool_client_t *client)
 {
     char *name = client->extract;
-    if (client->bin->flags & HTOOL_BINARY_FIRMWARETYPE_KERNEL) {
+
+    if (HTOOL_CLIENT_CHECK_FLAG (client->bin->flags, HTOOL_BINARY_FIRMWARETYPE_IBOOT)) {
+
+        iboot_t *iboot = (iboot_t *) client->bin->firmware;
+        uint32_t len = h_slist_length (iboot->payloads);
+
+        if (!len) goto no_embedded_bin;
+
+        printf (ANSI_COLOR_GREEN "[*] Searching binary for %s\n" RESET, name);
+        for (int i = 0; i < len; i++) {
+            iboot_payload_t *payload = (iboot_payload_t *) h_slist_nth_data (iboot->payloads, i);
+            if (strcmp (payload->name, name)) continue;
+
+            printf (ANSI_COLOR_GREEN "[*] Extracting Embedded payload:\n" RESET);
+
+            uint32_t payload_size;
+            unsigned char *payload_data;
+
+            if (payload->type == IBOOT_EMBEDDED_IMAGE_TYPE_LZFSE) {
+                payload_data = payload->decomp;
+                payload_size = payload->decomp_size;
+            } else {
+                payload_data = (unsigned char *) (iboot->data + payload->start);
+                payload_size = payload->size;
+            }
+
+            FILE *fp = fopen (payload->name, "w+");
+            fwrite (payload_data, payload_size, 1, fp);
+            fclose (fp);
+
+            return HTOOL_RETURN_SUCCESS;
+        }
+        printf (YELLOW "[*] Could not find embedded firmware with given name\n");
+        return HTOOL_RETURN_FAILURE;
+
+
+    } else if (HTOOL_CLIENT_CHECK_FLAG (client->bin->flags, HTOOL_BINARY_FIRMWARETYPE_KERNEL)) {
         xnu_t *xnu = (xnu_t *) client->bin->firmware;
         uint32_t k_size = h_slist_length (xnu->kexts);
 
@@ -147,7 +183,7 @@ htool_analyse_extract (htool_client_t *client)
             kext_t *kext = (kext_t *) h_slist_nth_data (xnu->kexts, i);
             if (strcmp (kext->name, name)) continue;
 
-            printf ("[*] Extracting KEXT\n");
+            printf ("[*] Extracting KEXT:\n");
 
             FILE *fp = fopen (kext->name, "w+");
             fwrite (kext->macho->data, kext->macho->size, 1, fp);

@@ -250,6 +250,7 @@ static htool_return_t handle_command_macho (htool_client_t *client)
 static htool_return_t handle_command_analyse (htool_client_t *client)
 {
     /* reset getopt */
+    htool_return_t res;
     optind = 1;
     opterr = 1;
 
@@ -321,22 +322,24 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
      *  Description:        Run a complete analysis of the given firmware file.
      */
     if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_ANALYSE)
-        htool_generic_analyse (client);
+        res = htool_generic_analyse (client);
 
     /**
      *  Option:             -l, --list-all
      *  Description:        List all embedded binaries / Mach-O's.
      */
     if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_LIST_ALL)
-        htool_analyse_list_all (client);
+        res = htool_analyse_list_all (client);
 
     /**
      *  Option:             -e, --extract
      *  Description:        Extract an embedded firmware that matches the given
      *                      name.
      */
-    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_EXTRACT)
-        htool_analyse_extract (client);
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_EXTRACT) {
+        res = htool_analyse_extract (client);
+        if (res) printf (ANSI_COLOR_GREEN "[*] Extracted %s\n" RESET, client->extract);
+    }
 
 
     return HTOOL_RETURN_SUCCESS;
