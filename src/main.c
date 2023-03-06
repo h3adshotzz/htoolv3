@@ -321,8 +321,10 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
      *  Option:             -a, --analyse
      *  Description:        Run a complete analysis of the given firmware file.
      */
-    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_ANALYSE)
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_ANALYSE) {
         res = htool_generic_analyse (client);
+        if (res == HTOOL_RETURN_FAILURE) return res;
+    }
 
     /**
      *  Option:             -l, --list-all

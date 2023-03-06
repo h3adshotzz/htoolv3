@@ -17,6 +17,7 @@
 
 #include "commands/analyse.h"
 
+#include "secure_enclave/sep.h"
 #include "iboot/iboot.h"
 
 #include "darwin/darwin.h"
@@ -64,9 +65,15 @@ htool_analyse_iboot (htool_binary_t *bin)
     debugf ("file_type_iboot\n");
     iboot_t *iboot = iboot_load (bin);
     bin->firmware = (void *) iboot;
+    return HTOOL_RETURN_SUCCESS;
+}
 
-
-
+htool_return_t
+htool_analyse_sep (htool_binary_t *bin)
+{
+    debugf ("file_type_sep\n");
+    sep_t *sep = parse_sep_firmware (bin);
+    bin->firmware = (void *) sep;
     return HTOOL_RETURN_SUCCESS;
 }
 
@@ -74,14 +81,16 @@ htool_return_t
 htool_generic_analyse (htool_client_t *client)
 {
     htool_binary_t *bin = client->bin;
+    htool_return_t ret;
 
     printf (BOLD RED "[*] Analysing file:" RESET DARK_GREY " %s\n" RESET, client->filename);
 
-    if (HTOOL_CLIENT_CHECK_FLAG (bin->flags, HTOOL_BINARY_FIRMWARETYPE_IBOOT)) htool_analyse_iboot (client->bin);
-    else if (HTOOL_CLIENT_CHECK_FLAG (bin->flags, HTOOL_BINARY_FIRMWARETYPE_KERNEL)) htool_analyse_kernel (client->bin);
-    else if (HTOOL_CLIENT_CHECK_FLAG (bin->flags, HTOOL_BINARY_FIRMWARETYPE_KEXT)) htool_analyse_kext (client->bin);
+    if (HTOOL_CLIENT_CHECK_FLAG (bin->flags, HTOOL_BINARY_FIRMWARETYPE_IBOOT)) ret = htool_analyse_iboot (client->bin);
+    else if (HTOOL_CLIENT_CHECK_FLAG (bin->flags, HTOOL_BINARY_FIRMWARETYPE_KERNEL)) ret = htool_analyse_kernel (client->bin);
+    else if (HTOOL_CLIENT_CHECK_FLAG (bin->flags, HTOOL_BINARY_FIRMWARETYPE_KEXT)) ret = htool_analyse_kext (client->bin);
+    else if (HTOOL_CLIENT_CHECK_FLAG (bin->flags, HTOOL_BINARY_FIRMWARETYPE_SEP)) ret = htool_analyse_sep (client->bin);
 
-    return HTOOL_RETURN_SUCCESS;
+    return ret;
 }
 
 htool_return_t
@@ -123,7 +132,27 @@ htool_analyse_list_all (htool_client_t *client)
         }
         return HTOOL_RETURN_SUCCESS;
     
-    } else {
+    } else if (HTOOL_CLIENT_CHECK_FLAG (client->bin->flags, HTOOL_BINARY_FIRMWARETYPE_SEP)) {
+
+        sep_t *sep = (sep_t *) client->bin->firmware;
+        if (sep->type != SEP_FIRMWARE_TYPE_OS_32) return HTOOL_RETURN_FAILURE;
+
+        uint32_t len = h_slist_length (sep->apps);
+
+        if (!len) goto no_embedded_bin;
+
+        printf (ANSI_COLOR_GREEN "[*]" RESET ANSI_COLOR_GREEN " SEP App List:\n" RESET);
+        printf (BOLD DARK_YELLOW "  %-12s%-10s%-25s%s\n", "Offset", "Size", "Name", "Version" RESET);
+        for (int i = 0; i < len; i++) {
+            sep_app_t *app = (kext_t *) h_slist_nth_data (sep->apps, i);
+            printf (BOLD DARK_WHITE "  0x%-10llx" RESET DARK_GREY "%-10d%-24s (%s)\n" RESET,
+                app->offset, app->size, app->name, app->version);
+        }
+        return HTOOL_RETURN_SUCCESS;
+    }
+    
+    
+    else {
         printf ("unknwon\n");
     }
 
@@ -193,6 +222,61 @@ htool_analyse_extract (htool_client_t *client)
         }
         printf (YELLOW "[*] Could not find embedded firmware with given name\n");
         return HTOOL_RETURN_FAILURE;
+
+    } else if (HTOOL_CLIENT_CHECK_FLAG (client->bin->flags, HTOOL_BINARY_FIRMWARETYPE_SEP)) {
+
+        /**
+         *  Individual SEP Apps can't be extracted, they all have to be split and written
+         *  to their own files. A SEPROM can't be split at all.
+         * 
+         *  First check that it's not a SEPROM
+         */
+        sep_t *sep = (sep_t *) client->bin->firmware;
+        if (sep->type != SEP_FIRMWARE_TYPE_OS_32) {
+            printf (YELLOW "[*] Cannot split a SEP ROM file, 32-bit Compressed SEPOS, or 64-bit SEPOS.\n" RESET);
+            return HTOOL_RETURN_FAILURE;
+        }
+
+        /* First extract the bootloader */
+        printf ("[*] Extracting SEPOS Bootloader...\n");
+        unsigned char *bootloader = calloc (1, sizeof (sep->bootloader_size));
+        memcpy (bootloader, sep->data + sep->bootloader_offset, sep->bootloader_size);
+
+        FILE *fp = fopen ("sepos_bootloader", "w+");
+        fwrite (bootloader, sep->bootloader_size, 1, fp);
+        fclose (fp);
+
+        /* Extract the Kernel */
+        printf ("[*] Extracting SEPOS Kernel...\n");
+        unsigned char *kernel = calloc (1, sizeof (sep->kernel_size));
+        memcpy (kernel, sep->data + sep->kernel_offset, sep->kernel_size);
+
+        fp = fopen ("sepos_kernel", "w+");
+        fwrite (kernel, sep->kernel_size, 1, fp);
+        fclose (fp);
+
+        /* Extract the applications */
+        for (int i = 0; i < h_slist_length (sep->apps); i++) {
+            sep_app_t *app = (sep_app_t *) h_slist_nth_data (sep->apps, i);
+
+            char *name;
+            if (!strcmp (app->name, "Unknown")) asprintf (&name, "sepos_app%d", i);
+            else asprintf (&name, "sepos_app%d_%s", i, app->name);
+
+            printf ("[*] Extracting SEPOS App: %s...\n", name);
+
+            unsigned char *data = calloc (1, app->size);
+            memcpy (data, sep->data + app->offset, app->size);
+
+            fp = fopen (name, "w+");
+            fwrite (data, app->size, 1, fp);
+            fclose (fp);
+            
+            name = NULL;
+            free (name);
+        }
+
+        return HTOOL_RETURN_SUCCESS;
     }
 
 no_embedded_bin:
