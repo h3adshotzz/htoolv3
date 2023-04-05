@@ -228,7 +228,7 @@ htool_binary_parser (htool_binary_t *bin)
         if (darwin_detect_firmware_component_kernel (bin))
             bin->flags |= HTOOL_BINARY_FIRMWARETYPE_KERNEL;
 
-        debugf ("flags: %llx\n", bin->flags);
+        //debugf ("flags: %llx\n", bin->flags);
         return bin;
     } 
     

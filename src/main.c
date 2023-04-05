@@ -179,14 +179,6 @@ static htool_return_t handle_command_macho (htool_client_t *client)
         }
     }
 
-    printf ("**********\n");
-    printf ("MACHO-DEBUG: \tclient->opt: 0x%08x\n", client->opts);
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_ARCH)     printf ("MACHO-DEBUG: \tclient->arch: %s\n", client->arch);
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_VERBOSE)  printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_VEERBOSE\n");
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)   printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_HEADER\n");
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_LCMDS)    printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_LCMDS\n");
-    printf ("**********\n\n");
-
     /**
      *  Option:             None
      *  Description:        No option has been passed, so print the help menu again.
@@ -257,9 +249,6 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
     /* set the appropriate flag for the client struct */
     client->cmd |= HTOOL_CLIENT_CMDFLAG_ANALYSE;
 
-    for (int i = 0; i < client->argc; i++)
-        debugf ("[%d]: %s\n", i, client->argv[i]);
-
     /* parse the `file` options */
     int opt = 0;
     int optindex = 2;
@@ -289,15 +278,6 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
         }
     }
 
-    debugf ("handle_command_analyse\n");
-
-    printf ("**********\n");
-    printf ("MACHO-DEBUG: \tclient->opt: 0x%08x\n", client->opts);
-    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_ANALYSE)   printf ("MACHO-DEBUG: \tHTOOL_CLIENT_ANALYSE_OPT_ANALYSE\n");
-    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_LIST_ALL)  printf ("MACHO-DEBUG: \tHTOOL_CLIENT_ANALYSE_OPT_LIST_ALL\n");
-    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_EXTRACT)   printf ("MACHO-DEBUG: \tHTOOL_CLIENT_ANALYSE_OPT_EXTRACT\n");
-    printf ("**********\n\n");
-
     /**
      *  Option:             None
      *  Description:        No option has been passed, so print the help menu again.
@@ -315,7 +295,7 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
         htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "%s", client->filename);
         exit (EXIT_FAILURE);
     }
-    ci_logf ("File successfully loaded\n");
+    //ci_logf ("File successfully loaded\n");
 
     /**
      *  Option:             -a, --analyse
@@ -387,9 +367,7 @@ void print_version_detail (int opt)
     } else {
         printf ("-----------------------------------------------------\n");
         printf ("  HTool %s - Built " __TIMESTAMP__ "\n", HTOOL_BUILD_VERSION);
-#if HTOOL_DEBUG
         printf (BLUE "  Source version: %s\n" RESET, HTOOL_SOURCE_VERSION);
-#endif
         printf ("-----------------------------------------------------\n");
     }
 }
