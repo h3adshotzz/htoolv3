@@ -1,3 +1,6 @@
 [submodule "libhelper"]
 	path = libhelper
 	url = https://github.com/h3adshotzz/libhelper
+[submodule "libarch"]
+	path = libarch
+	url = git@github.com:h3adshotzz/libarch.git

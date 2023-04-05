@@ -98,6 +98,7 @@ struct command {
 #define HTOOL_CLIENT_ANALYSE_OPT_LIST_ALL   (1 << 2)
 #define HTOOL_CLIENT_ANALYSE_OPT_EXTRACT    (1 << 3)
 
-//#define
+#define HTOOL_CLIENT_CMDFLAG_DISASS         0x40000000
+#define HTOOL_CLIENT_DISASS_OPT_DEBUG       (1 << 1)
 
 #endif /* __htool_htool_client_h__ */

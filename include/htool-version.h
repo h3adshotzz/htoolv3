@@ -27,9 +27,9 @@
 
 /* htool Source Version, i.e. 312.56.12 */
 #define HTOOL_SOURCE_VERSION_MAJOR      "14"
-#define HTOOL_SOURCE_VERSION_MINOR      "29"
+#define HTOOL_SOURCE_VERSION_MINOR      "56"
 
-#define HTOOL_SOURCE_VERSION            "htool-301.14.29"
+#define HTOOL_SOURCE_VERSION            "htool-301.14.56"
 
 /**
  *  Define a Target type for HTool to both display within the help

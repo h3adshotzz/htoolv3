@@ -21,6 +21,9 @@
 #include <libhelper-macho.h>
 #include <libhelper-file.h>
 
+#include <libarch.h>
+#include <instruction.h>
+
 #include "htool-version.h"
 #include "htool-loader.h"
 #include "htool-client.h"
@@ -44,6 +47,8 @@ static htool_return_t
 handle_command_macho (htool_client_t *client);
 static htool_return_t
 handle_command_analyse (htool_client_t *client);
+static htool_return_t
+handle_command_disass (htool_client_t *client);
 
 /* debug */
 static htool_return_t
@@ -86,6 +91,12 @@ static struct option analyse_cmd_opts[] = {
     { NULL,         0,                  NULL,   0   }
 };
 
+/* disass options */
+static struct option disass_cmd_opts[] = {
+    { "debug",      no_argument,        NULL,   'd' },
+    { NULL,         0,                  NULL,   0   },
+};
+
 /**
  *  List of top-level commands that htool provides
  */
@@ -93,6 +104,7 @@ static struct command commands[] = {
     { "file",       handle_command_file     },
     { "macho",      handle_command_macho    },
     { "analyse",    handle_command_analyse  },
+    { "disass",     handle_command_disass   },
     { "debug",      handle_command_debug    },
     { NULL,         NULL                    }
 };
@@ -342,6 +354,71 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
     return HTOOL_RETURN_SUCCESS;
 }
 
+#include <assert.h>
+
+static htool_return_t handle_command_disass (htool_client_t *client)
+{
+    /* reset getopt */
+    optind = 1;
+    opterr = 1;
+
+    /* set the appropriate flag for the client struct */
+    client->cmd |= HTOOL_CLIENT_CMDFLAG_DISASS;
+
+    /* parse the `disass` options */
+    int opt = 0;
+    int optindex = 2;
+    while ((opt = getopt_long (client->argc, client->argv, "dHA", disass_cmd_opts, &optindex)) > 0) {
+        switch (opt) {
+
+            /* -d, --debug */
+            case 'd':
+                client->opts |= HTOOL_CLIENT_DISASS_OPT_DEBUG;
+                break;
+
+            /* default, print usage */
+            case 'H':
+            default:
+                //disass_subcommand_usage (client->argc, client->argv, 0);
+                break;
+        }
+    }
+
+    debugf ("handle_command_disass\n");
+
+    /**
+     *  Load the file into client->bin, if the file is not valid exit with an error
+     *  message.
+     */
+    if ((client->bin = htool_binary_load_and_parse (client->filename)) == HTOOL_RETURN_FAILURE) {
+        htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "%s", client->filename);
+        exit (EXIT_FAILURE);
+    }
+
+    printf ("file: %s\n", client->filename);
+
+    macho_t *macho = h_slist_nth_data (client->bin->macho_list, 0);
+    mach_section_64_t *sect = mach_section_64_search (macho->scmds, "__TEXT_EXEC", "__text");
+
+    unsigned char *data = macho->data + sect->offset;
+    uint64_t base = sect->addr;
+
+    printf ("base: 0x%x, size: %d\n", base, sect->size);
+    for (int i = 0; i < 128; i++) {
+
+        uint32_t opcode = *(uint32_t *) (data + (i * 4));
+        instruction_t *in = libarch_instruction_create (opcode, base);
+        assert (in->fields_len == 0);
+
+        libarch_disass (&in);
+
+        printf ("0x%016x   %08x\t%s\n", in->addr, opcode, A64_INSTRUCTIONS_STR[in->type]);
+        base += 4;
+    }
+
+    return HTOOL_RETURN_SUCCESS;
+}
+
 static htool_return_t handle_command_debug (htool_client_t *client)
 {
     error_test ();
@@ -367,6 +444,7 @@ void print_version_detail (int opt)
         printf (BOLD DARK_WHITE "    Build Target:     " RESET DARK_GREY "%s-%s\n", BUILD_TARGET, BUILD_ARCH);        
         printf (BOLD DARK_WHITE "    Build time:       " RESET DARK_GREY "%s\n", __TIMESTAMP__);
         printf (BOLD DARK_WHITE "    Libhelper:        " RESET DARK_GREY "%s\n", libhelper_get_version_string());
+        printf (BOLD DARK_WHITE "    Libarch:          " RESET DARK_GREY "%s\n", LIBARCH_SOURCE_VERSION);
         printf (BOLD DARK_WHITE "    Compiler:         " RESET DARK_GREY "%s\n", __VERSION__);
 
         printf (BOLD DARK_WHITE "    Platform:         " RESET DARK_GREY);
