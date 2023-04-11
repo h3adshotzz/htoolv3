@@ -42,6 +42,10 @@ target_sources(htool
         darwin/kernel.c
         darwin/kext.c
 
+        disassembler/disass.c
+        disassembler/parser.c
+        disassembler/hashmap.c
+
         secure_enclave/sep.c
         iboot/iboot.c
 )

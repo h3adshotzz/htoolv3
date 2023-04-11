@@ -32,6 +32,8 @@
 
 #include "commands/macho.h"
 
+#define DEBUG 1
+
 int
 htool_macho_select_arch (htool_client_t *client, macho_t **macho)
 {
@@ -176,8 +178,12 @@ htool_print_load_commands (htool_client_t *client)
                 mach_segment_command_64_t *seg64 = (mach_segment_command_64_t *) info->segcmd;
 
                 /* load command info */
-                printf (BOLD DARK_GREY "LC %02d:  Mem: 0x%08llx → 0x%08llx\n" DARK_GREY BOLD RESET,
+                printf (BOLD DARK_GREY "LC %02d:  Mem: 0x%08llx → 0x%08llx" DARK_GREY BOLD RESET,
                         i, seg64->vmaddr, (seg64->vmaddr + seg64->vmsize));
+#if DEBUG
+                printf ("offset: 0x%llx - 0x%llx", seg64->fileoff, (seg64->fileoff + seg64->filesize));
+#endif
+                printf ("\n");
                 printf (YELLOW "  LC_SEGMENT_64:" YELLOW RESET);
 
                 /* segment memory protection */
@@ -847,7 +853,7 @@ htool_print_fileset_entry_command (macho_t *macho, uint32_t offset, void *lc_raw
     printf (YELLOW "  %s:\n" YELLOW, mach_load_command_get_name ((mach_load_command_t *) lc_raw));
 
     printf (BOLD DARK_WHITE "\tEntry Name: " RESET DARK_GREY "%s\n", entry_name);
-    printf (BOLD DARK_WHITE "\t    vmaddr: " RESET DARK_GREY "0x%08x\n", fs->vmaddr);
-    printf (BOLD DARK_WHITE "\t   fileoff: " RESET DARK_GREY "0x%08x\n", fs->fileoff);
-    printf (BOLD DARK_WHITE "\t  reserved: " RESET DARK_GREY "0x%08x\n", fs->reserved);
+    printf (BOLD DARK_WHITE "\t    vmaddr: " RESET DARK_GREY "0x%llx\n", fs->vmaddr);
+    printf (BOLD DARK_WHITE "\t   fileoff: " RESET DARK_GREY "0x%llx\n", fs->fileoff);
+    printf (BOLD DARK_WHITE "\t  reserved: " RESET DARK_GREY "0x%llx\n", fs->reserved);
 }

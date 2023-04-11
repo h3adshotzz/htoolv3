@@ -263,10 +263,10 @@ htool_binary_parser (htool_binary_t *bin)
         return bin;
     }
 
-    /** TODO: Check if the binary is an iBoot, SecureROM or SEP. */
+    /** TODO: Check if the binary is an  SecureROM or SEP. */
 
-    htool_error_throw (HTOOL_ERROR_FILETYPE, "Cannot determine filetype: 0x%08x", magic);
-    return NULL;
+    bin->flags |= HTOOL_BINARY_FILETYPE_RAWBINARY;
+    return bin;
 }
 
 htool_binary_t *
@@ -346,6 +346,8 @@ htool_binary_detect_image4 (htool_binary_t *bin, uint32_t magic)
     tmp->path = bin->filepath;
     tmp->size = bin->size;
     tmp->data = bin->data;
+
+    if (magic == 0) return HTOOL_RETURN_FAILURE;
 
     img4type_t type = image4_get_file_type (tmp);
 

@@ -21,6 +21,8 @@
 #include <libhelper-macho.h>
 #include <libhelper-file.h>
 
+#include <libarch.h>
+
 #include "htool-version.h"
 #include "htool-loader.h"
 #include "htool-client.h"
@@ -34,6 +36,7 @@
 /* headers for commands */
 #include "commands/macho.h"
 #include "commands/analyse.h"
+#include "commands/disassembler.h"
 
 
 /* Command handler functions */
@@ -44,6 +47,8 @@ static htool_return_t
 handle_command_macho (htool_client_t *client);
 static htool_return_t
 handle_command_analyse (htool_client_t *client);
+static htool_return_t
+handle_command_disass (htool_client_t *client);
 
 /* debug */
 static htool_return_t
@@ -86,6 +91,17 @@ static struct option analyse_cmd_opts[] = {
     { NULL,         0,                  NULL,   0   }
 };
 
+/* disass options */
+static struct option disass_cmd_opts[] = {
+    { "disassemble",        no_argument,        NULL,   'd' },
+    { "disassemble-all",    no_argument,        NULL,   'D' },
+
+    { "start-address",      required_argument,  NULL,   's' },
+
+    { "debug",          no_argument,        NULL,   'd' },
+    { NULL,             0,                  NULL,    0  },
+};
+
 /**
  *  List of top-level commands that htool provides
  */
@@ -93,6 +109,7 @@ static struct command commands[] = {
     { "file",       handle_command_file     },
     { "macho",      handle_command_macho    },
     { "analyse",    handle_command_analyse  },
+    { "disass",     handle_command_disass   },
     { "debug",      handle_command_debug    },
     { NULL,         NULL                    }
 };
@@ -327,6 +344,69 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
     return HTOOL_RETURN_SUCCESS;
 }
 
+#include <assert.h>
+
+static htool_return_t handle_command_disass (htool_client_t *client)
+{
+    /* reset getopt */
+    optind = 1;
+    opterr = 1;
+
+    /* set the appropriate flag for the client struct */
+    client->cmd |= HTOOL_CLIENT_CMDFLAG_DISASS;
+    char *start_addr;
+
+    /* parse the `disass` options */
+    int opt = 0;
+    int optindex = 2;
+    while ((opt = getopt_long (client->argc, client->argv, "DdsHA", disass_cmd_opts, &optindex)) > 0) {
+        switch (opt) {
+
+            /* -D, --disassemble-all */
+            case 'D':
+                client->opts |= HTOOL_CLIENT_DISASS_OPT_DISASSEMBLE_FULL;
+                break;
+
+            /* -d, --disassemble */
+            case 'd':
+                client->opts |= HTOOL_CLIENT_DISASS_OPT_DISASSEMBLE_QUICK;
+                break;
+
+            /* -s, --start-address */
+            case 's':
+                client->opts |= HTOOL_CLIENT_DISASS_OPT_START_ADDRESS;
+                start_addr = strdup (client->argv[client->argc-1]);
+                client->start_address = strtoull (start_addr, NULL, 16);
+                break;
+
+            /* default, print usage */
+            case 'H':
+            default:
+                //disass_subcommand_usage (client->argc, client->argv, 0);
+                break;
+        }
+    }
+
+    /**
+     *  Load the file into client->bin, if the file is not valid exit with an error
+     *  message.
+     */
+    if ((client->bin = htool_binary_load_and_parse (client->filename)) == HTOOL_RETURN_FAILURE) {
+        htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "%s", client->filename);
+        exit (EXIT_FAILURE);
+    }
+
+    /**
+     *  Option:             -d, --disassemble
+     *  Description:        Run a quick disassembly of a binary with minimal annotations.
+     */
+    if (client->opts & HTOOL_CLIENT_DISASS_OPT_DISASSEMBLE_QUICK)
+        htool_disassemble_binary_quick (client);
+    
+
+    return HTOOL_RETURN_SUCCESS;
+}
+
 static htool_return_t handle_command_debug (htool_client_t *client)
 {
     error_test ();
@@ -366,6 +446,7 @@ void print_version_detail (int opt)
 
         printf (BOLD RED "\n  Extensions:\n", RESET);
         printf (BOLD DARK_WHITE "    Libhelper:        " RESET DARK_GREY "%s\n", libhelper_get_version_string());
+        printf (BOLD DARK_WHITE "    Libarch:          " RESET DARK_GREY "%s\n", LIBARCH_SOURCE_VERSION);
 
     } else {
         printf ("-----------------------------------------------------\n");

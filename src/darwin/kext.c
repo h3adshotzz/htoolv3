@@ -17,7 +17,7 @@
 #include "darwin/kext.h"
 #include "commands/macho.h"
 
-#define KEXT_DEBUG 0
+#define KEXT_DEBUG 1
 
 #ifndef __APPLE__
 /* Temporary, should move to libhelper */
@@ -135,7 +135,7 @@ xnu_parse_split_style_kext (macho_t *macho, char *load_addr_str, char *bundleid)
     memset (kext, '\0', sizeof (kext_t));
 
     kext->macho = mem_macho;
-    kext->name = bundleid;
+    kext->name = strdup (bundleid);
     kext->offset = (base + offset);
     kext->vmaddr = addr;
 
@@ -335,7 +335,7 @@ xnu_load_kext_list_split_style (xnu_t *xnu)
         xml_PrelinkExecutableLoa_str = strstr (xml, "PrelinkExecutableLoa");
         if (xml_PrelinkExecutableLoa_str) {
 
-            char kext_name[2560], load_addr[24];
+            char *kext_name, load_addr[24];
             unsigned char *load_addr_ptr, *kext_name_ptr;
             unsigned char *prelink_addr;
 
@@ -362,6 +362,7 @@ xnu_load_kext_list_split_style (xnu_t *xnu)
                 load_addr_ptr = strstr (prelink_addr, "0x");
 
                 /* Initialise 256 bytes in the kext_name to avoid something going wrong */
+                kext_name = calloc (1, 256);
                 memset (kext_name, '\0', 256);
 
                 /* Fix for "ID=" */
@@ -405,6 +406,8 @@ xnu_load_kext_list_split_style (xnu_t *xnu)
                 
                 /* Look for the next CFBundleName */
                 kext_name_ptr = strstr (xml, "CFBundleName</key>");
+                kext_name = NULL;
+                free (kext_name);
                 k_count++;
             }
             printf (ANSI_COLOR_GREEN "[*] Successfully parsed Kernel Extensions (%d)\n" RESET, h_slist_length (kext_list));

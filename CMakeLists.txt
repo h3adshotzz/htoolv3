@@ -28,6 +28,7 @@ add_executable (htool)
 
 # Add Libhelper
 add_subdirectory(libhelper)
+add_subdirectory(libarch)
 
 # HTool public headers.
 target_include_directories(htool
@@ -35,6 +36,7 @@ target_include_directories(htool
         ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 target_link_libraries(htool libhelper)
+target_link_libraries(htool libarch)
 
 # Setup versioning script
 if (NOT HTOOL_DISABLE_VERSION)
