@@ -41,4 +41,8 @@ target_sources(htool
         darwin/darwin.c
         darwin/kernel.c
         darwin/kext.c
+
+        disassembler/disass.c
+        disassembler/parser.c
+        disassembler/hashmap.c
 )

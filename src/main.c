@@ -22,7 +22,6 @@
 #include <libhelper-file.h>
 
 #include <libarch.h>
-#include <instruction.h>
 
 #include "htool-version.h"
 #include "htool-loader.h"
@@ -37,6 +36,7 @@
 /* headers for commands */
 #include "commands/macho.h"
 #include "commands/analyse.h"
+#include "commands/disassembler.h"
 
 
 /* Command handler functions */
@@ -93,8 +93,13 @@ static struct option analyse_cmd_opts[] = {
 
 /* disass options */
 static struct option disass_cmd_opts[] = {
-    { "debug",      no_argument,        NULL,   'd' },
-    { NULL,         0,                  NULL,   0   },
+    { "disassemble",        no_argument,        NULL,   'd' },
+    { "disassemble-all",    no_argument,        NULL,   'D' },
+
+    { "start-address",      required_argument,  NULL,   's' },
+
+    { "debug",          no_argument,        NULL,   'd' },
+    { NULL,             0,                  NULL,    0  },
 };
 
 /**
@@ -364,16 +369,29 @@ static htool_return_t handle_command_disass (htool_client_t *client)
 
     /* set the appropriate flag for the client struct */
     client->cmd |= HTOOL_CLIENT_CMDFLAG_DISASS;
+    char *start_addr;
 
     /* parse the `disass` options */
     int opt = 0;
     int optindex = 2;
-    while ((opt = getopt_long (client->argc, client->argv, "dHA", disass_cmd_opts, &optindex)) > 0) {
+    while ((opt = getopt_long (client->argc, client->argv, "DdsHA", disass_cmd_opts, &optindex)) > 0) {
         switch (opt) {
 
-            /* -d, --debug */
+            /* -D, --disassemble-all */
+            case 'D':
+                client->opts |= HTOOL_CLIENT_DISASS_OPT_DISASSEMBLE_FULL;
+                break;
+
+            /* -d, --disassemble */
             case 'd':
-                client->opts |= HTOOL_CLIENT_DISASS_OPT_DEBUG;
+                client->opts |= HTOOL_CLIENT_DISASS_OPT_DISASSEMBLE_QUICK;
+                break;
+
+            /* -s, --start-address */
+            case 's':
+                client->opts |= HTOOL_CLIENT_DISASS_OPT_START_ADDRESS;
+                start_addr = strdup (client->argv[client->argc-1]);
+                client->start_address = strtoull (start_addr, NULL, 16);
                 break;
 
             /* default, print usage */
@@ -384,8 +402,6 @@ static htool_return_t handle_command_disass (htool_client_t *client)
         }
     }
 
-    debugf ("handle_command_disass\n");
-
     /**
      *  Load the file into client->bin, if the file is not valid exit with an error
      *  message.
@@ -395,26 +411,13 @@ static htool_return_t handle_command_disass (htool_client_t *client)
         exit (EXIT_FAILURE);
     }
 
-    printf ("file: %s\n", client->filename);
-
-    macho_t *macho = h_slist_nth_data (client->bin->macho_list, 0);
-    mach_section_64_t *sect = mach_section_64_search (macho->scmds, "__TEXT_EXEC", "__text");
-
-    unsigned char *data = macho->data + sect->offset;
-    uint64_t base = sect->addr;
-
-    printf ("base: 0x%x, size: %d\n", base, sect->size);
-    for (int i = 0; i < 128; i++) {
-
-        uint32_t opcode = *(uint32_t *) (data + (i * 4));
-        instruction_t *in = libarch_instruction_create (opcode, base);
-        assert (in->fields_len == 0);
-
-        libarch_disass (&in);
-
-        printf ("0x%016x   %08x\t%s\n", in->addr, opcode, A64_INSTRUCTIONS_STR[in->type]);
-        base += 4;
-    }
+    /**
+     *  Option:             -d, --disassemble
+     *  Description:        Run a quick disassembly of a binary with minimal annotations.
+     */
+    if (client->opts & HTOOL_CLIENT_DISASS_OPT_DISASSEMBLE_QUICK)
+        htool_disassemble_binary_quick (client);
+    
 
     return HTOOL_RETURN_SUCCESS;
 }

@@ -16,6 +16,11 @@
 #ifndef __HTOOL_H__
 #define __HTOOL_H__
 
+
+/* General definitions to make the code nicer to read */
+#define HTOOL_PRIVATE     static
+
+
 /**
  *  Exit codes
  */
@@ -26,17 +31,21 @@ typedef enum htool_return_t
     HTOOL_RETURN_VOID
 } htool_return_t;
 
+
 /**
  * Colour codes
  */
-#define WHITE           "\x1b[38;5;254m"
-#define DARK_WHITE      "\x1b[38;5;251m"
-#define DARK_GREY       "\x1b[38;5;243m"
-#define YELLOW          "\x1b[38;5;214m"
-#define DARK_YELLOW     "\x1b[38;5;94m"
-#define RED             "\x1b[38;5;88m"
-#define BLUE            "\x1b[38;5;32m"
-#define RESET           "\x1b[0m"
-#define BOLD            "\x1b[1m"
+#define WHITE            "\x1b[38;5;254m"
+#define DARK_WHITE       "\x1b[38;5;251m"
+#define DARK_GREY        "\x1b[38;5;243m"
+#define YELLOW           "\x1b[38;5;214m"
+#define DARK_YELLOW      "\x1b[38;5;94m"
+#define RED              "\x1b[38;5;88m"
+#define BLUE             "\x1b[38;5;32m"
+#define BOLD             "\x1b[1m"
+#define GREEN            "\x1b[32m"
+#define MAGENTA          "\x1b[35m"
+#define CYAN             "\x1b[36m"
+#define RESET            "\x1b[0m"
 
 #endif /* __htool_h__ */

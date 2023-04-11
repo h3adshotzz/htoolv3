@@ -17,7 +17,7 @@
 #include "darwin/kext.h"
 #include "commands/macho.h"
 
-#define KEXT_DEBUG 0
+#define KEXT_DEBUG 1
 
 #ifndef __APPLE__
 /* Temporary, should move to libhelper */
@@ -135,7 +135,7 @@ xnu_parse_split_style_kext (macho_t *macho, char *load_addr_str, char *bundleid)
     memset (kext, '\0', sizeof (kext_t));
 
     kext->macho = mem_macho;
-    kext->name = bundleid;
+    kext->name = strdup (bundleid);
     kext->offset = (base + offset);
     kext->vmaddr = addr;
 
