@@ -15,6 +15,7 @@
 
 #include <stdlib.h>
 #include <getopt.h>
+#include <assert.h>
 
 #include <libhelper.h>
 #include <libhelper-logger.h>
@@ -85,6 +86,7 @@ static struct option macho_cmd_opts[] = {
 
 /* analyse options */
 static struct option analyse_cmd_opts[] = {
+    { "help",       no_argument,        NULL,   'h' },
     { "analyse",    no_argument,        NULL,   'a' },
     { "list-all",   no_argument,        NULL,   'l' },
     { "extract",    required_argument,  NULL,   'e' },
@@ -93,6 +95,10 @@ static struct option analyse_cmd_opts[] = {
 
 /* disass options */
 static struct option disass_cmd_opts[] = {
+    { "arch",               required_argument,  NULL,   'a' },
+    { "verbose",            no_argument,        NULL,   'v' },
+    { "help",               no_argument,        NULL,   'h' },
+
     { "disassemble",        no_argument,        NULL,   'd' },
     { "disassemble-all",    no_argument,        NULL,   'D' },
 
@@ -269,7 +275,7 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
     /* parse the `file` options */
     int opt = 0;
     int optindex = 2;
-    while ((opt = getopt_long (client->argc, client->argv, "e:alHA", analyse_cmd_opts, &optindex)) > 0) {
+    while ((opt = getopt_long (client->argc, client->argv, "e:alhA", analyse_cmd_opts, &optindex)) > 0) {
         switch (opt) {
 
             /* -a, --analyse */
@@ -291,17 +297,8 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
             case 'H':
             default:
                 analyse_subcommand_usage (client->argc, client->argv, 0);
-                break;
+                return HTOOL_RETURN_FAILURE;
         }
-    }
-
-    /**
-     *  Option:             None
-     *  Description:        No option has been passed, so print the help menu again.
-     */
-    if (!client->opts) {
-        analyse_subcommand_usage (client->argc, client->argv, 0);
-        return HTOOL_RETURN_FAILURE;
     }
 
     /**
@@ -344,8 +341,6 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
     return HTOOL_RETURN_SUCCESS;
 }
 
-#include <assert.h>
-
 static htool_return_t handle_command_disass (htool_client_t *client)
 {
     /* reset getopt */
@@ -359,7 +354,7 @@ static htool_return_t handle_command_disass (htool_client_t *client)
     /* parse the `disass` options */
     int opt = 0;
     int optindex = 2;
-    while ((opt = getopt_long (client->argc, client->argv, "DdsHA", disass_cmd_opts, &optindex)) > 0) {
+    while ((opt = getopt_long (client->argc, client->argv, "DdshA", disass_cmd_opts, &optindex)) > 0) {
         switch (opt) {
 
             /* -D, --disassemble-all */
@@ -380,10 +375,10 @@ static htool_return_t handle_command_disass (htool_client_t *client)
                 break;
 
             /* default, print usage */
-            case 'H':
+            case 'h':
             default:
-                //disass_subcommand_usage (client->argc, client->argv, 0);
-                break;
+                disass_subcommand_usage (client->argc, client->argv, 0);
+                return HTOOL_RETURN_FAILURE;
         }
     }
 
