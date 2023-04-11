@@ -351,7 +351,6 @@ void print_version_detail (int opt)
         printf (BOLD DARK_WHITE "    Build Version:    " RESET DARK_GREY "%s (%s)\n", HTOOL_BUILD_VERSION, HTOOL_SOURCE_VERSION);
         printf (BOLD DARK_WHITE "    Build Target:     " RESET DARK_GREY "%s-%s\n", BUILD_TARGET, BUILD_ARCH);        
         printf (BOLD DARK_WHITE "    Build time:       " RESET DARK_GREY "%s\n", __TIMESTAMP__);
-        printf (BOLD DARK_WHITE "    Libhelper:        " RESET DARK_GREY "%s\n", libhelper_get_version_string());
         printf (BOLD DARK_WHITE "    Compiler:         " RESET DARK_GREY "%s\n", __VERSION__);
 
         printf (BOLD DARK_WHITE "    Platform:         " RESET DARK_GREY);
@@ -364,6 +363,10 @@ void print_version_detail (int opt)
         printf (BLUE "\n    HTool Version %s: %s; root:%s/%s_%s %s\n\n" RESET,
             HTOOL_BUILD_VERSION, __TIMESTAMP__, HTOOL_SOURCE_VERSION, HTOOL_BUILD_TYPE, BUILD_ARCH_CAP, BUILD_ARCH);
 #endif
+
+        printf (BOLD RED "\n  Extensions:\n", RESET);
+        printf (BOLD DARK_WHITE "    Libhelper:        " RESET DARK_GREY "%s\n", libhelper_get_version_string());
+
     } else {
         printf ("-----------------------------------------------------\n");
         printf ("  HTool %s - Built " __TIMESTAMP__ "\n", HTOOL_BUILD_VERSION);
