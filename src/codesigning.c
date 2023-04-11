@@ -122,8 +122,13 @@ htool_print_code_signature (htool_client_t *client)
      *  code signature command.
      */
     mach_load_command_info_t *info = mach_load_command_find_command_by_type (macho, LC_CODE_SIGNATURE);
-    mach_linkedit_data_command_t *cs_cmd = (mach_linkedit_data_command_t *) info->lc;
+    if (info == NULL) {
+        printf ("\n" BOLD RED "Code Signature: \n" RESET);
+        printf (BLUE "  No Code Signing Information\n" RESET);
+        exit (EXIT_FAILURE);
+    }
 
+    mach_linkedit_data_command_t *cs_cmd = (mach_linkedit_data_command_t *) info->lc;
     void *raw = macho_load_bytes (macho, cs_cmd->datasize, cs_cmd->dataoff);
 
     printf ("\n" BOLD RED "Code Signature (%s): \n" RESET, mach_header_get_cpu_string (macho->header->cputype, macho->header->cpusubtype));

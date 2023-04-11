@@ -34,7 +34,7 @@ htool_print_static_symbols (htool_client_t *client)
     printf (BOLD RED "Symbols:\n" RESET);
 
     if (!table->nsyms) {
-        printf (BLUE "  No Symbol Information\n" RESET, client->filename);
+        printf (BLUE "  No Symbol Information\n" RESET);
         return HTOOL_RETURN_FAILURE;
     }
 
