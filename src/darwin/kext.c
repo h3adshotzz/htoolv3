@@ -17,7 +17,7 @@
 #include "darwin/kext.h"
 #include "commands/macho.h"
 
-#define KEXT_DEBUG 1
+#define KEXT_DEBUG 0
 
 #ifndef __APPLE__
 /* Temporary, should move to libhelper */
