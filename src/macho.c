@@ -203,7 +203,7 @@ htool_print_load_commands (htool_client_t *client)
                         mach_section_64_t *sect = (mach_section_64_t *) h_slist_nth_data (info->sections, i);
                         printf (BOLD DARK_WHITE "  %s%-23s" RESET DARK_GREY "%-10llu0x%08llx → 0x%08llx\n" RESET,
                                 ".", sect->sectname, sect->size, sect->addr, sect->addr + sect->size);
-                        debugf ("offset: 0x%08x\n", sect->offset);
+                        //debugf ("offset: 0x%08x\n", sect->offset);
                     }
                 } else {
                     printf (BLUE "  No Data\n" BLUE RESET);

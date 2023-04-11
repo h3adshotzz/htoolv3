@@ -196,14 +196,6 @@ static htool_return_t handle_command_macho (htool_client_t *client)
         }
     }
 
-    printf ("**********\n");
-    printf ("MACHO-DEBUG: \tclient->opt: 0x%08x\n", client->opts);
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_ARCH)     printf ("MACHO-DEBUG: \tclient->arch: %s\n", client->arch);
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_VERBOSE)  printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_VEERBOSE\n");
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_HEADER)   printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_HEADER\n");
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_LCMDS)    printf ("MACHO-DEBUG: \tHTOOL_CLIENT_MACHO_OPT_LCMDS\n");
-    printf ("**********\n\n");
-
     /**
      *  Option:             None
      *  Description:        No option has been passed, so print the help menu again.
@@ -267,14 +259,12 @@ static htool_return_t handle_command_macho (htool_client_t *client)
 static htool_return_t handle_command_analyse (htool_client_t *client)
 {
     /* reset getopt */
+    htool_return_t res;
     optind = 1;
     opterr = 1;
 
     /* set the appropriate flag for the client struct */
     client->cmd |= HTOOL_CLIENT_CMDFLAG_ANALYSE;
-
-    for (int i = 0; i < client->argc; i++)
-        debugf ("[%d]: %s\n", i, client->argv[i]);
 
     /* parse the `file` options */
     int opt = 0;
@@ -305,15 +295,6 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
         }
     }
 
-    debugf ("handle_command_analyse\n");
-
-    printf ("**********\n");
-    printf ("MACHO-DEBUG: \tclient->opt: 0x%08x\n", client->opts);
-    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_ANALYSE)   printf ("MACHO-DEBUG: \tHTOOL_CLIENT_ANALYSE_OPT_ANALYSE\n");
-    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_LIST_ALL)  printf ("MACHO-DEBUG: \tHTOOL_CLIENT_ANALYSE_OPT_LIST_ALL\n");
-    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_EXTRACT)   printf ("MACHO-DEBUG: \tHTOOL_CLIENT_ANALYSE_OPT_EXTRACT\n");
-    printf ("**********\n\n");
-
     /**
      *  Option:             None
      *  Description:        No option has been passed, so print the help menu again.
@@ -331,29 +312,33 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
         htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "%s", client->filename);
         exit (EXIT_FAILURE);
     }
-    ci_logf ("File successfully loaded\n");
+    //ci_logf ("File successfully loaded\n");
 
     /**
      *  Option:             -a, --analyse
      *  Description:        Run a complete analysis of the given firmware file.
      */
-    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_ANALYSE)
-        htool_generic_analyse (client);
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_ANALYSE) {
+        res = htool_generic_analyse (client);
+        if (res == HTOOL_RETURN_FAILURE) return res;
+    }
 
     /**
      *  Option:             -l, --list-all
      *  Description:        List all embedded binaries / Mach-O's.
      */
     if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_LIST_ALL)
-        htool_analyse_list_all (client);
+        res = htool_analyse_list_all (client);
 
     /**
      *  Option:             -e, --extract
      *  Description:        Extract an embedded firmware that matches the given
      *                      name.
      */
-    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_EXTRACT)
-        htool_analyse_extract (client);
+    if (client->opts & HTOOL_CLIENT_ANALYSE_OPT_EXTRACT) {
+        res = htool_analyse_extract (client);
+        if (res) printf (ANSI_COLOR_GREEN "[*] Extracted %s\n" RESET, client->extract);
+    }
 
 
     return HTOOL_RETURN_SUCCESS;
@@ -446,8 +431,6 @@ void print_version_detail (int opt)
         printf (BOLD DARK_WHITE "    Build Version:    " RESET DARK_GREY "%s (%s)\n", HTOOL_BUILD_VERSION, HTOOL_SOURCE_VERSION);
         printf (BOLD DARK_WHITE "    Build Target:     " RESET DARK_GREY "%s-%s\n", BUILD_TARGET, BUILD_ARCH);        
         printf (BOLD DARK_WHITE "    Build time:       " RESET DARK_GREY "%s\n", __TIMESTAMP__);
-        printf (BOLD DARK_WHITE "    Libhelper:        " RESET DARK_GREY "%s\n", libhelper_get_version_string());
-        printf (BOLD DARK_WHITE "    Libarch:          " RESET DARK_GREY "%s\n", LIBARCH_SOURCE_VERSION);
         printf (BOLD DARK_WHITE "    Compiler:         " RESET DARK_GREY "%s\n", __VERSION__);
 
         printf (BOLD DARK_WHITE "    Platform:         " RESET DARK_GREY);
@@ -460,12 +443,15 @@ void print_version_detail (int opt)
         printf (BLUE "\n    HTool Version %s: %s; root:%s/%s_%s %s\n\n" RESET,
             HTOOL_BUILD_VERSION, __TIMESTAMP__, HTOOL_SOURCE_VERSION, HTOOL_BUILD_TYPE, BUILD_ARCH_CAP, BUILD_ARCH);
 #endif
+
+        printf (BOLD RED "\n  Extensions:\n", RESET);
+        printf (BOLD DARK_WHITE "    Libhelper:        " RESET DARK_GREY "%s\n", libhelper_get_version_string());
+        printf (BOLD DARK_WHITE "    Libarch:          " RESET DARK_GREY "%s\n", LIBARCH_SOURCE_VERSION);
+
     } else {
         printf ("-----------------------------------------------------\n");
         printf ("  HTool %s - Built " __TIMESTAMP__ "\n", HTOOL_BUILD_VERSION);
-#if HTOOL_DEBUG
         printf (BLUE "  Source version: %s\n" RESET, HTOOL_SOURCE_VERSION);
-#endif
         printf ("-----------------------------------------------------\n");
     }
 }

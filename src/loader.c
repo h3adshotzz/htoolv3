@@ -20,8 +20,9 @@
 #include "htool-loader.h"
 #include "htool-client.h"
 
-#include "darwin/darwin.h"
+#include "secure_enclave/sep.h"
 #include "commands/macho.h"
+#include "darwin/darwin.h"
 
 htool_binary_t *
 htool_binary_create ()
@@ -69,6 +70,7 @@ htool_binary_parser (htool_binary_t *bin)
 {
     const uint32_t fat_header_size = sizeof (fat_header_t);
     uint32_t magic = *(uint32_t *) bin->data;
+    htool_return_t ret;
 
 
     /**
@@ -226,6 +228,7 @@ htool_binary_parser (htool_binary_t *bin)
         if (darwin_detect_firmware_component_kernel (bin))
             bin->flags |= HTOOL_BINARY_FIRMWARETYPE_KERNEL;
 
+        //debugf ("flags: %llx\n", bin->flags);
         return bin;
     } 
     
@@ -233,8 +236,22 @@ htool_binary_parser (htool_binary_t *bin)
      *  Check if the binary is an iBoot
      */
     if (darwin_detect_firmware_component_iboot (bin)) {
-        printf ("iBoot detected\n");
+        bin->flags |= HTOOL_BINARY_FILETYPE_RAWBINARY;
         bin->flags |= HTOOL_BINARY_FIRMWARETYPE_IBOOT;
+        return bin;
+    }
+
+    /**
+     *  Check if the binary is a SEP firmware
+     */
+    if (ret = detect_sep_firmware (bin)) {
+        if (ret == HTOOL_RETURN_VOID) {
+            htool_error_throw (HTOOL_ERROR_FILETYPE, "Found unknown Apple Secure Boot firmware, cannot handle");
+            return NULL;
+        }
+        debugf ("sep detected\n");
+        bin->flags |= HTOOL_BINARY_FILETYPE_RAWBINARY;
+        bin->flags |= HTOOL_BINARY_FIRMWARETYPE_SEP;
         return bin;
     }
     

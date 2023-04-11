@@ -16,10 +16,10 @@
 #ifndef __HTOOL_H__
 #define __HTOOL_H__
 
-
 /* General definitions to make the code nicer to read */
 #define HTOOL_PRIVATE     static
 
+#include <libhelper-logger.h>
 
 /**
  *  Exit codes
@@ -47,5 +47,7 @@ typedef enum htool_return_t
 #define MAGENTA          "\x1b[35m"
 #define CYAN             "\x1b[36m"
 #define RESET            "\x1b[0m"
+
+#define DEBUG_FLAG      debugf ("flag");
 
 #endif /* __htool_h__ */

@@ -93,6 +93,7 @@ darwin_detect_firmware_component_kernel (htool_binary_t *bin)
     return (uname) ? HTOOL_RETURN_SUCCESS : HTOOL_RETURN_FAILURE;
 }
 
+/** TODO: move to iboot.c and rename */
 htool_return_t
 darwin_detect_firmware_component_iboot (htool_binary_t *bin)
 {

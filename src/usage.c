@@ -27,11 +27,9 @@ void general_usage (int argc, char *argv[], int err)
     "Commands:\n" \
     "  file             Identify file and print header.\n" \
     "  macho            Mach-O parser.\n" \
-    "  dyld             Dyld Shared Cache parser.\n" \
-    "  kernel           XNU Kernel/Kernelcache parser.\n" \
-    "  iboot            iBoot parser.\n" \
-    "  sep              SEP OS/Firmware parser.\n" \
-    "  devtree          DeviceTree parser.\n" \
+    "  analyse          Analyse firmware files.\n" \
+    "  disassemble      Disassemble a binary.\n" \
+    "  debug            [DEBUG].\n" \
     "\n"\
     "Options:\n" \
     "  --help           HTool Usage info.\n" \
@@ -67,6 +65,7 @@ void macho_subcommand_usage (int argc, char *argv[], int err)
     "  -s, --symbols    Print the Symbols contained in the Mach-O.\n" \
     "      --sym-dbg        Print additional debug symbols.\n" \
     "      --sym-sect       Print additional section info.\n" \
+    "  -S, --signing    Print the Code Signing information.\n" \
     "\n"\
     "Options:\n" \
     "  --verbose       Print more in-depth verbose information\n" \

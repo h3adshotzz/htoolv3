@@ -45,4 +45,7 @@ target_sources(htool
         disassembler/disass.c
         disassembler/parser.c
         disassembler/hashmap.c
+
+        secure_enclave/sep.c
+        iboot/iboot.c
 )
