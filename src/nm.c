@@ -31,12 +31,12 @@ htool_print_static_symbols (htool_client_t *client)
         return HTOOL_RETURN_FAILURE;
     }
 
+    printf (BOLD RED "Symbols:\n" RESET);
+
     if (!table->nsyms) {
-        printf ("%s: No Symbol Information\n", macho->path);
+        printf (BLUE "  No Symbol Information\n" RESET, client->filename);
         return HTOOL_RETURN_FAILURE;
     }
-
-    printf (BOLD RED "Symbols:\n" RESET);
 
     uint32_t offset = table->symoff;
     uint32_t nlist_size = sizeof (nlist);
