@@ -102,7 +102,9 @@ static struct option disass_cmd_opts[] = {
     { "disassemble",        no_argument,        NULL,   'd' },
     { "disassemble-all",    no_argument,        NULL,   'D' },
 
-    { "start-address",      required_argument,  NULL,   's' },
+    { "base-address",       required_argument,  NULL,   'b' },
+    { "stop-address",       required_argument,  NULL,   's' },
+    { "count",              required_argument,  NULL,   'c' },
 
     { "debug",          no_argument,        NULL,   'd' },
     { NULL,             0,                  NULL,    0  },
@@ -349,12 +351,12 @@ static htool_return_t handle_command_disass (htool_client_t *client)
 
     /* set the appropriate flag for the client struct */
     client->cmd |= HTOOL_CLIENT_CMDFLAG_DISASS;
-    char *start_addr;
+    char *base_addr, *stop_address, *size;
 
     /* parse the `disass` options */
     int opt = 0;
     int optindex = 2;
-    while ((opt = getopt_long (client->argc, client->argv, "DdshA", disass_cmd_opts, &optindex)) > 0) {
+    while ((opt = getopt_long (client->argc, client->argv, "DdbcshA", disass_cmd_opts, &optindex)) > 0) {
         switch (opt) {
 
             /* -D, --disassemble-all */
@@ -367,12 +369,27 @@ static htool_return_t handle_command_disass (htool_client_t *client)
                 client->opts |= HTOOL_CLIENT_DISASS_OPT_DISASSEMBLE_QUICK;
                 break;
 
-            /* -s, --start-address */
-            case 's':
-                client->opts |= HTOOL_CLIENT_DISASS_OPT_START_ADDRESS;
-                start_addr = strdup (client->argv[client->argc-1]);
-                client->start_address = strtoull (start_addr, NULL, 16);
+            /* -b, --base-address */
+            case 'b':
+                client->opts |= HTOOL_CLIENT_DISASS_OPT_BASE_ADDRESS;
+                base_addr = strdup (client->argv[client->argc-1]);
+                client->base_address = strtoull (base_addr, NULL, 16);
                 break;
+
+            /* -s, --stop-address */
+            case 's':
+                client->opts |= HTOOL_CLIENT_DISASS_OPT_STOP_ADDRESS;
+                stop_address = strdup (client->argv[client->argc-1]);
+                client->stop_address = strtoull (stop_address, NULL, 16);
+                break;
+
+            /* -c, --count */
+            case 'c':
+                client->opts |= HTOOL_CLIENT_DISASS_OPT_COUNT;
+                size = strdup (client->argv[client->argc-1]);
+                client->size = strtoull (size, NULL, 16);
+                break;
+
 
             /* default, print usage */
             case 'h':

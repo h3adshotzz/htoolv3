@@ -105,7 +105,7 @@ void disass_subcommand_usage (int argc, char *argv[], int err)
     "Commands:\n" \
     "  -d, --disassemble        Quick disassemble of a binary.\n" \
     "  -D, --disassemble-all    Full disassemble of a binary.\n" \
-    "  -a, --start-address      Virtual address to disassemble from.\n" \
+    "  -b, --base-address       Virtual address to disassemble from.\n" \
     "  -s, --stop-address       Virtual address to disassemble to.\n" \
     "  -c, --count              Number of bytes to disassemble.\n" \
     "\n" \

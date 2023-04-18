@@ -45,6 +45,7 @@ typedef struct section_symbol_t {
 typedef struct inline_symbol_t {
     uint64_t    virt_addr;
     char       *name;
+    char       *type;       // method, section
 } inline_symbol_t;
 
 
@@ -64,7 +65,7 @@ htool_parse_macho_function_symbols (macho_t *macho);
 
 
 htool_return_t
-htool_disassembler_parse_instruction (instruction_t **instr);
+htool_disassembler_parse_instruction (instruction_t *instr);
 
 
 #endif /* __htool_disassembler_parser_h__ */

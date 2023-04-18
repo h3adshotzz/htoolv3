@@ -49,7 +49,9 @@ struct __htool_client
     char                *extract;   // --extract value (analyse only)
 
     /* `disass` options */
-    uint64_t            start_address;
+    uint64_t            base_address;
+    uint64_t            stop_address;
+    uint64_t            size;
 
     /* Parsed binary */
     htool_binary_t      *bin;       // parsed `filename`
@@ -104,6 +106,8 @@ struct command {
 #define HTOOL_CLIENT_CMDFLAG_DISASS                     0x40000000
 #define HTOOL_CLIENT_DISASS_OPT_DISASSEMBLE_QUICK       (1 << 1)
 #define HTOOL_CLIENT_DISASS_OPT_DISASSEMBLE_FULL        (1 << 2)
-#define HTOOL_CLIENT_DISASS_OPT_START_ADDRESS           (1 << 3)
+#define HTOOL_CLIENT_DISASS_OPT_BASE_ADDRESS            (1 << 3)
+#define HTOOL_CLIENT_DISASS_OPT_STOP_ADDRESS            (1 << 4)
+#define HTOOL_CLIENT_DISASS_OPT_COUNT                   (1 << 5)
 
 #endif /* __htool_htool_client_h__ */
