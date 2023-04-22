@@ -293,7 +293,8 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
             /* -e, --extract */
             case 'e':
                 client->opts |= HTOOL_CLIENT_ANALYSE_OPT_EXTRACT;
-                client->extract = strdup ((const char *) client->argv[client->argc-1]);
+                client->extract = strdup ((const char *) optarg);
+                break;
 
             /* default, print usage */
             case 'H':
@@ -345,9 +346,16 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
 
 static htool_return_t handle_command_disass (htool_client_t *client)
 {
+    #if HTOOL_DEBUG
+        debugf ("argc: %d\n", client->argc);
+        for (int i = 0; i < client->argc; i++)
+            debugf ("[%d]: %s\n", i, client->argv[i]);
+    #endif
+
     /* reset getopt */
     optind = 1;
     opterr = 1;
+    optarg = NULL;
 
     /* set the appropriate flag for the client struct */
     client->cmd |= HTOOL_CLIENT_CMDFLAG_DISASS;
@@ -356,7 +364,7 @@ static htool_return_t handle_command_disass (htool_client_t *client)
     /* parse the `disass` options */
     int opt = 0;
     int optindex = 2;
-    while ((opt = getopt_long (client->argc, client->argv, "DdbcshA", disass_cmd_opts, &optindex)) > 0) {
+    while ((opt = getopt_long (client->argc, client->argv, "Ddb:c:s:hA", disass_cmd_opts, &optindex)) > 0) {
         switch (opt) {
 
             /* -D, --disassemble-all */
@@ -372,22 +380,20 @@ static htool_return_t handle_command_disass (htool_client_t *client)
             /* -b, --base-address */
             case 'b':
                 client->opts |= HTOOL_CLIENT_DISASS_OPT_BASE_ADDRESS;
-                base_addr = strdup (client->argv[client->argc-1]);
-                client->base_address = strtoull (base_addr, NULL, 16);
+                client->base_address = strtoull (optarg, NULL, 16);
                 break;
 
             /* -s, --stop-address */
             case 's':
                 client->opts |= HTOOL_CLIENT_DISASS_OPT_STOP_ADDRESS;
-                stop_address = strdup (client->argv[client->argc-1]);
-                client->stop_address = strtoull (stop_address, NULL, 16);
+                client->stop_address = strtoull (optarg, NULL, 16);
                 break;
 
             /* -c, --count */
             case 'c':
                 client->opts |= HTOOL_CLIENT_DISASS_OPT_COUNT;
-                size = strdup (client->argv[client->argc-1]);
-                client->size = strtoull (size, NULL, 16);
+                //size = strdup (client->argv[optind + optarg]);
+                client->size = strtoull (optarg, NULL, 16);
                 break;
 
 
@@ -452,7 +458,7 @@ void print_version_detail (int opt)
         printf ("intel-genuine (Intel Genuine)\n");
 #endif
 #if HTOOL_DEBUG
-        printf (BLUE "\n    HTool Version %s: %s; root:%s/%s_%s %s\n\n" RESET,
+        printf (BLUE "\n    HTool Version %s: %s; root:%s/%s_%s %s\n" RESET,
             HTOOL_BUILD_VERSION, __TIMESTAMP__, HTOOL_SOURCE_VERSION, HTOOL_BUILD_TYPE, BUILD_ARCH_CAP, BUILD_ARCH);
 #endif
 
@@ -471,17 +477,16 @@ void print_version_detail (int opt)
 
 int main(int argc, char **argv)
 {
-#if HTOOL_DEBUG
-    debugf ("argc: %d\n", argc);
-    for (int i = 0; i < argc; i++)
-        debugf ("[%d]: %s\n", i, argv[i]);
-#endif
-
     /* always print the version info (short) */
     print_version_detail (0);
 
     /* create a new client */
     htool_client_t *client = calloc (1, sizeof (htool_client_t));
+
+    /* set client->argv and ->argc */
+    client->argc = argc;
+    client->argv = (char **) malloc (client->argc * sizeof (char *));
+    for (int i = 0; i < client->argc; i++) client->argv[i] = argv[i];
 
     /**
      * check for the --help or --version options. These are handled differently to the
@@ -507,11 +512,6 @@ int main(int argc, char **argv)
                 break;
         }
     }
-
-    /* set client->argv and ->argc */
-    client->argc = argc - 1;
-    client->argv = (char **) malloc (client->argc * sizeof (char *));
-    for (int i = 0; i < client->argc; i++) client->argv[i] = argv[i];
 
     /* try to get the filename */
     char *filename = argv[argc - 1];

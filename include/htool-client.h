@@ -21,7 +21,7 @@
 #include "htool-loader.h"
 #include "htool.h"
 
-#define HTOOL_DEBUG 0
+#define HTOOL_DEBUG 1
 
 
 /**
