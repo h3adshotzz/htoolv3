@@ -17,7 +17,21 @@
 
 #include <assert.h>
 #include <libarch.h>
+
+#include <arm64/arm64-common.h>
+#include <arm64/arm64-conditions.h>
+#include <arm64/arm64-instructions.h>
+#include <arm64/arm64-prefetch-ops.h>
+#include <arm64/arm64-pstate.h>
+#include <arm64/arm64-registers.h>
+#include <arm64/arm64-tlbi-ops.h>
+#include <arm64/arm64-translation.h>
+#include <arm64/arm64-vector-specifiers.h>
+#include <arm64/arm64-index-extend.h>
+
 #include <instruction.h>
+#include <register.h>
+#include <utils.h>
 
 #include "disassembler/parser.h"
 #include "commands/disassembler.h"
@@ -25,7 +39,6 @@
 #include "commands/macho.h"
 
 #include "hashmap.h"
-
 
 HTOOL_PRIVATE
 int
@@ -56,8 +69,8 @@ find_offset_for_virtual_address (macho_t *macho, uint64_t vmaddr)
         mach_segment_info_t *info = (mach_segment_info_t *) h_slist_nth_data (macho->scmds, i);
         mach_segment_command_64_t *seg = info->segcmd;
 
-        if (vmaddr > seg->vmaddr && vmaddr < (seg->vmaddr + seg->vmsize))
-            return seg->fileoff + (vmaddr - seg->vmaddr);
+        if (vmaddr >= seg->vmaddr && vmaddr < (seg->vmaddr + seg->vmsize))
+            return (sizeof(mach_header_t)) + (seg->fileoff + (vmaddr - seg->vmaddr));
     }
     return 0;
 }
@@ -142,64 +155,8 @@ fetch_macho_inline_symbol_hashmap (macho_t *macho)
     return map;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
-
-void instruction_debug (instruction_t *instr, int show_fields)
-{
-    printf ("Parsed:            %s\n",          instr->parsed);
-    printf ("Opcode:            0x%08x\n",      instr->opcode);
-    printf ("Decode Group:      %d\n",          instr->group);
-    printf ("Decode Subgroup:   %d\n",          instr->subgroup);
-    printf ("Instruction Type:  %s (%d)\n",     A64_INSTRUCTIONS_STR[instr->type], instr->type);
-    printf ("Address:           0x%016x\n",     instr->addr);
-
-    printf ("Operands:          %d\n", instr->operands_len);
-    for (int i = 0; i < instr->operands_len; i++) {
-        operand_t *op = &instr->operands[i];
-        
-        printf ("\t[%d]: type:          ", i);
-        if (op->op_type == ARM64_OPERAND_TYPE_REGISTER) {
-            printf ("REGISTER (%d)\n", op->op_type);
-            printf ("\t[%d]: reg:           %d\n", i, op->reg);
-            printf ("\t[%d]: reg_size:      %d\n", i, op->reg_size);
-            printf ("\t[%d]: reg_type:      %d\n", i, op->reg_type);
-        } else if (op->op_type == ARM64_OPERAND_TYPE_IMMEDIATE) {
-            printf ("IMMEDIATE (%d)\n", op->op_type);
-            printf ("\t[%d]: imm_type:      %d\n", i, op->imm_type);
-            printf ("\t[%d]: imm_bits:      %d\n", i, op->imm_bits);
-        } else if (op->op_type == ARM64_OPERAND_TYPE_SHIFT) {
-            printf ("SHIFT (%d)\n", op->op_type);
-            printf ("\t[%d]: shift_type:    %d\n", i, op->shift_type);
-            printf ("\t[%d]: shift:         %d\n", i, op->shift);
-        } else if (op->op_type == ARM64_OPERAND_TYPE_TARGET) {
-            printf ("TARGET (%d)\n", op->op_type);
-            printf ("\t[%d]: target:        %s\n", i, op->target);
-        } else if (op->op_type == ARM64_OPERAND_TYPE_PSTATE) {
-            printf ("PSTATE (%d)\n", op->op_type);
-            printf ("\t[%d]: pstate:        %d\n", i, op->extra);
-        } else if (op->op_type == ARM64_OPERAND_TYPE_AT_NAME) {
-            printf ("AT NAME (%d)\n", op->op_type);
-            printf ("\t[%d]: pstate:        %d\n", i, op->extra);
-        } else if (op->op_type == ARM64_OPERAND_TYPE_TLBI_OP) {
-            printf ("TLBI (%d)\n", op->op_type);
-            printf ("\t[%d]: pstate:        %d\n", i, op->extra);
-        } else if (op->op_type == ARM64_OPERAND_TYPE_INDEX_EXTEND) {
-            printf ("INDEX EXTEND (%d)\n", op->op_type);
-            printf ("\t[%d]: extend:        %d\n", i, op->extra);
-        }
-        printf ("\t[%d]: pre/suffix:    %c, %c, %c\n", i, op->prefix, op->suffix, op->suffix_extra);
-    }
-
-    if (show_fields) {
-        printf ("Fields:            %d\n", instr->fields_len);
-        for (int i = 0; i < instr->fields_len; i++) {
-            int f = instr->fields[i];
-            printf ("\t[%d]: field:         %d\n", i, f);
-        }
-    }
-    printf ("\n");
-}
-
 
 htool_return_t
 htool_disassemble (unsigned char *data, uint32_t size, uint64_t base_address)
@@ -326,7 +283,7 @@ htool_disassemble_binary_quick (htool_client_t *client)
      *  Determine the amount of bytes to disassemble from the base address.
      * 
      */
-    if (client->opts & HTOOL_CLIENT_DISASS_OPT_STOP_ADDRESS) size = client->stop_address - client->base_address;
+    if (client->opts & HTOOL_CLIENT_DISASS_OPT_STOP_ADDRESS) size = ((client->stop_address - client->base_address) / 4) + 1;
     else if (client->opts & HTOOL_CLIENT_DISASS_OPT_COUNT) size = client->size;
     debugf ("start: 0x%llx, end: 0x%llx, size: %d\n", base_addr, base_addr + size, size);
 
@@ -342,5 +299,5 @@ htool_disassemble_binary_quick (htool_client_t *client)
         htool_disassemble (data, size, base_addr);
     }
 
-
+    return HTOOL_RETURN_SUCCESS;
 }
