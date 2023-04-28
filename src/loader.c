@@ -124,9 +124,6 @@ htool_binary_parser (htool_binary_t *bin)
         
         } else if (bin->flags == HTOOL_BINARY_FILETYPE_FAT) {
 
-            /**
-             * 
-             */
             fat_header_t *fat = calloc (1, fat_header_size);
             bin->fat_info = calloc (1, sizeof (fat_info_t));
 
