@@ -85,10 +85,8 @@ xnu_kernel_fetch_type (xnu_t *xnu)
          *  to detect it.
          */
         mach_section_64_t *__PPLTRAMP__text = mach_section_64_search (tmp_macho->scmds, "__PPLTRAMP", "__text");
-        if (__PPLTRAMP__text)
-            return XNU_KERNEL_TYPE_MACOS_ARM64_DTK;
-        else
-            return XNU_KERNEL_TYPE_MACOS_ARM64;
+        if (__PPLTRAMP__text) return XNU_KERNEL_TYPE_MACOS_ARM64_DTK;
+        else return XNU_KERNEL_TYPE_MACOS_ARM64;
     } else {
 
 kernel_ios_detect:
@@ -201,12 +199,6 @@ xnu_kernel_soc_string (char *buffer)
         }
     }
 
-
-    for (int i = 0; i < h_slist_length (matches); i++) {
-        darwin_device_t *tmp = (darwin_device_t *) h_slist_nth_data (matches, i);
-        //debugf ("plat: %s, board: %s, soc: %s, identifier: %s\n", tmp->platform, tmp->board, tmp->soc, tmp->identifier);
-    }
-
     darwin_device_t *ret = (darwin_device_t *) h_slist_nth_data (matches, 0);
     return ret->platform;
 }
@@ -220,8 +212,7 @@ xnu_search_needle_haystack (unsigned char *needle, uint32_t needle_len, unsigned
     char *ret;
     
     result = (char *) bh_memmem (haystack, size, needle, needle_len) + adjust;
-    if (!result) 
-        return NULL;
+    if (!result) return NULL;
 
     if (split) {
         if ((ret = (char *) strsplit (result, split)->ptrs[0]))

@@ -34,8 +34,7 @@
  *              so everything is stored in a single structure.
  *
  */
-typedef struct __htool_client           htool_client_t;
-struct __htool_client
+typedef struct htool_client_t
 {
     /* Loaded file info */
     char                *filename;  // loaded file path
@@ -55,10 +54,12 @@ struct __htool_client
 
     /* Parsed binary */
     htool_binary_t      *bin;       // parsed `filename`
-};
+} htool_client_t;
 
 /**
- * \brief       CLI Command option struct.
+ * \brief       CLI Command option struct. Contains the command name and
+ *              a pointer to the handler function, with a `htool_client_t`
+ *              as an argument.
  *
  */
 struct command {
@@ -73,7 +74,7 @@ struct command {
  *              the `mask` would be HTOOL_CLIENT_CMDFLAG_MACHO.
  *
  */
-#define HTOOL_CLIENT_CHECK_FLAG(flags, mask)              (((flags & mask) == mask) ? 1 : 0)
+#define HTOOL_CLIENT_CHECK_FLAG(flags, mask)            (((flags & mask) == mask) ? 1 : 0)
 
 
 /**
@@ -83,25 +84,25 @@ struct command {
  *      htool_client_check_flags (client_flags, mask);
  *
  */
-#define HTOOL_CLIENT_GENERIC_OPT_HELP       (1 << 0)
+#define HTOOL_CLIENT_GENERIC_OPT_HELP                   (1 << 0)
 
-#define HTOOL_CLIENT_CMDFLAG_FILE           0x10000000
+#define HTOOL_CLIENT_CMDFLAG_FILE                       0x10000000
 
-#define HTOOL_CLIENT_CMDFLAG_MACHO          0x20000000
-#define HTOOL_CLIENT_MACHO_OPT_ARCH         (1 << 1)
-#define HTOOL_CLIENT_MACHO_OPT_HEADER       (1 << 2)
-#define HTOOL_CLIENT_MACHO_OPT_LCMDS        (1 << 3)
-#define HTOOL_CLIENT_MACHO_OPT_LIBS         (1 << 4)
-#define HTOOL_CLIENT_MACHO_OPT_SYMBOLS      (1 << 5)
-#define HTOOL_CLIENT_MACHO_OPT_SYMDBG       (1 << 6)
-#define HTOOL_CLIENT_MACHO_OPT_SYMSECT      (1 << 7)
-#define HTOOL_CLIENT_MACHO_OPT_CODE_SIGNING (1 << 8)
-#define HTOOL_CLIENT_MACHO_OPT_VERBOSE      (1 << 9)
+#define HTOOL_CLIENT_CMDFLAG_MACHO                      0x20000000
+#define HTOOL_CLIENT_MACHO_OPT_ARCH                     (1 << 1)
+#define HTOOL_CLIENT_MACHO_OPT_HEADER                   (1 << 2)
+#define HTOOL_CLIENT_MACHO_OPT_LCMDS                    (1 << 3)
+#define HTOOL_CLIENT_MACHO_OPT_LIBS                     (1 << 4)
+#define HTOOL_CLIENT_MACHO_OPT_SYMBOLS                  (1 << 5)
+#define HTOOL_CLIENT_MACHO_OPT_SYMDBG                   (1 << 6)
+#define HTOOL_CLIENT_MACHO_OPT_SYMSECT                  (1 << 7)
+#define HTOOL_CLIENT_MACHO_OPT_CODE_SIGNING             (1 << 8)
+#define HTOOL_CLIENT_MACHO_OPT_VERBOSE                  (1 << 9)
 
-#define HTOOL_CLIENT_CMDFLAG_ANALYSE        0x30000000
-#define HTOOL_CLIENT_ANALYSE_OPT_ANALYSE    (1 << 1)
-#define HTOOL_CLIENT_ANALYSE_OPT_LIST_ALL   (1 << 2)
-#define HTOOL_CLIENT_ANALYSE_OPT_EXTRACT    (1 << 3)
+#define HTOOL_CLIENT_CMDFLAG_ANALYSE                    0x30000000
+#define HTOOL_CLIENT_ANALYSE_OPT_ANALYSE                (1 << 1)
+#define HTOOL_CLIENT_ANALYSE_OPT_LIST_ALL               (1 << 2)
+#define HTOOL_CLIENT_ANALYSE_OPT_EXTRACT                (1 << 3)
 
 #define HTOOL_CLIENT_CMDFLAG_DISASS                     0x40000000
 #define HTOOL_CLIENT_DISASS_OPT_DISASSEMBLE_QUICK       (1 << 1)

@@ -22,6 +22,7 @@
 #include <time.h>
 
 #include "htool-error.h"
+#include "commands/macho.h"
 
 /* libhelper doesn't implement support for arm thread state */
 #if defined(__APPLE__) && defined(__MACH__)
@@ -30,9 +31,6 @@
 #   include <libhelper-macho.h>
 #endif
 
-#include "commands/macho.h"
-
-#define DEBUG 1
 
 int
 htool_macho_select_arch (htool_client_t *client, macho_t **macho)
@@ -53,7 +51,8 @@ htool_macho_select_arch (htool_client_t *client, macho_t **macho)
     macho_t *tmp = calloc (1, sizeof (macho_t));
 
     /* check for --arch */
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_ARCH && htool_macho_check_fat (client)) {
+    if (HTOOL_CLIENT_CHECK_FLAG(client->opts, HTOOL_CLIENT_MACHO_OPT_ARCH) && 
+        HTOOL_CLIENT_CHECK_FLAG (client->bin->flags, HTOOL_BINARY_FILETYPE_FAT)) {
 
         /* load the macho for --arch */
         tmp = htool_binary_select_arch (bin, client->arch);
@@ -85,7 +84,7 @@ htool_macho_check_fat (htool_client_t *client)
 htool_return_t
 htool_print_header (htool_client_t *client)
 {
-    htool_binary_t *bin = client->bin;      /* cleaner than client->bin-><ext> */
+    htool_binary_t *bin = client->bin;
 
     /**
      *  If the file is a FAT archive, but --arch hasn't been set, print the
@@ -96,8 +95,6 @@ htool_print_header (htool_client_t *client)
         // print fat header
         printf (BOLD RED "FAT Header:\n" RED BOLD RESET);
         htool_print_fat_header_from_struct (bin->fat_info, 1);
-
-        ci_logf("Printed FAT Header\n");
     } else {
 
         /**
@@ -105,14 +102,10 @@ htool_print_header (htool_client_t *client)
          *  the one specified by --arch.
          */
         macho_t *macho = calloc (1, sizeof (macho_t));
-        int res = htool_macho_select_arch (client, &macho);
-
-        debugf ("res_: %d\n", res);
+        htool_macho_select_arch (client, &macho);
 
         printf (BOLD RED "Mach Header:\n" RED BOLD RESET);
         htool_print_macho_header_from_struct (macho->header);
-        
-        ci_logf("Printed Mach-O Header\n");
     }
 }
 
@@ -138,7 +131,7 @@ htool_print_load_commands (htool_client_t *client)
         }
         
         /* there's nothing that can be done now, so exit */
-        return HTOOL_RETURN_FAILURE;
+        return HTOOL_RETURN_EXIT;
 
     } else {
 
@@ -151,19 +144,17 @@ htool_print_load_commands (htool_client_t *client)
             htool_error_throw (HTOOL_ERROR_FILETYPE, "Could not load architecture from FAT archive: %s\n", client->arch);
             htool_print_fat_header_from_struct (bin->fat_info, 1);
 
-            exit (EXIT_FAILURE);
+            return HTOOL_RETURN_EXIT;
         }
 
         /* lists for segment and load commands */
-        HSList *lc_list = macho->lcmds;
-        HSList *sc_list = macho->scmds;
+        HSList *lc_list = macho->lcmds, *sc_list = macho->scmds;
 
         /* counter for load commands and dylibs */
         int lc_count = 0, dylib_count = 0;
 
-        printf (BOLD RED "\nLoad Command:\n" RESET);
-
         /* printing segment commands */
+        printf (BOLD RED "\nLoad Command:\n" RESET);
         for (int i = 0; i < (int) h_slist_length (sc_list); i++) {
 
             /**
@@ -178,12 +169,8 @@ htool_print_load_commands (htool_client_t *client)
                 mach_segment_command_64_t *seg64 = (mach_segment_command_64_t *) info->segcmd;
 
                 /* load command info */
-                printf (BOLD DARK_GREY "LC %02d:  Mem: 0x%08llx → 0x%08llx" DARK_GREY BOLD RESET,
+                printf (BOLD DARK_GREY "LC %02d:  Mem: 0x%08llx → 0x%08llx\n" DARK_GREY BOLD RESET,
                         i, seg64->vmaddr, (seg64->vmaddr + seg64->vmsize));
-#if DEBUG
-                printf ("offset: 0x%llx - 0x%llx", seg64->fileoff, (seg64->fileoff + seg64->filesize));
-#endif
-                printf ("\n");
                 printf (YELLOW "  LC_SEGMENT_64:" YELLOW RESET);
 
                 /* segment memory protection */
@@ -215,7 +202,6 @@ htool_print_load_commands (htool_client_t *client)
                 warningf ("32-bit segment commands not implemented\n");
             }
         }
-        ci_logf("Printed Mach-O Segment Commands\n");
 
         /* print the other load commands */
         for (int i = 0; i < (int) h_slist_length (lc_list); i++) {
@@ -231,8 +217,6 @@ htool_print_load_commands (htool_client_t *client)
             /* load the whole command into a new buffer */
             void *rawlc = (void *) macho_load_bytes (macho, lc->cmdsize, info->offset);
             
-            printf ("lc->cmd: %d\n", lc->cmd);
-
             /**
              *  Go through every type of Load Command. LCs that have been deprecated will
              *  print a warningf, as it makes it too difficult to test if their output is
@@ -352,7 +336,6 @@ htool_print_load_commands (htool_client_t *client)
         }
 
     }
-    ci_logf("Printed Mach-O Load Commands\n");
     return HTOOL_RETURN_SUCCESS;
 }
 
@@ -378,7 +361,7 @@ htool_print_shared_libraries (htool_client_t *client)
         }
         
         /* there's nothing that can be done now, so exit */
-        exit (EXIT_FAILURE);
+        return HTOOL_RETURN_EXIT;
 
     } else {
 
@@ -391,7 +374,7 @@ htool_print_shared_libraries (htool_client_t *client)
             htool_error_throw (HTOOL_ERROR_FILETYPE, "Could not load architecture from FAT archive: %s\n", client->arch);
             htool_print_fat_header_from_struct (bin->fat_info, 1);
 
-            exit (EXIT_FAILURE);
+            return HTOOL_RETURN_EXIT;
         }
 
         printf (RED BOLD "Dynamically-linked Libraries:\n" RESET);
@@ -556,66 +539,6 @@ htool_print_dylid_info_command (void *cmd)
     printf (BOLD DARK_WHITE "  %-12s" RESET, "Export");
     printf (DARK_GREY "%-8d0x%08x → 0x%08x\n" RESET, lc->export_size, lc->export_off, lc->export_off + lc->export_size);
 }
-
-/*
-
-SOME CODE FOR HANDLING BYTE SWAPS IF THE MACHINE IS A DIFFERENT
-ENDIAN TO THE TARGET FILE
-
-typedef struct {
-    uint32_t cmd;
-    uint32_t cmdsize;
-
-    uint32_t flavour;
-    uint32_t count;
-
-    arm_thread_state64_t state;
-} thread_test;
-
-enum byte_sex {
-    UNKNOWN_BYTE_SEX,
-    BIG_ENDIAN_BYTE_SEX,
-    LITTLE_ENDIAN_BYTE_SEX
-};
-
-static long long
-SWAP_LONG_LONG (long long ll)
-{
-	union {
-	    char c[8];
-	    long long ll;
-	} in, out;
-	in.ll = ll;
-	out.c[0] = in.c[7];
-	out.c[1] = in.c[6];
-	out.c[2] = in.c[5];
-	out.c[3] = in.c[4];
-	out.c[4] = in.c[3];
-	out.c[5] = in.c[2];
-	out.c[6] = in.c[1];
-	out.c[7] = in.c[0];
-
-    printf ("in: 0x%016llx\nout: 0x%016llx\n", in.ll, out.ll);
-	return(out.ll);
-}
-
-#define SWAP_INT(a)  ( ((a) << 24) | \
-		      (((a) << 8) & 0x00ff0000) | \
-		      (((a) >> 8) & 0x0000ff00) | \
-	 ((unsigned int)(a) >> 24) )
-
-static void
-_swap_arm_thread_state64_t (arm_thread_state64_t *state)
-{
-    for (int i = 0; i < 29; i++)
-        state->__x[i] = SWAP_LONG_LONG (state->__x[i]);
-
-    state->__fp = SWAP_LONG_LONG (state->__fp);
-    state->__lr = SWAP_LONG_LONG (state->__lr);
-    state->__sp = SWAP_LONG_LONG (state->__sp);
-    //state->__pc = SWAP_LONG_LONG (state->__pc);
-    state->__cpsr = SWAP_INT (state->__cpsr);
-}*/
 
 void
 htool_print_thread_state_command (void *lc_raw)

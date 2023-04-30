@@ -31,7 +31,6 @@
 
 #include <instruction.h>
 #include <register.h>
-#include <utils.h>
 
 #include "disassembler/parser.h"
 #include "commands/disassembler.h"
@@ -70,7 +69,7 @@ find_offset_for_virtual_address (macho_t *macho, uint64_t vmaddr)
         mach_segment_command_64_t *seg = info->segcmd;
 
         if (vmaddr >= seg->vmaddr && vmaddr < (seg->vmaddr + seg->vmsize))
-            return (sizeof(mach_header_t)) + (seg->fileoff + (vmaddr - seg->vmaddr));
+            return seg->fileoff + (vmaddr - seg->vmaddr);
     }
     return 0;
 }
@@ -128,6 +127,10 @@ fetch_macho_inline_symbol_hashmap (macho_t *macho)
             //printf ("name: %s\n", name);
         }
     }
+
+    /* Do not add symbols for Fileset-style kernels */
+    if (macho->header->filetype == MACH_TYPE_FILESET)
+        return map;
 
     /* Find the symbol table */
     mach_load_command_info_t *info = mach_load_command_find_command_by_type (macho, LC_SYMTAB);
@@ -285,7 +288,12 @@ htool_disassemble_binary_quick (htool_client_t *client)
      */
     if (client->opts & HTOOL_CLIENT_DISASS_OPT_STOP_ADDRESS) size = ((client->stop_address - client->base_address) / 4) + 1;
     else if (client->opts & HTOOL_CLIENT_DISASS_OPT_COUNT) size = client->size;
-    debugf ("start: 0x%llx, end: 0x%llx, size: %d\n", base_addr, base_addr + size, size);
+
+    /**
+     * Output a summary before disassembly.
+     */
+    printf (BOLD RED "Disassembly:\t" RED BOLD RESET);
+    printf (BOLD DARK_GREY "0x%08llx → 0x%08llx (%d bytes)\n" DARK_GREY BOLD RESET, base_addr, base_addr + size, size);
 
     /**
      *  Fetch a list of all inline functions and sections, so they can be printed when outputting

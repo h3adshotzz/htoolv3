@@ -1,7 +1,0 @@
-TODO
-====
-
- * `macho` command:
-    - Add a feature to split a FAT archive into induvidual Mach-O files
-    - Add a feature to split a particular section/segment/memory range into a new file.
-    - Add an `-a` flag that runs all the options for macho.

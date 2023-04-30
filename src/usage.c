@@ -28,8 +28,7 @@ void general_usage (int argc, char *argv[], int err)
     "  file             Identify file and print header.\n" \
     "  macho            Mach-O parser.\n" \
     "  analyse          Analyse firmware files.\n" \
-    "  disassemble      Disassemble a binary.\n" \
-    "  debug            [DEBUG].\n" \
+    "  disass           Disassemble a binary.\n" \
     "\n"\
     "Options:\n" \
     "  --help           HTool Usage info.\n" \

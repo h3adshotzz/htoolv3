@@ -72,7 +72,6 @@ htool_binary_parser (htool_binary_t *bin)
     uint32_t magic = *(uint32_t *) bin->data;
     htool_return_t ret;
 
-
     /**
      *  Check if the binary is an ELF format.
     */
@@ -109,7 +108,6 @@ htool_binary_parser (htool_binary_t *bin)
                 htool_error_throw (HTOOL_ERROR_FILE_LOADING, "Failed to load Mach-O");
                 return HTOOL_RETURN_FAILURE;
             }
-            warningf ("m64->size: %d\n", m64->size);
             if (m64->size < bin->size) m64->size = bin->size;
 
             /* clear the list to ensure this is the only element */
@@ -225,7 +223,6 @@ htool_binary_parser (htool_binary_t *bin)
         if (darwin_detect_firmware_component_kernel (bin))
             bin->flags |= HTOOL_BINARY_FIRMWARETYPE_KERNEL;
 
-        //debugf ("flags: %llx\n", bin->flags);
         return bin;
     } 
     
@@ -246,7 +243,6 @@ htool_binary_parser (htool_binary_t *bin)
             htool_error_throw (HTOOL_ERROR_FILETYPE, "Found unknown Apple Secure Boot firmware, cannot handle");
             return NULL;
         }
-        debugf ("sep detected\n");
         bin->flags |= HTOOL_BINARY_FILETYPE_RAWBINARY;
         bin->flags |= HTOOL_BINARY_FIRMWARETYPE_SEP;
         return bin;
@@ -255,10 +251,8 @@ htool_binary_parser (htool_binary_t *bin)
     /**
      *  Check if the binary is an Image4
      */
-    if (htool_binary_detect_image4 (bin, magic)) {
-        printf ("image4 detected\n");
+    if (htool_binary_detect_image4 (bin, magic))
         return bin;
-    }
 
     /** TODO: Check if the binary is an  SecureROM or SEP. */
 
@@ -305,12 +299,11 @@ htool_binary_detect_macho (htool_binary_t *bin, uint32_t magic)
 macho_t *
 htool_binary_select_arch (htool_binary_t *bin, char *arch_name)
 {
-    debugf ("htool_binary_select_arch: arch_name: %s\n", arch_name);
     for (int i = 0; i < h_slist_length (bin->fat_info->archs); i++) {
         fat_arch_t *arch = (fat_arch_t *) h_slist_nth_data (bin->fat_info->archs, i);
         char *cpu_name = mach_header_get_cpu_string (arch->cputype, arch->cpusubtype);
 
-        /* if teh cpu_name doesn't match arch_name, try the next item */
+        /* if the cpu_name doesn't match arch_name, try the next item */
         if (!strcmp (cpu_name, arch_name))
             return (macho_t *) h_slist_nth_data (bin->macho_list, i);
     }

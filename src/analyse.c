@@ -28,17 +28,15 @@
 htool_return_t
 htool_analyse_kernel (htool_binary_t *bin)
 {
-    debugf ("file_type_kernel\n");
     xnu_t *xnu = xnu_kernel_load_kernel_cache (bin);
     bin->firmware = (void *) xnu;
 
     if (xnu->type == XNU_KERNEL_TYPE_IOS_FILESET_EXTRACTED) {
-        printf ("Cannot parse KEXTs of an extracted Fileset Kernel\n");
+        htool_error_throw (HTOOL_ERROR_FILETYPE, "Cannot parse KEXTs of an extracted Fileset Kernel\n");
         return HTOOL_RETURN_FAILURE;
     }
 
     xnu_parse_kernel_extensions (xnu);
-
     return HTOOL_RETURN_SUCCESS;
 }
 
@@ -55,14 +53,13 @@ htool_analyse_kext (htool_binary_t *bin)
      *  within the area of the KEXT Mach-O. The other ones idk about but since they
      *  are old it's not a big deal if they're not supported.
      */
-    printf ("analyse_kext\n");
+    htool_error_throw (HTOOL_ERROR_NOT_IMPLEMENTED, "Parsing KEXTs is not yet implemented.\n");
     return HTOOL_RETURN_SUCCESS;
 }
 
 htool_return_t
 htool_analyse_iboot (htool_binary_t *bin)
 {
-    debugf ("file_type_iboot\n");
     iboot_t *iboot = iboot_load (bin);
     bin->firmware = (void *) iboot;
     return HTOOL_RETURN_SUCCESS;
@@ -71,7 +68,6 @@ htool_analyse_iboot (htool_binary_t *bin)
 htool_return_t
 htool_analyse_sep (htool_binary_t *bin)
 {
-    debugf ("file_type_sep\n");
     sep_t *sep = parse_sep_firmware (bin);
     bin->firmware = (void *) sep;
     return HTOOL_RETURN_SUCCESS;
@@ -149,11 +145,8 @@ htool_analyse_list_all (htool_client_t *client)
                 app->offset, app->size, app->name, app->version);
         }
         return HTOOL_RETURN_SUCCESS;
-    }
-    
-    
-    else {
-        printf ("unknwon\n");
+    } else {
+        htool_error_throw (HTOOL_ERROR_FILETYPE, "Filetype not supported.");
     }
 
 no_embedded_bin:
