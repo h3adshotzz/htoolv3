@@ -50,16 +50,41 @@ jobs:
     - name: test-setup
       run: |
         git clone git@github.com:h3adshotzz/htoolv3-testing.git
-
-    - name: test-run
+        
+    - name: macho-tests
       run: |
-        python3 .github/scripts/test_runner.py -c .github/configs/htool-macho-tests.yaml -b ./build/htool
-        ls -la
+        ./build/htool macho -h -l -L -s -S htoolv3-testing/ps.arm64
+        ./build/htool macho -h -l -L -s -S htoolv3-testing/ps.x86_64
+        ./build/htool macho -h -l htoolv3-testing/ps.universal
+        ./build/htool macho -h -l htoolv3-testing/ps.universal --arch=arm64 | grep arm64
 
-    - name: Publish Test Results
-      uses: mikepenz/action-junit-report@v3
-      if: always()
-      with:
-        report_paths: test.xml
-        fail_on_failure: true
-        detailed_summary: true
+    - name: analyse-kernel-tests
+      run: |
+        ./build/htool analyse -a htoolv3-testing/kernelcache.ios11.arm64
+        ./build/htool analyse -a htoolv3-testing/kernelcache.ios12.arm64
+        ./build/htool analyse -a htoolv3-testing/kernelcache.ios16.arm64
+        ./build/htool analyse -a -l htoolv3-testing/kernelcache.ios16.arm64
+        ./build/htool analyse -a -l -e com.apple.driver.AppleARMPlatform htoolv3-testing/kernelcache.ios16.arm64
+        ./build/htool analyse -a com.apple.driver.AppleARMPlatform
+        ./build/htool macho -h -l com.apple.driver.AppleARMPlatform
+
+    - name: analyse-sep-tests
+      run:
+        ./build/htool analyse -a -l AppleSEPROM-302.0.0.2.1
+        ./build/htool analyse -a -l sep.t8010.bin
+        ./build/htool analyse -a -l -e AppleCredentialManager sep.t8010.bin
+        strings sepos_app6_AppleCredentialManager | grep "/Library/Caches/com.apple.xbs/Sources/AppleCredentialManager_Firmware/AppleCredentialManager-336.100.5/common/CoreExec.c"
+
+    - name: analyse-iboot-tests
+      run:
+        ./build/htool analyse -a -l iboot.arm64
+
+    - name: disass-raw-binary-tests
+      run:
+        ./build/htool disass -d -b 0x60 iboot.arm64
+        ./build/htool disass -d -b 0x60 iboot.arm64 | grep "bf4000d5"
+
+    - name: disass-macho-tests
+      run:
+        ./build/htool disass -d ps.arm64
+        ./build/htool disass -d -b 0x0000000100005190 -s 0x00000001000051ac ps.arm64
