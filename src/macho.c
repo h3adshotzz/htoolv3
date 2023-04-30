@@ -139,7 +139,7 @@ htool_print_load_commands (htool_client_t *client)
         }
         
         /* there's nothing that can be done now, so exit */
-        return HTOOL_RETURN_FAILURE;
+        return HTOOL_RETURN_EXIT;
 
     } else {
 
@@ -152,7 +152,7 @@ htool_print_load_commands (htool_client_t *client)
             htool_error_throw (HTOOL_ERROR_FILETYPE, "Could not load architecture from FAT archive: %s\n", client->arch);
             htool_print_fat_header_from_struct (bin->fat_info, 1);
 
-            exit (EXIT_FAILURE);
+            return HTOOL_RETURN_EXIT;
         }
 
         /* lists for segment and load commands */
@@ -379,7 +379,7 @@ htool_print_shared_libraries (htool_client_t *client)
         }
         
         /* there's nothing that can be done now, so exit */
-        exit (EXIT_FAILURE);
+        return HTOOL_RETURN_EXIT;
 
     } else {
 
@@ -392,7 +392,7 @@ htool_print_shared_libraries (htool_client_t *client)
             htool_error_throw (HTOOL_ERROR_FILETYPE, "Could not load architecture from FAT archive: %s\n", client->arch);
             htool_print_fat_header_from_struct (bin->fat_info, 1);
 
-            exit (EXIT_FAILURE);
+            return HTOOL_RETURN_EXIT;
         }
 
         printf (RED BOLD "Dynamically-linked Libraries:\n" RESET);

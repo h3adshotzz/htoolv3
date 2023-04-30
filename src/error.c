@@ -38,7 +38,7 @@ htool_error_throw (error_code_t error_code, char *fmt, ...)
         }
     }
 
-    fmt = mstrappend ("%s%s%s%s%s%s", RED "[*Error*] ", err->error_msg, ": ", fmt, RESET, "\n");
+    fmt = mstrappend ("%s%s%s%s%s%s", RED "[Error] ", err->error_msg, ": ", fmt, RESET, "\n");
 
     va_start (arg, fmt);
     done = vfprintf (stdout, fmt, arg);

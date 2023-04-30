@@ -98,7 +98,7 @@ htool_print_code_signature (htool_client_t *client)
         }
         
         /* there's nothing that can be done now, so exit */
-        exit (EXIT_FAILURE);
+        return HTOOL_RETURN_EXIT;
     }
 
     /**
@@ -110,7 +110,7 @@ htool_print_code_signature (htool_client_t *client)
         htool_error_throw (HTOOL_ERROR_FILETYPE, "Could not load architecture from FAT archive: %s\n", client->arch);
         htool_print_fat_header_from_struct (bin->fat_info, 1);
 
-        exit (EXIT_FAILURE);
+        return HTOOL_RETURN_EXIT;
     }
 
     /**
@@ -125,7 +125,7 @@ htool_print_code_signature (htool_client_t *client)
     if (info == NULL) {
         printf ("\n" BOLD RED "Code Signature: \n" RESET);
         printf (BLUE "  No Code Signing Information\n" RESET);
-        exit (EXIT_FAILURE);
+        return HTOOL_RETURN_EXIT;
     }
 
     mach_linkedit_data_command_t *cs_cmd = (mach_linkedit_data_command_t *) info->lc;
