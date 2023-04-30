@@ -11,10 +11,13 @@ jobs:
     - name: clean
       run: rm -rf *
 
-    - uses: actions/checkout@v3
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
 
     # Checkout and pull libhelper
-    - name: libhelper-configure
+    - name: lib-configure
       run: git submodule init && git submodule update
 
     # Configure the project.
