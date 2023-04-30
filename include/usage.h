@@ -16,11 +16,13 @@
 #ifndef __HTOOL_USAGE_H__
 #define __HTOOL_USAGE_H__
 
-
+/**
+ *  NOTE:   Functions for printing the usage (--help) prompt for the different
+ *          commands.
+ */
 void general_usage (int argc, char *argv[], int err);
 void file_subcommand_usage (int argc, char *argv[], int err);
 void macho_subcommand_usage (int argc, char *argv[], int err);
 void analyse_subcommand_usage (int argc, char *argv[], int err);
-void disass_subcommand_usage (int argc, char *argv[], int err);
 
 #endif /* __htool_usage_h__ */
