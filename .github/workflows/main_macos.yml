@@ -14,6 +14,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3
       with:
+        token: ${{ secrets.LIBARCH_PAT }}
         submodules: recursive
 
     # Configure the project.
