@@ -33,15 +33,12 @@
 #include "colours.h"
 #include "usage.h"
 
-
-/* headers for commands */
 #include "commands/macho.h"
 #include "commands/analyse.h"
 #include "commands/disassembler.h"
 
 
 /* Command handler functions */
-
 static htool_return_t
 handle_command_file (htool_client_t *client);
 static htool_return_t
@@ -51,16 +48,17 @@ handle_command_analyse (htool_client_t *client);
 static htool_return_t
 handle_command_disass (htool_client_t *client);
 
-/* debug */
-static htool_return_t
-handle_command_debug (htool_client_t *client);
-
-
 ///////////////////////////////////////////////////////////////////////////////
 
-/* Command optins definitions, using getopt.h option structs */
+/**
+ *  Command Option arrays using `option` from getopt.h to define each
+ *  commands available options.
+*/
 
-/* standard cli options */
+/**
+ * \brief   Standard HTool options if a command is not specified
+ * 
+ */
 static struct option standard_opts[] = {
     { "help",       no_argument,    NULL,   'h' },
     { "version",    no_argument,    NULL,   'V' },
@@ -68,7 +66,10 @@ static struct option standard_opts[] = {
     { NULL,         0,              NULL,   0 }
 };
 
-/* macho options */
+/**
+ * \brief   HTool `macho` command options.
+ * 
+ */
 static struct option macho_cmd_opts[] = {
     { "arch",       required_argument,  NULL,   'a' },
     { "verbose",    no_argument,        NULL,   'v' },
@@ -84,7 +85,10 @@ static struct option macho_cmd_opts[] = {
     { NULL,         0,                  NULL,    0  }
 };
 
-/* analyse options */
+/**
+ * \brief   HTool `analyse` command options.
+ * 
+ */
 static struct option analyse_cmd_opts[] = {
     { "help",       no_argument,        NULL,   'h' },
     { "analyse",    no_argument,        NULL,   'a' },
@@ -93,7 +97,10 @@ static struct option analyse_cmd_opts[] = {
     { NULL,         0,                  NULL,   0   }
 };
 
-/* disass options */
+/**
+ * \brief   HTool `disass` command options.
+ * 
+ */
 static struct option disass_cmd_opts[] = {
     { "arch",               required_argument,  NULL,   'a' },
     { "verbose",            no_argument,        NULL,   'v' },
@@ -106,47 +113,57 @@ static struct option disass_cmd_opts[] = {
     { "stop-address",       required_argument,  NULL,   's' },
     { "count",              required_argument,  NULL,   'c' },
 
-    { "debug",          no_argument,        NULL,   'd' },
-    { NULL,             0,                  NULL,    0  },
+    { NULL,                 0,                  NULL,    0  },
 };
 
 /**
- *  List of top-level commands that htool provides
+ * \brief   List of commands available in HTool. Each command will have
+ *          a corresponding options array above.
  */
 static struct command commands[] = {
     { "file",       handle_command_file     },
     { "macho",      handle_command_macho    },
     { "analyse",    handle_command_analyse  },
     { "disass",     handle_command_disass   },
-    { "debug",      handle_command_debug    },
     { NULL,         NULL                    }
 };
 
 
-/* command counts */
+/* Number of commands and standard options */
 #define STANDARD_OPTION_COUNT       sizeof(standardopts) / sizeof(standardopts[0])
 #define HTOOL_COMMAND_COUNT         sizeof(commands) / sizeof(commands[0])
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/**
+ *  NOTE:   Command handler are defined here as static functions, so they're not
+ *          defined in another header file.
+ */
+
+/**
+ * \brief   Command handler for the `file` command.
+ * 
+ */
 static htool_return_t handle_command_file (htool_client_t *client)
 {
     htool_error_throw (HTOOL_ERROR_NOT_IMPLEMENTED, "'file' not implemented.");
     return HTOOL_RETURN_FAILURE;
 }
 
+/**
+ * \brief   Command handler for the `macho` command.
+ * 
+ */
 static htool_return_t handle_command_macho (htool_client_t *client)
 {
     /* reset getopt */
-    optind = 1;
-    opterr = 1;
+    optind = 1, opterr = 1;
 
     /* set the appropriate flag for the client struct */
     client->cmd |= HTOOL_CLIENT_CMDFLAG_MACHO;
 
     /* parse the `file` options */
-    int opt = 0;
-    int optindex = 0;
+    int opt = 0, optindex = 0;
     while ((opt = getopt_long (client->argc, client->argv, "vhlLsSDCA", macho_cmd_opts, &optindex)) > 0) {
         switch (opt) {
 
@@ -221,7 +238,6 @@ static htool_return_t handle_command_macho (htool_client_t *client)
         htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "%s", client->filename);
         exit (EXIT_FAILURE);
     }
-    ci_logf ("File successfully loaded\n");
 
     /**
      *  Option:             -h, --header
@@ -260,23 +276,24 @@ static htool_return_t handle_command_macho (htool_client_t *client)
     if (client->opts & HTOOL_CLIENT_MACHO_OPT_CODE_SIGNING)
         htool_print_code_signature (client);
 
-
     return HTOOL_RETURN_SUCCESS;
 }
 
+/**
+ * \brief   Command handler for the `analyse` command.
+ * 
+ */
 static htool_return_t handle_command_analyse (htool_client_t *client)
 {
     /* reset getopt */
     htool_return_t res;
-    optind = 1;
-    opterr = 1;
+    optind = 1, opterr = 1;
 
     /* set the appropriate flag for the client struct */
     client->cmd |= HTOOL_CLIENT_CMDFLAG_ANALYSE;
 
     /* parse the `file` options */
-    int opt = 0;
-    int optindex = 2;
+    int opt = 0, optindex = 2;
     while ((opt = getopt_long (client->argc, client->argv, "e:alhA", analyse_cmd_opts, &optindex)) > 0) {
         switch (opt) {
 
@@ -312,7 +329,6 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
         htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "%s", client->filename);
         exit (EXIT_FAILURE);
     }
-    //ci_logf ("File successfully loaded\n");
 
     /**
      *  Option:             -a, --analyse
@@ -340,30 +356,24 @@ static htool_return_t handle_command_analyse (htool_client_t *client)
         if (res) printf (ANSI_COLOR_GREEN "[*] Extracted %s\n" RESET, client->extract);
     }
 
-
     return HTOOL_RETURN_SUCCESS;
 }
 
+/**
+ * \brief   Command handler for the `disass` command.
+ * 
+ */
 static htool_return_t handle_command_disass (htool_client_t *client)
 {
-    #if HTOOL_DEBUG
-        debugf ("argc: %d\n", client->argc);
-        for (int i = 0; i < client->argc; i++)
-            debugf ("[%d]: %s\n", i, client->argv[i]);
-    #endif
-
     /* reset getopt */
-    optind = 1;
-    opterr = 1;
-    optarg = NULL;
+    optind = 1, opterr = 1;
 
     /* set the appropriate flag for the client struct */
     client->cmd |= HTOOL_CLIENT_CMDFLAG_DISASS;
     char *base_addr, *stop_address, *size;
 
     /* parse the `disass` options */
-    int opt = 0;
-    int optindex = 2;
+    int opt = 0, optindex = 2;
     while ((opt = getopt_long (client->argc, client->argv, "Ddb:c:s:hA", disass_cmd_opts, &optindex)) > 0) {
         switch (opt) {
 
@@ -421,25 +431,15 @@ static htool_return_t handle_command_disass (htool_client_t *client)
     if (client->opts & HTOOL_CLIENT_DISASS_OPT_DISASSEMBLE_QUICK)
         htool_disassemble_binary_quick (client);
     
-
     return HTOOL_RETURN_SUCCESS;
-}
-
-static htool_return_t handle_command_debug (htool_client_t *client)
-{
-    error_test ();
-    htool_error_throw (HTOOL_ERROR_INVALID_FILENAME, "HTOOL_ERROR_INVALID_FILENAME test");
-    htool_error_throw (HTOOL_ERROR_INVALID_ARCH, "HTOOL_ERROR_INVALID_ARCH test");
-    htool_error_throw (HTOOL_ERROR_NOT_IMPLEMENTED, "HTOOL_ERROR_NOT_IMPLEMENTED test");
-    htool_error_throw (HTOOL_ERROR_FILE_LOADING, "HTOOL_ERROR_FILE_LOADING test");
-    htool_error_throw (HTOOL_ERROR_FILETYPE, "HTOOL_ERROR_FILETYPE test");
-    htool_error_throw (HTOOL_ERROR_GENERAL, "HTOOL_ERROR_GENERAL test");
-    htool_error_throw (HTOOL_ERROR_ARCH, "HTOOL_ERROR_ARCH test");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/* print version details */
+/**
+ * \brief   Print version detail, either as a full version output or a shortened
+ *          banner just showing the source version.
+ */
 void print_version_detail (int opt)
 {
     if (opt == 1) {
@@ -457,10 +457,8 @@ void print_version_detail (int opt)
 #else
         printf ("intel-genuine (Intel Genuine)\n");
 #endif
-#if HTOOL_DEBUG
         printf (BLUE "\n    HTool Version %s: %s; root:%s/%s_%s %s\n" RESET,
             HTOOL_BUILD_VERSION, __TIMESTAMP__, HTOOL_SOURCE_VERSION, HTOOL_BUILD_TYPE, BUILD_ARCH_CAP, BUILD_ARCH);
-#endif
 
         printf (BOLD RED "\n  Extensions:\n", RESET);
         printf (BOLD DARK_WHITE "    Libhelper:        " RESET DARK_GREY "%s\n", libhelper_get_version_string());
@@ -521,12 +519,9 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     client->filename = strdup (filename);
-#if HTOOL_DEBUG
-    debugf ("client->filename: %s\n", client->filename);
-#endif
 
     /**
-     *  work out which command has been invoked. Use the `optind` index from getopt.h
+     *  Work out which command has been invoked. Use the `optind` index from getopt.h
      *  to get the next item in the argv array. This value will be compared to each
      *  command name until there is either a match, at which point the handler can be
      *  invoked, or until there are no commands left, in that case the general usage
@@ -536,24 +531,12 @@ int main(int argc, char **argv)
     char *cmdname = argv[optind];
     for (int i = 0; i < HTOOL_COMMAND_COUNT; i++) {
         struct command *c = &commands[i];
-#if HTOOL_DEBUG
-        debugf ("check: %s, %s\n", cmdname, c->cmdname);
-#endif
 
         if (!c->cmdname || !cmdname)
             continue;
 
         if (!strcmp (c->cmdname, cmdname))
-#if HTOOL_DEBUG
-        {
-            debugf ("matched command: %s\n", cmdname);
-            int res = c->handler (client);
-            debugf ("res: %d\n", res);
-            return (res == HTOOL_RETURN_SUCCESS) ? EXIT_SUCCESS : EXIT_FAILURE;
-        }
-#else
             return (c->handler (client) == HTOOL_RETURN_SUCCESS) ? EXIT_SUCCESS : EXIT_FAILURE;
-#endif
     }
 
     /* if we get here, print the usage again */
