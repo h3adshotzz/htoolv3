@@ -34,14 +34,10 @@
                         (((a) >> 8) & 0x0000ff00) | \
                         ((unsigned int)(a) >> 24) )
 
-typedef struct section_symbol_t {
-    int         index;
-    uint64_t    virt_addr;
-    uint32_t    size;
-    char       *perms;
-    char       *name;
-} section_symbol_t;
-
+/**
+ * \brief       Structure to represent an inline symbol, whether that be
+ *              a function name or the start location of a section.
+ */
 typedef struct inline_symbol_t {
     uint64_t    virt_addr;
     char       *name;
@@ -49,21 +45,14 @@ typedef struct inline_symbol_t {
 } inline_symbol_t;
 
 
-typedef struct function_t {
-    char       *name;
-
-    uint64_t    virt_addr;
-    uint64_t    offset;
-    uint32_t    size;
-} function_t;
-
-
-HSList *
-htool_parse_macho_section_symbols (macho_t *macho);
-HSList *
-htool_parse_macho_function_symbols (macho_t *macho);
-
-
+/**
+ * \brief       Disassemble a given `instruction_t` and output it to the
+ *              terminal, colour-coded and formatted. 
+ * 
+ * \param   instr   Instruction to parse and print.
+ * 
+ * \return      Success or Failure based on the result of the parsing.
+ */
 htool_return_t
 htool_disassembler_parse_instruction (instruction_t *instr);
 

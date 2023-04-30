@@ -84,10 +84,14 @@
 
 
 /**
- *
+ * \brief       HTool Binary Loader structure.
+ * 
+ *              Each file that is loaded by HTool will be parsed into one of
+ *              these structures which tracks the original file properties as
+ *              well as any additional filetype-specific structures and a pointer
+ *              to a firmware struct.
  */
-typedef struct __htool_binary           htool_binary_t;
-struct __htool_binary
+typedef struct htool_binary_t
 {
     /* htool_binary version */
     uint32_t        version;
@@ -106,32 +110,88 @@ struct __htool_binary
     //elf_t           *elf;
     image4_t        *image4;
 
-    /* other */
+    /* firmware struct pointer */
     void *firmware;
-    uint32_t debug;
-};
+} htool_binary_t;
 
 
-
+/**
+ * \brief       Load a given file into a new `htool_binary_t` struct by
+ *              only populating the "raw data properties". 
+ * 
+ * \param   path    Filepath to load.
+ * 
+ * \returns     A new `htool_binary_t` structure with the loaded file.
+ */
 htool_binary_t *
 htool_binary_load_file (const char *path);
 
+/**
+ * \brief       Parse a given binary and populate the appropriate filetype
+ *              fields
+ * 
+ * \param   bin     The `htool_binary_t` to parse.
+ * 
+ * \return      An updated `bin` with the appropriate filetype properties set,
+ *              and the flags updated to reflect the parsed filetype.
+ * 
+ */
 htool_binary_t *
 htool_binary_parser (htool_binary_t *bin);
 
+/**
+ * \brief       Load and Parse a given file. Just calls the load function, verifies
+ *              the result, and returns the parser function.
+ * 
+ * \param   path    Filepath to load.
+ * 
+ * \return      The result from calling htool_binary_parser() with `path`.
+ */
 htool_binary_t *
 htool_binary_load_and_parse (const char *path);
 
+/**
+ * \brief       Iterate through the list of architectures within a given `bin` to
+ *              find and return the `macho_t` for the desired `arch_name`, or NULL.
+ * 
+ * \param   bin         The `htool_binary_t` containing multiple architectures a a FAT file.
+ * \param   arch_name   The desired architecture to find.
+ * 
+ * \return      Either the desired `macho_t`, or NULL.
+ */
 macho_t *
 htool_binary_select_arch (htool_binary_t *bin, char *arch_name);
 
-
+/**
+ * \brief       Detect whether a magic number value is a Mach-O.
+ * 
+ * \param   bin     The binary to update the flags for.
+ * \param   magic   The magic number to verify.
+ * 
+ * \return      Success or Failure based on the result of the magic check.
+ */
 htool_return_t
 htool_binary_detect_macho (htool_binary_t *bin, uint32_t magic);
 
+/**
+ * \brief       Detect whether a magic number value is an ELF.
+ * 
+ * \param   bin     The binary to update the flags for.
+ * \param   magic   The magic number to verify.
+ * 
+ * \return      Success or Failure based on the result of the magic check.
+ */
 htool_return_t
 htool_binary_detect_elf (htool_binary_t *bin, uint32_t magic);
 
+/**
+ * \brief       Detect whether a magic number value is an Image4.
+ * 
+ * \param   bin     The binary to update the flags for.
+ * \param   magic   The magic number to verify.
+ * 
+ * \return      Success or Failure based on the result of the magic check.
+ */
 htool_return_t
 htool_binary_detect_image4 (htool_binary_t *bin, uint32_t magic);
 
