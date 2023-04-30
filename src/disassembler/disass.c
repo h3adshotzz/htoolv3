@@ -70,7 +70,7 @@ find_offset_for_virtual_address (macho_t *macho, uint64_t vmaddr)
         mach_segment_command_64_t *seg = info->segcmd;
 
         if (vmaddr >= seg->vmaddr && vmaddr < (seg->vmaddr + seg->vmsize))
-            return (sizeof(mach_header_t)) + (seg->fileoff + (vmaddr - seg->vmaddr));
+            return seg->fileoff + (vmaddr - seg->vmaddr);
     }
     return 0;
 }
@@ -128,6 +128,10 @@ fetch_macho_inline_symbol_hashmap (macho_t *macho)
             //printf ("name: %s\n", name);
         }
     }
+
+    /* Do not add symbols for Fileset-style kernels */
+    if (macho->header->filetype == MACH_TYPE_FILESET)
+        return map;
 
     /* Find the symbol table */
     mach_load_command_info_t *info = mach_load_command_find_command_by_type (macho, LC_SYMTAB);

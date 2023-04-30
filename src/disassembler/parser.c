@@ -90,7 +90,6 @@ htool_parse_macho_function_symbols (macho_t *macho)
     return ret;
 }
 
-
 htool_return_t
 htool_disassembler_parse_instruction (instruction_t *instr)
 {
@@ -256,9 +255,6 @@ static int _concat_internal(char **dst, const char *src, va_list args){
     if(*dst)
         dstlen = strlen(*dst);
 
-    /* Back up args before it gets used. Client calls va_end
-     * on the parameter themselves when calling vconcat.
-     */
     va_list args1;
     va_copy(args1, args);
 
