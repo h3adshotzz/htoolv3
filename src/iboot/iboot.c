@@ -207,7 +207,6 @@ iboot_load (htool_binary_t *bin)
         htool_error_throw (HTOOL_ERROR_GENERAL, "Could not determine iBoot version or device.");
         return NULL;
     }
-    ci_logf ("iBoot successfully loaded\n");
 
     printf (ANSI_COLOR_GREEN "[*]" RESET ANSI_COLOR_GREEN " Detected iBoot (iBoot)\n" RESET);
     printf ( BOLD DARK_WHITE "%siBoot Version:   " RESET DARK_GREY "%s\n" RESET, "    ", iboot->iboot_version);

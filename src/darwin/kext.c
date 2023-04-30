@@ -43,6 +43,11 @@ strnstr(const char *s, const char *find, size_t slen)
 }
 #endif
 
+/**
+ * \brief   Select the com.apple.kernel Mach-O from an `xnu_t`, as on Fileset-style
+ *          kernel caches the kernel is stored in `xnu->kern`, whereas with others it
+ *          is in `xnu->macho`.
+ */
 static macho_t *
 _xnu_select_macho (xnu_t *xnu)
 {
