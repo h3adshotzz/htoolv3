@@ -53,7 +53,8 @@ htool_macho_select_arch (htool_client_t *client, macho_t **macho)
     macho_t *tmp = calloc (1, sizeof (macho_t));
 
     /* check for --arch */
-    if (client->opts & HTOOL_CLIENT_MACHO_OPT_ARCH && htool_macho_check_fat (client)) {
+    if (HTOOL_CLIENT_CHECK_FLAG(client->opts, HTOOL_CLIENT_MACHO_OPT_ARCH) && 
+        HTOOL_CLIENT_CHECK_FLAG (client->bin->flags, HTOOL_BINARY_FILETYPE_FAT)) {
 
         /* load the macho for --arch */
         tmp = htool_binary_select_arch (bin, client->arch);

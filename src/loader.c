@@ -310,7 +310,7 @@ htool_binary_select_arch (htool_binary_t *bin, char *arch_name)
         fat_arch_t *arch = (fat_arch_t *) h_slist_nth_data (bin->fat_info->archs, i);
         char *cpu_name = mach_header_get_cpu_string (arch->cputype, arch->cpusubtype);
 
-        /* if teh cpu_name doesn't match arch_name, try the next item */
+        /* if the cpu_name doesn't match arch_name, try the next item */
         if (!strcmp (cpu_name, arch_name))
             return (macho_t *) h_slist_nth_data (bin->macho_list, i);
     }
