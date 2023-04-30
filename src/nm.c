@@ -15,8 +15,12 @@
 
 #include "commands/macho.h"
 
+/**
+ *  \brief      Print a given symbol.
+ */
 static htool_return_t
 _print_symbol (htool_client_t *client, macho_t *macho, nlist *sym, char *name);
+
 
 htool_return_t
 htool_print_static_symbols (htool_client_t *client)
