@@ -1,5 +1,7 @@
 name: htool-linux
 
+on: push
+
 jobs:
   Build:
     runs-on: [self-hosted, linux]
