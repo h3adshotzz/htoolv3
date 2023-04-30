@@ -1,0 +1,41 @@
+name: htool-linux
+
+on: push
+
+jobs:
+  Build:
+    runs-on: [self-hosted, linux]
+
+    steps:
+
+    - name: clean
+      run: rm -rf *
+
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.LIBARCH_PAT }}
+        submodules: recursive
+
+    # Checkout and pull libhelper
+    - name: lib-configure
+      run: git submodule init && git submodule update
+
+    # Configure the project.
+    - name: htool-configure
+      run: cmake -B build/ -D CMAKE_C_COMPILER=clang -DHTOOL_DISABLE_VERSION=1
+
+    # Build
+    - name: build
+      id: htool-linux-build
+      run: |
+        cd build/;
+        make;
+        ls -la;
+        echo "HTOOL_SOURCE_VERSION=$(python3 ../config/version_fetch.py -f ../src/MasterVersion)" >> $GITHUB_ENV
+
+    # Upload Artefact
+    - uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.HTOOL_SOURCE_VERSION }}-linux-internal
+        path: build/
