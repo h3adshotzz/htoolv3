@@ -31,7 +31,6 @@
 
 #include <instruction.h>
 #include <register.h>
-#include <utils.h>
 
 #include "disassembler/parser.h"
 #include "commands/disassembler.h"
@@ -289,7 +288,12 @@ htool_disassemble_binary_quick (htool_client_t *client)
      */
     if (client->opts & HTOOL_CLIENT_DISASS_OPT_STOP_ADDRESS) size = ((client->stop_address - client->base_address) / 4) + 1;
     else if (client->opts & HTOOL_CLIENT_DISASS_OPT_COUNT) size = client->size;
-    debugf ("start: 0x%llx, end: 0x%llx, size: %d\n", base_addr, base_addr + size, size);
+
+    /**
+     * Output a summary before disassembly.
+     */
+    printf (BOLD RED "Disassembly:\t" RED BOLD RESET);
+    printf (BOLD DARK_GREY "0x%08llx → 0x%08llx (%d bytes)\n" DARK_GREY BOLD RESET, base_addr, base_addr + size, size);
 
     /**
      *  Fetch a list of all inline functions and sections, so they can be printed when outputting

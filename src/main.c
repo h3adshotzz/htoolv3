@@ -402,8 +402,7 @@ static htool_return_t handle_command_disass (htool_client_t *client)
             /* -c, --count */
             case 'c':
                 client->opts |= HTOOL_CLIENT_DISASS_OPT_COUNT;
-                //size = strdup (client->argv[optind + optarg]);
-                client->size = strtoull (optarg, NULL, 16);
+                client->size = strtoull (optarg, NULL, 10);
                 break;
 
 
